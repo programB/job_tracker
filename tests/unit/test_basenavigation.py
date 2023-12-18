@@ -7,9 +7,9 @@ from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from tester_jobs_stats.pracujpl_POM import BaseNavigation
+from tester_jobs_auto.pracujpl_POM import BaseNavigation
 
-temporary_skip = True
+temporary_skip = False
 
 
 @pytest.fixture
