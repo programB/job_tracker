@@ -26,7 +26,14 @@ class BaseNavigation:
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
 
     def visit(self, url: str) -> None:
-        self.driver.get(url)
+        try:
+            self.driver.get(url)
+        except Exception as e:
+            logging.warning(f"problem visiting the page at: {url}")
+            if "ERR_NAME_NOT_RESOLVED" in str(e):
+                raise ConnectionError
+            else:
+                raise e
 
     def find(self, element, highlight: bool = False) -> WebElement:
         element_found = self.driver.find_element(*element)

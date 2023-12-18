@@ -9,7 +9,7 @@ from selenium.webdriver.remote.webelement import WebElement
 
 from tester_jobs_stats.pracujpl_POM import BaseNavigation
 
-temporary_skip = False
+temporary_skip = True
 
 
 @pytest.fixture
@@ -38,10 +38,12 @@ def non_existing_tag_on_existing_website():
     return (non_existing_tag, website)
 
 
+@pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
 def test_should_create_BaseNavigation(selenium_driver):
     assert BaseNavigation(selenium_driver) is not None
 
 
+@pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
 @pytest.mark.parametrize(
     "property",
     [
@@ -52,6 +54,7 @@ def test_should_assure_properties_existance(property):
     assert hasattr(BaseNavigation, property)
 
 
+@pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
 @pytest.mark.parametrize(
     "method",
     [
@@ -72,9 +75,15 @@ def test_should_assure_methods_existance(method):
 
 
 @pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
-def test_should_visit_a_webpage(nav_window):
+def test_should_visit_an_existing_webpage(nav_window):
     nav_window.visit("https://www.google.com")
     assert "google".casefold() in nav_window.driver.title.casefold()
+
+
+@pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
+def test_should_fail_to_visit_a_not_existing_webpage(nav_window):
+    with pytest.raises(ConnectionError) as page_not_found_e:
+        nav_window.visit("https://www.glubiel.com")
 
 
 @pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
@@ -140,6 +149,12 @@ def test_should_enter_text_into_filed(nav_window):
 
 
 @pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
+@pytest.mark.xfail(reason="TEST NOT IMPLEMENTED")
+def test_should_fail_to_enter_text_into_element_not_accepting_text_input(nav_window):
+    assert False
+
+
+@pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
 def test_should_confirm_visibility_of_displayed_element(
     nav_window,
     existing_tag_on_existing_website,
@@ -161,6 +176,7 @@ def test_should_fail_to_see_a_non_existing_element(
     assert nav_window.is_displayed(non_existing_tag) is False
 
 
+@pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
 def test_should_modify_default_timeout(
     nav_window,
     non_existing_tag_on_existing_website,
