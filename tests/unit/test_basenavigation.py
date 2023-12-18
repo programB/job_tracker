@@ -149,9 +149,13 @@ def test_should_enter_text_into_filed(nav_window):
 
 
 @pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")
-@pytest.mark.xfail(reason="TEST NOT IMPLEMENTED")
 def test_should_fail_to_enter_text_into_element_not_accepting_text_input(nav_window):
-    assert False
+    with pytest.raises(SE.ElementNotInteractableException):
+        nav_window.visit("https://www.google.com")
+        non_text_filed = nav_window.find((By.XPATH, "//div[@id='uMousc']"), highlight=True)
+
+        text_to_enter = "Who framed Roger Rabbit"
+        nav_window.enter_text(non_text_filed, text_to_enter)
 
 
 @pytest.mark.skipif(temporary_skip is True, reason="skipping to concentrate on the latest test")

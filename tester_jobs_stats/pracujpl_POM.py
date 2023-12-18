@@ -128,6 +128,9 @@ class BaseNavigation:
     def enter_text(self, element: WebElement, text: str) -> None:
         """Causes the browsers to enter the given text into the webpage element
 
+        Raises ElementNotInteractableException error on attempt to enter
+        a text into an element that does not support it (eg. not a text field)
+
         Parameters
         ----------
         element : WebElement
