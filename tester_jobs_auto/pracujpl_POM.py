@@ -1,8 +1,10 @@
 import logging
+import random
 import time
 from typing import Tuple
 
 from selenium.common import exceptions as SE
+from selenium.webdriver.common.by import By
 # from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
@@ -169,7 +171,7 @@ class BaseNavigation:
             logging.warning(f"Timeout of {self.timeout_sec}s reached while waiting for {locator}")
             return False
 
-    def _highlight(self, element: WebElement):
+    def _highlight(self, element: WebElement, color="red"):
         """Highlights an existing webpage element by changing its background
 
         After highlighting this method will trigger a 1 second pause
@@ -180,7 +182,183 @@ class BaseNavigation:
             an existing element on the current webpage
         """
         self.driver.execute_script(
-            "arguments[0].style.backgroundColor='red'",
+            f"arguments[0].style.backgroundColor='{color}'",
             element,
         )
         time.sleep(1)
+
+
+class PracujplMainPage(BaseNavigation):
+    def __init__(self, driver, reject_cookies=False, visual_mode=False) -> None:
+        # FIXME: visual_mode should be probably moved to the BaseNavigation
+        super().__init__(driver)
+        self._visual_mode = visual_mode
+        self._overlay_cookie_consent = [
+            None,
+            (
+                By.XPATH,
+                "//div[@data-test='modal-cookie-bottom-bar']",
+            ),
+        ]
+        self._search_bar_box = [
+            None,
+            (By.XPATH, "//div[@data-test='section-search-bar']"),
+        ]
+
+        # Working code
+        self._btn_search_submit = [
+            None,
+            (
+                By.XPATH,
+                ".//descendant::div[@data-test='section-search-with-filters']/button",
+                # ".//descendant::button[6]",  # works
+                # ".//descendant::button[last()]",  # doesn't work. selects [1]
+                # ".//descendant::button::[last()]",  # :( invalid xpath expression
+                # ".//descendant::button:last-child",  # :( unresolvable namespaces
+                # ".//descendant::button:last-of-type",  # :( unresolvable namespaces
+            ),
+        ]
+        self._search_field = [
+            None,
+            (
+                By.XPATH,
+                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][1]",
+            ),
+        ]
+        self._category_field = [
+            None,
+            (
+                By.XPATH,
+                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][2]",
+            ),
+        ]
+        self._location_field = [
+            None,
+            (
+                By.XPATH,
+                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][3]",
+            ),
+        ]
+        self._distance_field = [
+            None,
+            (
+                By.XPATH,
+                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][4]",
+            ),
+        ]
+
+        self.visit("https://www.pracuj.pl")
+        if reject_cookies:
+            self._reject_non_essential_cookies()
+        else:
+            self._accept_all_cookies()
+
+    @property
+    def overlay_cookie_consent(self):
+        if self._overlay_cookie_consent[0] is None:
+            try:
+                self._overlay_cookie_consent[0] = self.find(
+                    self._overlay_cookie_consent[1],
+                    highlight=self._visual_mode,
+                )
+            except SE.NoSuchElementException as e:
+                logging.info("cookie consent modal was not found")
+        return self._overlay_cookie_consent[0]
+
+    @property
+    def search_bar_box(self) -> WebElement:
+        if self._search_bar_box[0] is None:
+            try:
+                self._search_bar_box[0] = self.find(
+                    self._search_bar_box[1],
+                    highlight=self._visual_mode,
+                )
+            except SE.NoSuchElementException as e:
+                logging.critical("search box was not found")
+                raise e
+        return self._search_bar_box[0]
+
+    @property
+    def btn_search_submit(self) -> WebElement:
+        return self._get_search_bar_control(
+            self._btn_search_submit,
+        )
+
+    @property
+    def search_field(self) -> WebElement:
+        return self._get_search_bar_control(
+            self._search_field,
+        )
+
+    @property
+    def category_field(self) -> WebElement:
+        return self._get_search_bar_control(
+            self._category_field,
+        )
+
+    @property
+    def location_field(self) -> WebElement:
+        return self._get_search_bar_control(
+            self._location_field,
+        )
+
+    @property
+    def distance_field(self) -> WebElement:
+        return self._get_search_bar_control(
+            self._distance_field,
+        )
+
+    def _get_search_bar_control(self, control):
+        if control[0] is None:
+            try:
+                control[0] = self.search_bar_box.find_element(*control[1])
+                if self._visual_mode:
+                    color = random.choice(
+                        [
+                            "pink",
+                            "yellow",
+                            "lime",
+                            "lightblue",
+                            "lightgreen",
+                        ]
+                    )
+                    self._highlight(control[0], color=color)
+
+            except SE.NoSuchElementException as e:
+                logging.critical(f"{control[0]} was not found")
+                raise e
+        return control[0]
+
+    def _reject_non_essential_cookies(self):
+        # if self.find(self.overlay_cookie_consent, highlight=self._visual_mode):
+        if self.overlay_cookie_consent is not None:
+            btn_customize_cookies = self.find(
+                (
+                    By.XPATH,
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",
+                ),
+                highlight=self._visual_mode,
+            )
+            btn_customize_cookies.click()
+            btn_save_cookie_settings = self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",
+                ),
+                highlight=self._visual_mode,
+            )
+            btn_save_cookie_settings.click()
+
+    def _accept_all_cookies(self):
+        if self.overlay_cookie_consent is not None:
+            btn_accept_all_cookies = self.find(
+                (
+                    By.XPATH,
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",
+                ),
+                highlight=self._visual_mode,
+            )
+            btn_accept_all_cookies.click()
+
+    def set_visual_mode(self, state):
+        self._visual_mode = state
