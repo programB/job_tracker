@@ -6,7 +6,7 @@ from selenium.common import exceptions as SE
 
 from tester_jobs_auto.pracujpl_POM import PracujplMainPage
 
-temp_skip = True
+temp_skip = False
 
 
 @pytest.fixture
@@ -45,6 +45,7 @@ def test_should_dismiss_cookie_modal_by_accepting_cookies_on_object_creation(sel
         ) and main_page.search_bar_box.is_displayed()
 
 
+@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_essential_search_options_are_available(selenium_driver):
     main_page = PracujplMainPage(selenium_driver, reject_cookies=True)
     assert main_page.search_field.is_displayed() and main_page.search_field.is_enabled()
@@ -53,6 +54,7 @@ def test_should_check_essential_search_options_are_available(selenium_driver):
     assert main_page.btn_search_submit.is_displayed() and main_page.btn_search_submit.is_enabled()
 
 
+@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_distance_field_is_shown_when_window_is_maximized(selenium_driver):
     main_page = PracujplMainPage(selenium_driver, reject_cookies=True)
     selenium_driver.maximize_window()

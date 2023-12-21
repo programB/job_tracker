@@ -1,5 +1,4 @@
 import logging
-import random
 import time
 from typing import Tuple
 
@@ -20,6 +19,9 @@ class BaseNavigation:
         selenium webdriver object
     timeout_sec: int
         a timeout setting used by the find method
+    visual_mode: bool
+        decides whether all newly found elements will get highlighted
+        for human inspection
 
     Methods
     -------
@@ -35,7 +37,17 @@ class BaseNavigation:
        checks whether an element indicated by locator is visible on the webpage
     """
 
-    def __init__(self, driver) -> None:
+    _color_index: int = 0
+    _highlight_colors = ["pink", "yellow", "lime", "lightblue", "lightgreen"]
+
+    @classmethod
+    def _get_color(cls) -> str:
+        """Returns a html compatible color from a predefined list"""
+        color = cls._highlight_colors[cls._color_index % len(cls._highlight_colors)]
+        cls._color_index += 1
+        return color
+
+    def __init__(self, driver, visual_mode=False) -> None:
         """
         Parameters
         ----------
@@ -44,6 +56,7 @@ class BaseNavigation:
         """
         # self.driver: WebDriver = driver
         self.driver = driver
+        self._visual_mode = visual_mode
         self._timeout_sec = 5
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
 
@@ -83,7 +96,7 @@ class BaseNavigation:
             else:
                 raise e
 
-    def find(self, element, highlight: bool = False) -> WebElement:
+    def find(self, element, highlight_color: str | None = None) -> WebElement:
         """Tries to find a given element in the current webpage
 
         When element is found it returns a corresponding WebElement object
@@ -111,8 +124,10 @@ class BaseNavigation:
             an object representing element found
         """
         element_found = self.driver.find_element(*element)
-        if highlight:
+        if self._visual_mode:
             self._highlight(element_found)
+        elif highlight_color is not None:
+            self._highlight(element_found, color=highlight_color)
         return element_found
 
     def click(self, element: WebElement) -> None:
@@ -171,6 +186,9 @@ class BaseNavigation:
             logging.warning(f"Timeout of {self.timeout_sec}s reached while waiting for {locator}")
             return False
 
+    def set_visual_mode(self, state):
+        self._visual_mode = state
+
     def _highlight(self, element: WebElement, color="red"):
         """Highlights an existing webpage element by changing its background
 
@@ -180,19 +198,24 @@ class BaseNavigation:
         ----------
         element : WebElement
             an existing element on the current webpage
+        color: str
+            html valid color string. This is bypassed by an auto generated
+            color if visual_mode is active
         """
+
+        # When visual_mod is active use a color
+        # from predefined sequence
+        bgcolor = self._get_color() if self._visual_mode else color
         self.driver.execute_script(
-            f"arguments[0].style.backgroundColor='{color}'",
+            f"arguments[0].style.backgroundColor='{bgcolor}'",
             element,
         )
         time.sleep(1)
 
 
 class PracujplMainPage(BaseNavigation):
-    def __init__(self, driver, reject_cookies=False, visual_mode=False) -> None:
-        # FIXME: visual_mode should be probably moved to the BaseNavigation
-        super().__init__(driver)
-        self._visual_mode = visual_mode
+    def __init__(self, driver, visual_mode=False, reject_cookies=False) -> None:
+        super().__init__(driver, visual_mode)
         self._overlay_cookie_consent = [
             None,
             (
@@ -259,7 +282,6 @@ class PracujplMainPage(BaseNavigation):
             try:
                 self._overlay_cookie_consent[0] = self.find(
                     self._overlay_cookie_consent[1],
-                    highlight=self._visual_mode,
                 )
             except SE.NoSuchElementException as e:
                 logging.info("cookie consent modal was not found")
@@ -271,7 +293,6 @@ class PracujplMainPage(BaseNavigation):
             try:
                 self._search_bar_box[0] = self.find(
                     self._search_bar_box[1],
-                    highlight=self._visual_mode,
                 )
             except SE.NoSuchElementException as e:
                 logging.critical("search box was not found")
@@ -312,18 +333,6 @@ class PracujplMainPage(BaseNavigation):
         if control[0] is None:
             try:
                 control[0] = self.search_bar_box.find_element(*control[1])
-                if self._visual_mode:
-                    color = random.choice(
-                        [
-                            "pink",
-                            "yellow",
-                            "lime",
-                            "lightblue",
-                            "lightgreen",
-                        ]
-                    )
-                    self._highlight(control[0], color=color)
-
             except SE.NoSuchElementException as e:
                 logging.critical(f"{control[0]} was not found")
                 raise e
@@ -337,7 +346,6 @@ class PracujplMainPage(BaseNavigation):
                     By.XPATH,
                     "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",
                 ),
-                highlight=self._visual_mode,
             )
             btn_customize_cookies.click()
             btn_save_cookie_settings = self.find(
@@ -345,7 +353,6 @@ class PracujplMainPage(BaseNavigation):
                     By.XPATH,
                     "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",
                 ),
-                highlight=self._visual_mode,
             )
             btn_save_cookie_settings.click()
 
@@ -356,9 +363,5 @@ class PracujplMainPage(BaseNavigation):
                     By.XPATH,
                     "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",
                 ),
-                highlight=self._visual_mode,
             )
             btn_accept_all_cookies.click()
-
-    def set_visual_mode(self, state):
-        self._visual_mode = state
