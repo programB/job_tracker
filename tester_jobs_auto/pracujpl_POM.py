@@ -3,8 +3,8 @@ import time
 from typing import Tuple
 
 from selenium.common import exceptions as SE
-from selenium.webdriver.common.by import By
 # from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
@@ -217,6 +217,73 @@ class BaseNavigation:
         time.sleep(1)
 
 
+class OptionsMenu:
+    def __init__(
+        self,
+        # driver: WebDriver,
+        driver,
+        main_locator: Tuple[str, str],
+        btn_rel_locator: str,
+        option_rel_locators: dict,
+    ) -> None:
+        self.driver = driver
+        self._main_locator = main_locator
+        self._btn_rel_locator = btn_rel_locator
+        self._option_locators = option_rel_locators
+
+    @property
+    def menu(self) -> WebElement:
+        return self.driver.find_element(
+            self._main_locator[0],
+            self._main_locator[1] + self._btn_rel_locator,
+        )
+
+    def select(self, options: list[str]) -> None:
+        for option in options:
+            if option in self._option_locators.keys():
+                try:
+                    # unfold menu
+                    self.menu.click()
+                    element = self.driver.find_element(
+                        self._main_locator[0],
+                        self._main_locator[1] + self._option_locators[option],
+                    )
+                    if "selected" not in element.get_attribute("class"):
+                        self._scroll_into_view(element)
+                        element.click()
+                except SE.NoSuchElementException:
+                    logging.warning(f"{option} not found in the menu")
+                finally:
+                    # fold menu
+                    self.menu.click()
+
+    def is_selected(self, option: str) -> bool:
+        if option in self._option_locators.keys():
+            try:
+                # unfold menu
+                self.menu.click()
+                element = self.driver.find_element(
+                    self._main_locator[0],
+                    self._main_locator[1] + self._option_locators[option],
+                )
+                if "selected" in element.get_attribute("class"):
+                    # fold menu
+                    self.menu.click()
+                    return True
+                else:
+                    # fold menu
+                    self.menu.click()
+                    return False
+            except SE.NoSuchElementException:
+                logging.warning(f"{option} not found in the menu")
+                return False
+        return False
+
+    def _scroll_into_view(self, element: WebElement) -> None:
+        script = "arguments[0].scrollIntoView();"
+        self.driver.execute_script(script, element)
+
+
 class PracujplMainPage(BaseNavigation):
     def __init__(self, driver, visual_mode=False, reject_cookies=False) -> None:
         super().__init__(driver, visual_mode)
@@ -245,6 +312,59 @@ class PracujplMainPage(BaseNavigation):
                 # ".//descendant::button:last-of-type",  # :( unresolvable namespaces
             ),
         ]
+        self.job_level = OptionsMenu(
+            self.driver,
+            main_locator=(By.XPATH, "//div[@data-test='dropdown-element-et']"),
+            btn_rel_locator="//descendant::button[1]",
+            option_rel_locators={
+                "trainee": "//descendant::div[@data-test='select-option-1']",
+                "assistant": "//descendant::div[@data-test='select-option-3']",
+                "junior": "//descendant::div[@data-test='select-option-17']",
+                "mid_regular": "//descendant::div[@data-test='select-option-4']",
+                "senior": "//descendant::div[@data-test='select-option-18']",
+                "expert": "//descendant::div[@data-test='select-option-19']",
+                "manager": "//descendant::div[@data-test='select-option-5']",
+                "director": "//descendant::div[@data-test='select-option-6']",
+                "president": "//descendant::div[@data-test='select-option-21']",
+                "laborer": "//descendant::div[@data-test='select-option-21']",
+            },
+        )
+        self.contract_type = OptionsMenu(
+            self.driver,
+            main_locator=(By.XPATH, "//div[@data-test='dropdown-element-tc']"),
+            btn_rel_locator="//descendant::button[1]",
+            option_rel_locators={
+                "o_prace": "//descendant::div[@data-test='select-option-0']",
+                "o_dzielo": "//descendant::div[@data-test='select-option-1']",
+                "zlecenie": "//descendant::div[@data-test='select-option-2']",
+                "B2B": "//descendant::div[@data-test='select-option-3']",
+                "o_zastepstwo": "//descendant::div[@data-test='select-option-4']",
+                "agencyjna": "//descendant::div[@data-test='select-option-5']",
+                "o_prace_tymczasowa": "//descendant::div[@data-test='select-option-6']",
+                "praktyki": "//descendant::div[@data-test='select-option-7']",
+            },
+        )
+        self.employment_type = OptionsMenu(
+            self.driver,
+            main_locator=(By.XPATH, "//div[@data-test='dropdown-element-ws']"),
+            btn_rel_locator="//descendant::button[1]",
+            option_rel_locators={
+                "part_time": "//descendant::div[@data-test='select-option-1']",
+                "temporary": "//descendant::div[@data-test='select-option-2']",
+                "full_time": "//descendant::div[@data-test='select-option-0']",
+            },
+        )
+        self.job_location = OptionsMenu(
+            self.driver,
+            main_locator=(By.XPATH, "//div[@data-test='dropdown-element-wm']"),
+            btn_rel_locator="//descendant::button[1]",
+            option_rel_locators={
+                "full_office": "//descendant::div[@data-test='select-option-full-office']",
+                "hybrid": "//descendant::div[@data-test='select-option-hybrid']",
+                "home_office": "//descendant::div[@data-test='select-option-home-office']",
+                "mobile": "//descendant::div[@data-test='select-option-mobile']",
+            },
+        )
         self._search_field = [
             None,
             (
