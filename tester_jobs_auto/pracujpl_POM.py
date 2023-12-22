@@ -96,7 +96,7 @@ class BaseNavigation:
             else:
                 raise e
 
-    def find(self, element, highlight_color: str | None = None) -> WebElement:
+    def find(self, element, root_element: WebElement | None = None, highlight_color: str | None = None) -> WebElement:
         """Tries to find a given element in the current webpage
 
         When element is found it returns a corresponding WebElement object
@@ -123,7 +123,11 @@ class BaseNavigation:
         WebElement
             an object representing element found
         """
-        element_found = self.driver.find_element(*element)
+        if root_element is None:
+            element_found = self.driver.find_element(*element)
+        else:
+            element_found = root_element.find_element(*element)
+
         if self._visual_mode:
             self._highlight(element_found)
         elif highlight_color is not None:
@@ -332,7 +336,9 @@ class PracujplMainPage(BaseNavigation):
     def _get_search_bar_control(self, control):
         if control[0] is None:
             try:
-                control[0] = self.search_bar_box.find_element(*control[1])
+                logging.warning(f"Looking for {control}")
+                # control[0] = self.search_bar_box.find_element(*control[1])
+                control[0] = self.find(control[1], root_element=self.search_bar_box)
             except SE.NoSuchElementException as e:
                 logging.critical(f"{control[0]} was not found")
                 raise e
