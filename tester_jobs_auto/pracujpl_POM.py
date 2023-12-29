@@ -1,10 +1,13 @@
 import logging
+import platform
 import time
 from typing import Tuple
 
 from selenium.common import exceptions as SE
+from selenium.webdriver.common.action_chains import ActionChains
 # from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
@@ -493,3 +496,74 @@ class PracujplMainPage(BaseNavigation):
                 ),
             )
             btn_accept_all_cookies.click()
+
+
+class ResultsPage(BaseNavigation):
+    """docstring for ResultsPage."""
+
+    def __init__(self, driver, visual_mode=False):
+        super(ResultsPage, self).__init__(driver, visual_mode)
+
+    def current_subpage(self) -> tuple[WebElement | None, int]:
+        try:
+            csb_element = self.find((By.XPATH, "//input[@name='top-pagination']"))
+        except SE.NoSuchElementException:
+            logging.warning("Current subpage number couldn't be established")
+            return (None, 0)
+        else:
+            return (csb_element, int(csb_element.get_attribute("value")))
+
+    @property
+    def tot_no_of_subpages(self) -> int:
+        try:
+            tot_no_element = self.find(
+                (By.XPATH, "//span[@data-test='top-pagination-max-page-number']"),
+            )
+        except SE.NoSuchElementException:
+            logging.warning("Total number of subpages couldn't be established")
+            return 0
+        else:
+            return int(tot_no_element.text)
+
+    @property
+    def total_offer_count(self):
+        # TODO: Implement
+        pass
+
+    @property
+    def subpage_offers(self) -> list[Offer]:
+        sp_offers = []
+        offers_section = self.find(
+            (By.XPATH, "//div[@data-test='section-offers']"),
+        )
+        all_child_divs = offers_section.find_elements(By.XPATH, "./div")
+        logging.warning(f"len(all_child_divs): {len(all_child_divs)}")
+        for child_div in all_child_divs:
+            # TODO: Create Offer objects here based on the
+            #       child_div(s) found above.
+            #       Add those to the list doing smth like this:
+            #       sp_offers.append(Offer(child_div))
+            pass
+        return sp_offers
+
+    def goto_subpage(self, n: int) -> None:
+        page_field, _ = self.current_subpage()
+        actions = ActionChains(self.driver)
+        mod_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
+        if page_field is not None:
+            # Clear the field by ctrl+a and Delete,
+            #   (page_field.clear() doesn't work and page_field always gets
+            #    automatically set to '1' - probably page's js is doing this)
+            # then enter and submit the desired subpage number
+            # fmt: off
+            actions.key_down(mod_key).send_keys_to_element(page_field, "a") \
+                .send_keys_to_element(page_field, Keys.DELETE).key_up(mod_key)\
+                .send_keys_to_element(page_field, str(n)) \
+                .send_keys_to_element(page_field, Keys.ENTER) \
+                .perform()
+            # fmt: on
+            # page_field.clear()
+            # page_field.send_keys(n)
+            # page_field.send_keys(Keys.ENTER)
+        else:
+            raise RuntimeError(f"could not switch to subpage {n}, page selector not found")
