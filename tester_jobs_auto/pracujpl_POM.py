@@ -503,9 +503,9 @@ class Advertisement:
     def __init__(self, root_element: WebElement) -> None:
         self.root_element = root_element
         self._offer_dict = {
-            "offer_id": 0,
-            "offer_link": "",
-            "offer_title": "",
+            "id": 0,
+            "link": "",
+            "title": "",
             "salary": "",
             "company_name": "",
             "job_level": "",
@@ -523,7 +523,7 @@ class Advertisement:
                 By.XPATH,
                 "./div[@data-test='default-offer' and @data-test-offerid and @data-test-location]",
             )
-            self._offer_dict["offer_id"] = default_offer_div.get_attribute("data-test-offerid")
+            self._offer_dict["id"] = default_offer_div.get_attribute("data-test-offerid")
         except SE.NoSuchElementException as webelement_not_found:
             # There are commercial ads among genuine offers
             # that should be ignored
@@ -544,7 +544,7 @@ class Advertisement:
 
         try:
             link = default_offer_div.find_element(By.XPATH, "./div/a").get_attribute("href")
-            self._offer_dict["offer_link"] = link
+            self._offer_dict["link"] = link
         except SE.NoSuchElementException:
             # Some job offers advertise the same position in multiple
             # physical locations to choose from.
@@ -589,13 +589,13 @@ class Advertisement:
 
         try:
             # logging.warning(f"offer_details_div: {offer_details_div}")
-            # self._offer_dict["offer_title"] = offer_details_div.find_element(
+            # self._offer_dict["title"] = offer_details_div.find_element(
             if self.is_multiple_location_offer:
                 search_xpath = ".//descendant::h2[@data-test='offer-title']"
             else:
                 # search_xpath = ".//h2[@data-test='offer-title']/a"
                 search_xpath = ".//descendant::h2[@data-test='offer-title']/a"
-            self._offer_dict["offer_title"] = default_offer_div.find_element(
+            self._offer_dict["title"] = default_offer_div.find_element(
                 By.XPATH,
                 search_xpath,
             ).text
@@ -671,16 +671,16 @@ class Advertisement:
         self.is_valid_offer = True
 
     @property
-    def offer_id(self) -> int:
-        return self._offer_dict["offer_id"]
+    def id(self) -> int:
+        return self._offer_dict["id"]
 
     @property
-    def offer_link(self) -> str:
-        return self._offer_dict["offer_link"]
+    def link(self) -> str:
+        return self._offer_dict["link"]
 
     @property
-    def offer_title(self) -> str:
-        return self._offer_dict["offer_title"]
+    def title(self) -> str:
+        return self._offer_dict["title"]
 
     @property
     def salary(self) -> str:

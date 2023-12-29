@@ -71,8 +71,8 @@ def test_should_check_only_valid_offers_are_collected(standard_search):
 def test_should_check_offers_have_not_empty_essential_params(standard_search):
     results_page = ResultsPage(standard_search.driver)
     for offer in results_page.subpage_offers:
-        assert offer.offer_id != 0
-        assert offer.offer_title != ""
+        assert offer.id != 0
+        assert offer.title != ""
         assert offer.company_name != ""
         assert offer.job_level != ""
         assert offer.contract_type != ""
