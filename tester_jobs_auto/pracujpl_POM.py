@@ -1,3 +1,4 @@
+import json
 import logging
 import platform
 import time
@@ -498,6 +499,173 @@ class PracujplMainPage(BaseNavigation):
             btn_accept_all_cookies.click()
 
 
+class Offer:
+    def __init__(self, root_element: WebElement) -> None:
+        self.root_element = root_element
+        self._offer_dict = {
+            "offer_id": 0,
+            "offer_link": "",
+            "offer_title": "",
+            "salary": "",
+            "company_name": "",
+            "job_level": "",
+            "contract_type": "",
+            "technology_tags": [],
+            "webscrap_timestamp": 0.0,
+        }
+        self._build_dict()
+
+    def _build_dict(self):
+        try:
+            default_offer_div = self.root_element.find_element(
+                By.XPATH,
+                "./div[@data-test='default-offer' and @data-test-offerid]",
+            )
+            self._offer_dict["offer_id"] = default_offer_div.get_attribute("data-test-offerid")
+        except SE.NoSuchElementException as webelement_not_found:
+            logging.error(f"no valid offer found in the div {self.root_element}")
+            raise webelement_not_found
+
+        try:
+            link = default_offer_div.find_element(By.XPATH, "./div/a").get_attribute("href")
+            self._offer_dict["offer_link"] = link
+        except SE.NoSuchElementException:
+            logging.warning(f"no valid offer found in the div {self.root_element}")
+
+        try:
+            info_div_tags = default_offer_div.find_elements(By.XPATH, "./div[1]/div[1]/div")
+            # logging.warning(f"len(info_div_tags): {len(info_div_tags)}")
+            # for tag in info_div_tags:
+            #     logging.warning(f"tag.get_attribute('class'): {tag.get_attribute('class')}")
+            if len(info_div_tags) == 2:
+                offer_details_div = default_offer_div.find_element(
+                    By.XPATH,
+                    # "./div/div/[last()][name()='div']/[1][name()='div']",
+                    "./div[1]/div[1]/div[2]",
+                )
+            elif len(info_div_tags) == 3:
+                # FIXME: These 2 are WRONG ! should be div[1]/div[1]/etc.
+                #        They work now accidentally
+                offer_details_div = default_offer_div.find_element(
+                    By.XPATH,
+                    # "./div/div/[last()][name()='div']/[1][name()='div']",
+                    "./div/div/div[last()]/div[1]",
+                )
+                technology_tags_div = default_offer_div.find_element(
+                    By.XPATH,
+                    # "./div/div/[last()][name()='div']/[last()][name()='div']",
+                    "./div/div/div[last()]/div[last()]",
+                )
+            else:
+                raise SE.NoSuchElementException
+        except SE.NoSuchElementException as webelement_not_found:
+            logging.error("offer details not found (missing tags)")
+            raise webelement_not_found
+
+        try:
+            # logging.warning(f"offer_details_div: {offer_details_div}")
+            self._offer_dict["offer_title"] = offer_details_div.find_element(
+                By.XPATH,
+                ".//descendant::h2[@data-test='offer-title']/a",
+            ).text
+        except SE.NoSuchElementException:
+            logging.warning("offer does not have a title")
+
+        try:
+            self._offer_dict["salary"] = offer_details_div.find_element(
+                By.XPATH,
+                ".//descendant::span[@data-test='offer-salary']",
+            ).text
+        except SE.NoSuchElementException:
+            self._offer_dict["salary"] = "not specified"
+            logging.warning("offer does not provide salary information")
+
+        try:
+            self._offer_dict["company_name"] = offer_details_div.find_element(
+                By.XPATH,
+                ".//descendant::*[@data-test='text-company-name']",
+            ).text
+        except SE.NoSuchElementException:
+            logging.warning("offer does not provide company name")
+
+        try:
+            self._offer_dict["job_level"] = offer_details_div.find_element(
+                By.XPATH,
+                ".//descendant::li[@data-test='offer-additional-info-0']",
+            ).get_attribute("innerText")
+            # ).text
+            # the text property isn't working as the text has some
+            # pseudoselectors eg:
+            # <li class="mobile-hidden tiles_iwlrcdk" data-test="offer-additional-info-0">
+            # Specjalista (Mid / Regular)
+            # ::after
+            # </li>
+        except SE.NoSuchElementException:
+            logging.warning("offer does not provide job level information")
+
+        try:
+            self._offer_dict["contract_type"] = offer_details_div.find_element(
+                By.XPATH,
+                ".//descendant::li[@data-test='offer-additional-info-1']",
+            ).get_attribute("innerText")
+        except SE.NoSuchElementException:
+            logging.warning("offer does not provide contract type information")
+
+        # TODO: this requires selecting only IT offers on the main page
+        #      as generic offers do not contain technology tags
+        # try:
+        #     tech_tags_elements = technology_tags_div.find_elements(
+        #         By.XPATH,
+        #         ".//descendant::span[@data-test='technologies-item']",
+        #     )
+        #     for tag in tech_tags_elements:
+        #         self._offer_dict["technology_tags"].append(tag.text)
+        # except SE.NoSuchElementException:
+        #     logging.warning("offer does not provide technology tags")
+        #
+        # finalny the timestamp
+        self._offer_dict["webscrap_timestamp"] = time.time()
+
+    @property
+    def offer_id(self) -> int:
+        return self._offer_dict["offer_id"]
+
+    @property
+    def offer_link(self) -> str:
+        return self._offer_dict["offer_link"]
+
+    @property
+    def offer_title(self) -> str:
+        return self._offer_dict["offer_title"]
+
+    @property
+    def salary(self) -> str:
+        return self._offer_dict["salary"]
+
+    @property
+    def company_name(self) -> str:
+        return self._offer_dict["company_name"]
+
+    @property
+    def job_level(self) -> str:
+        return self._offer_dict["job_level"]
+
+    @property
+    def contract_type(self) -> str:
+        return self._offer_dict["contract_type"]
+
+    @property
+    def technology_tags(self) -> list[str]:
+        return self._offer_dict["technology_tags"]
+
+    @property
+    def webscrap_timestamp(self) -> float:
+        return self._offer_dict["webscrap_timestamp"]
+
+    def to_json(self):
+        return json.dumps(self._offer_dict)
+
+
 class ResultsPage(BaseNavigation):
     """docstring for ResultsPage."""
 
@@ -539,11 +707,7 @@ class ResultsPage(BaseNavigation):
         all_child_divs = offers_section.find_elements(By.XPATH, "./div")
         logging.warning(f"len(all_child_divs): {len(all_child_divs)}")
         for child_div in all_child_divs:
-            # TODO: Create Offer objects here based on the
-            #       child_div(s) found above.
-            #       Add those to the list doing smth like this:
-            #       sp_offers.append(Offer(child_div))
-            pass
+            sp_offers.append(Offer(child_div))
         return sp_offers
 
     def goto_subpage(self, n: int) -> None:
