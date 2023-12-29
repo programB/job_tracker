@@ -513,24 +513,46 @@ class Advertisement:
             "technology_tags": [],
             "webscrap_timestamp": 0.0,
         }
+        self.is_valid_offer = False
+        self.is_multiple_location_offer = False
         self._build_dict()
 
     def _build_dict(self):
         try:
             default_offer_div = self.root_element.find_element(
                 By.XPATH,
-                "./div[@data-test='default-offer' and @data-test-offerid]",
+                "./div[@data-test='default-offer' and @data-test-offerid and @data-test-location]",
             )
             self._offer_dict["offer_id"] = default_offer_div.get_attribute("data-test-offerid")
         except SE.NoSuchElementException as webelement_not_found:
+            # There are commercial ads among genuine offers
+            # that should be ignored
             logging.error(f"no valid offer found in the div {self.root_element}")
-            raise webelement_not_found
+            self.is_valid_offer = False
+            return
+
+        try:
+            match default_offer_div.get_attribute("data-test-location"):
+                case "single":
+                    self.is_multiple_location_offer = False
+                case "multiple":
+                    self.is_multiple_location_offer = True
+                case _:
+                    raise RuntimeError
+        except RuntimeError:
+            logging.warning("unknown offer type (neither single nor multiple)")
 
         try:
             link = default_offer_div.find_element(By.XPATH, "./div/a").get_attribute("href")
             self._offer_dict["offer_link"] = link
         except SE.NoSuchElementException:
-            logging.warning(f"no valid offer found in the div {self.root_element}")
+            # Some job offers advertise the same position in multiple
+            # physical locations to choose from.
+            # Multiple links are exposed by the JavaScript creating a
+            # new tag on user click event.
+            # In such a case it's OK not to store the link at all
+            # as its a non essential piece of information (offer id is)
+            logging.warning("offer does not provide a link")
 
         try:
             info_div_tags = default_offer_div.find_elements(By.XPATH, "./div[1]/div[1]/div")
@@ -559,17 +581,30 @@ class Advertisement:
             else:
                 raise SE.NoSuchElementException
         except SE.NoSuchElementException as webelement_not_found:
+            # This means there is some problems with parsing,
+            # this tags should exist even for commercial ads.
+            # We should give up here
             logging.error("offer details not found (missing tags)")
             raise webelement_not_found
 
         try:
             # logging.warning(f"offer_details_div: {offer_details_div}")
-            self._offer_dict["offer_title"] = offer_details_div.find_element(
+            # self._offer_dict["offer_title"] = offer_details_div.find_element(
+            if self.is_multiple_location_offer:
+                search_xpath = ".//descendant::h2[@data-test='offer-title']"
+            else:
+                # search_xpath = ".//h2[@data-test='offer-title']/a"
+                search_xpath = ".//descendant::h2[@data-test='offer-title']/a"
+            self._offer_dict["offer_title"] = default_offer_div.find_element(
                 By.XPATH,
-                ".//descendant::h2[@data-test='offer-title']/a",
+                search_xpath,
             ).text
-        except SE.NoSuchElementException:
+        except SE.NoSuchElementException as webelement_not_found:
+            # Everything should have a title!
+            # We should give up here
+            logging.warning(f"_offer_dict: {self._offer_dict}")
             logging.warning("offer does not have a title")
+            raise webelement_not_found
 
         try:
             self._offer_dict["salary"] = offer_details_div.find_element(
@@ -577,6 +612,7 @@ class Advertisement:
                 ".//descendant::span[@data-test='offer-salary']",
             ).text
         except SE.NoSuchElementException:
+            # Some genuine offers do not provide salary information, it's OK.
             self._offer_dict["salary"] = "not specified"
             logging.warning("offer does not provide salary information")
 
@@ -586,7 +622,11 @@ class Advertisement:
                 ".//descendant::*[@data-test='text-company-name']",
             ).text
         except SE.NoSuchElementException:
+            # If there is no company name that is probably an ad
+            # that should be skipped
             logging.warning("offer does not provide company name")
+            self.is_valid_offer = False
+            return
 
         try:
             self._offer_dict["job_level"] = offer_details_div.find_element(
@@ -601,6 +641,7 @@ class Advertisement:
             # ::after
             # </li>
         except SE.NoSuchElementException:
+            # Unusual but acceptable
             logging.warning("offer does not provide job level information")
 
         try:
@@ -609,6 +650,7 @@ class Advertisement:
                 ".//descendant::li[@data-test='offer-additional-info-1']",
             ).get_attribute("innerText")
         except SE.NoSuchElementException:
+            # Unusual but acceptable
             logging.warning("offer does not provide contract type information")
 
         # TODO: this requires selecting only IT offers on the main page
@@ -625,6 +667,8 @@ class Advertisement:
         #
         # finalny the timestamp
         self._offer_dict["webscrap_timestamp"] = time.time()
+        # if the code reaches this point it means this is a valid job offer
+        self.is_valid_offer = True
 
     @property
     def offer_id(self) -> int:
@@ -707,7 +751,9 @@ class ResultsPage(BaseNavigation):
         all_child_divs = offers_section.find_elements(By.XPATH, "./div")
         logging.warning(f"len(all_child_divs): {len(all_child_divs)}")
         for child_div in all_child_divs:
-            sp_offers.append(Offer(child_div))
+            ad = Advertisement(child_div)
+            if ad.is_valid_offer:
+                sp_offers.append(ad)
         return sp_offers
 
     def goto_subpage(self, n: int) -> None:
