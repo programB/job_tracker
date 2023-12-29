@@ -130,7 +130,7 @@ def test_should_enter_text_into_filed(nav_window):
     try:
         # It seems 4th button in the cookie consent modal window is always
         # the 'decline all' button
-        btn = nav_window.find((By.XPATH, "/descendant::button[4]"), highlight=False)
+        btn = nav_window.find((By.XPATH, "/descendant::button[4]"))
         btn.click()
         # time.sleep(2)
     except SE.NoSuchElementException as e:
@@ -152,7 +152,8 @@ def test_should_enter_text_into_filed(nav_window):
 def test_should_fail_to_enter_text_into_element_not_accepting_text_input(nav_window):
     with pytest.raises(SE.ElementNotInteractableException):
         nav_window.visit("https://www.google.com")
-        non_text_filed = nav_window.find((By.XPATH, "//div[@id='uMousc']"), highlight=True)
+        nav_window.set_visual_mode(True)
+        non_text_filed = nav_window.find((By.XPATH, "//div[@id='uMousc']"))
 
         text_to_enter = "Who framed Roger Rabbit"
         nav_window.enter_text(non_text_filed, text_to_enter)
@@ -195,3 +196,49 @@ def test_should_modify_default_timeout(
     after = datetime.datetime.now()
 
     assert (after - before).seconds >= new_timeout
+
+
+def test_should_force_highlighting_of_found_elements(nav_window):
+    # should turn highlight to True for all calls of the find method
+    nav_window.visit("http://pracuj.pl")
+    nav_window.set_visual_mode(True)
+    el1 = nav_window.find(
+        (
+            By.XPATH,
+            "//div[@data-test='modal-cookie-bottom-bar']",
+        ),
+    )
+    el2 = nav_window.find(
+        (
+            By.XPATH,
+            "//div[@data-test='modal-cookie-bottom-bar']//descendant::button",
+        ),
+    )
+    el1_style = el1.get_attribute("style")
+    el2_style = el2.get_attribute("style")
+    assert "background-color: " in el1_style and "background-color: " in el2_style
+
+
+def test_should_be_able_to_highlight_elements_if_visual_mode_is_off(nav_window):
+    nav_window.visit("http://pracuj.pl")
+
+    nav_window.set_visual_mode(False)
+    color_to_apply = "magenta"
+
+    el1 = nav_window.find(
+        (
+            By.XPATH,
+            "//div[@data-test='modal-cookie-bottom-bar']",
+        ),
+    )
+    el2 = nav_window.find(
+        (
+            By.XPATH,
+            "//div[@data-test='modal-cookie-bottom-bar']//descendant::button",
+        ),
+        highlight_color=color_to_apply,
+    )
+    el1_style = el1.get_attribute("style")
+    el2_style = el2.get_attribute("style")
+    time.sleep(1)
+    assert (el1_style == "") and (color_to_apply in el2_style)
