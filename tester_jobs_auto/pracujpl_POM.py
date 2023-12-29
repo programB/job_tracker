@@ -499,7 +499,7 @@ class PracujplMainPage(BaseNavigation):
             btn_accept_all_cookies.click()
 
 
-class Offer:
+class Advertisement:
     def __init__(self, root_element: WebElement) -> None:
         self.root_element = root_element
         self._offer_dict = {
@@ -699,7 +699,7 @@ class ResultsPage(BaseNavigation):
         pass
 
     @property
-    def subpage_offers(self) -> list[Offer]:
+    def subpage_offers(self) -> list[Advertisement]:
         sp_offers = []
         offers_section = self.find(
             (By.XPATH, "//div[@data-test='section-offers']"),
