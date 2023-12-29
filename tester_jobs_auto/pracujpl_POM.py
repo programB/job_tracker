@@ -555,41 +555,6 @@ class Advertisement:
             logging.warning("offer does not provide a link")
 
         try:
-            info_div_tags = default_offer_div.find_elements(By.XPATH, "./div[1]/div[1]/div")
-            # logging.warning(f"len(info_div_tags): {len(info_div_tags)}")
-            # for tag in info_div_tags:
-            #     logging.warning(f"tag.get_attribute('class'): {tag.get_attribute('class')}")
-            if len(info_div_tags) == 2:
-                offer_details_div = default_offer_div.find_element(
-                    By.XPATH,
-                    # "./div/div/[last()][name()='div']/[1][name()='div']",
-                    "./div[1]/div[1]/div[2]",
-                )
-            elif len(info_div_tags) == 3:
-                # FIXME: These 2 are WRONG ! should be div[1]/div[1]/etc.
-                #        They work now accidentally
-                offer_details_div = default_offer_div.find_element(
-                    By.XPATH,
-                    # "./div/div/[last()][name()='div']/[1][name()='div']",
-                    "./div/div/div[last()]/div[1]",
-                )
-                technology_tags_div = default_offer_div.find_element(
-                    By.XPATH,
-                    # "./div/div/[last()][name()='div']/[last()][name()='div']",
-                    "./div/div/div[last()]/div[last()]",
-                )
-            else:
-                raise SE.NoSuchElementException
-        except SE.NoSuchElementException as webelement_not_found:
-            # This means there is some problems with parsing,
-            # this tags should exist even for commercial ads.
-            # We should give up here
-            logging.error("offer details not found (missing tags)")
-            raise webelement_not_found
-
-        try:
-            # logging.warning(f"offer_details_div: {offer_details_div}")
-            # self._offer_dict["title"] = offer_details_div.find_element(
             if self.is_multiple_location_offer:
                 search_xpath = ".//descendant::h2[@data-test='offer-title']"
             else:
@@ -607,7 +572,7 @@ class Advertisement:
             raise webelement_not_found
 
         try:
-            self._offer_dict["salary"] = offer_details_div.find_element(
+            self._offer_dict["salary"] = default_offer_div.find_element(
                 By.XPATH,
                 ".//descendant::span[@data-test='offer-salary']",
             ).text
@@ -617,7 +582,7 @@ class Advertisement:
             logging.warning("offer does not provide salary information")
 
         try:
-            self._offer_dict["company_name"] = offer_details_div.find_element(
+            self._offer_dict["company_name"] = default_offer_div.find_element(
                 By.XPATH,
                 ".//descendant::*[@data-test='text-company-name']",
             ).text
@@ -629,7 +594,7 @@ class Advertisement:
             return
 
         try:
-            self._offer_dict["job_level"] = offer_details_div.find_element(
+            self._offer_dict["job_level"] = default_offer_div.find_element(
                 By.XPATH,
                 ".//descendant::li[@data-test='offer-additional-info-0']",
             ).get_attribute("innerText")
@@ -645,7 +610,7 @@ class Advertisement:
             logging.warning("offer does not provide job level information")
 
         try:
-            self._offer_dict["contract_type"] = offer_details_div.find_element(
+            self._offer_dict["contract_type"] = default_offer_div.find_element(
                 By.XPATH,
                 ".//descendant::li[@data-test='offer-additional-info-1']",
             ).get_attribute("innerText")
