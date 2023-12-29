@@ -41,6 +41,16 @@ def test_should_create_ResultPage_object(selenium_driver):
 
 
 @pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
+def test_should_check_tot_number_of_subpages(standard_search):
+    results_page = ResultsPage(standard_search.driver)
+
+    # The search criteria in standard_search fixture are general enough
+    # for the returned number of offers to fill more then 1 subpage,
+    # hence assuming the subpage 2 always exists should be safe.
+    assert results_page.tot_no_of_subpages >= 2
+
+
+@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_navigation_to_desired_subpage(standard_search):
     results_page = ResultsPage(standard_search.driver)
 
@@ -76,3 +86,9 @@ def test_should_check_offers_have_not_empty_essential_params(standard_search):
         assert offer.company_name != ""
         assert offer.job_level != ""
         assert offer.contract_type != ""
+
+
+@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
+def test_should_collect_offers_from_all_subpages(standard_search):
+    results_page = ResultsPage(standard_search.driver)
+    assert len(results_page.all_offers) != 0

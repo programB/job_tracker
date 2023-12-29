@@ -742,3 +742,12 @@ class ResultsPage(BaseNavigation):
             # page_field.send_keys(Keys.ENTER)
         else:
             raise RuntimeError(f"could not switch to subpage {n}, page selector not found")
+
+    @property
+    def all_offers(self) -> list[Advertisement]:
+        offers = []
+        for page in range(1, self.tot_no_of_subpages + 1):
+            if page != self.current_subpage()[1]:
+                self.goto_subpage(n=page)
+            offers.extend(self.subpage_offers)
+        return offers
