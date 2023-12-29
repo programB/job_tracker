@@ -83,7 +83,7 @@ def test_should_check_extended_search_options_are_available(selenium_driver):
         main_page.job_level.menu.is_displayed()
         and main_page.contract_type.menu.is_displayed()
         and main_page.employment_type.menu.is_displayed()
-        and main_page.job_location.menu.is_displayed()
+        and main_page.job_mode.menu.is_displayed()
     )
 
 
@@ -159,6 +159,6 @@ def test_should_check_job_locations_can_be_selected(selenium_driver):
         "mobile",
     ]
     choice = locations[1]
-    main_page.job_location.select([choice])
+    main_page.job_mode.select([choice])
 
-    assert main_page.job_location.is_selected(choice)
+    assert main_page.job_mode.is_selected(choice)

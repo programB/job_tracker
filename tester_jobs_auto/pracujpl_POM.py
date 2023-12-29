@@ -354,7 +354,7 @@ class PracujplMainPage(BaseNavigation):
                 "full_time": "//descendant::div[@data-test='select-option-0']",
             },
         )
-        self.job_location = OptionsMenu(
+        self.job_mode = OptionsMenu(
             self.driver,
             main_locator=(By.XPATH, "//div[@data-test='dropdown-element-wm']"),
             btn_rel_locator="//descendant::button[1]",
