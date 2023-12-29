@@ -287,6 +287,7 @@ class OptionsMenu:
 class PracujplMainPage(BaseNavigation):
     def __init__(self, driver, visual_mode=False, reject_cookies=False) -> None:
         super().__init__(driver, visual_mode)
+        self.reject_cookies = reject_cookies
         self._overlay_cookie_consent = [
             None,
             (
@@ -394,8 +395,9 @@ class PracujplMainPage(BaseNavigation):
             ),
         ]
 
+    def gohome(self):
         self.visit("https://www.pracuj.pl")
-        if reject_cookies:
+        if self.reject_cookies:
             self._reject_non_essential_cookies()
         else:
             self._accept_all_cookies()
