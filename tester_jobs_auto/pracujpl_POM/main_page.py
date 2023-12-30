@@ -47,6 +47,8 @@ class OptionsMenu:
                 finally:
                     # fold menu
                     self.menu.click()
+            else:
+                logging.warning(f"unable to select unknown option: {option}")
 
     def is_selected(self, option: str) -> bool:
         if option in self._option_locators.keys():
