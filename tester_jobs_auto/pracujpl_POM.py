@@ -500,7 +500,23 @@ class PracujplMainPage(BaseNavigation):
 
 
 class Advertisement:
+    """Models a single advertisement on the results subpage"""
+
     def __init__(self, root_element: WebElement) -> None:
+        """
+
+        Parameters
+        ----------
+        root_element : WebElement
+            a tag from which to start looking for information
+        is_valid_offer : bool
+            True for ads that are genuine job offers
+            False for sponsored ads or general ads
+        is_multiple_location_offer : bool
+            True if the same job opening is available in different
+            physical locations for the candidate to choose from
+            False otherwise
+        """
         self.root_element = root_element
         self._offer_dict = {
             "id": 0,
@@ -518,6 +534,7 @@ class Advertisement:
         self._build_dict()
 
     def _build_dict(self):
+        """Scraps the information under root_element, fils _offer_dict"""
         try:
             default_offer_div = self.root_element.find_element(
                 By.XPATH,
@@ -637,42 +654,92 @@ class Advertisement:
 
     @property
     def id(self) -> int:
+        """Unique offer id
+
+        0 means invalid offer
+        """
         return self._offer_dict["id"]
 
     @property
     def link(self) -> str:
+        """URL to the offer details
+
+        empty string if URL not provided
+        """
         return self._offer_dict["link"]
 
     @property
     def title(self) -> str:
+        """Offer's title"""
         return self._offer_dict["title"]
 
     @property
     def salary(self) -> str:
+        """Offered salary
+
+        empty string if salary not specified
+        """
         return self._offer_dict["salary"]
 
     @property
     def company_name(self) -> str:
+        """Name of the company offering the job"""
+
         return self._offer_dict["company_name"]
 
     @property
     def job_level(self) -> str:
+        """Job level for the offer
+
+        Can be a comma separated list.
+        Job levels names usually come from
+        a list predefined by pracuj.pl
+        (however this is not guaranteed to always be the case):
+        - trainee
+        - assistant
+        - junior
+        - mid_regular
+        - senior
+        - expert
+        - manager
+        - director
+        - president
+        - laborer
+        """
         return self._offer_dict["job_level"]
 
     @property
     def contract_type(self) -> str:
+        """Contract type for the offer
+
+        Contract type names usually come from
+        a list predefined by pracuj.pl
+        (however this is not guaranteed to always be the case):
+        - o_prace
+        - o_dzielo
+        - zlecenie
+        - B2B
+        - o_zastepstwo
+        - agencyjna
+        - o_prace_tymczasowa
+        - praktyki
+        """
         return self._offer_dict["contract_type"]
 
-    @property
-    def technology_tags(self) -> list[str]:
-        return self._offer_dict["technology_tags"]
+    # @property
+    # def technology_tags(self) -> list[str]:
+    #     return self._offer_dict["technology_tags"]
 
     @property
     def webscrap_timestamp(self) -> float:
+        """Time when the offer was scraped from the webpage
+
+        timestamp in seconds since the Unix epoch
+        """
         return self._offer_dict["webscrap_timestamp"]
 
-    def to_json(self):
-        return json.dumps(self._offer_dict)
+    # def to_json(self):
+    #     return json.dumps(self._offer_dict)
 
 
 class ResultsPage(BaseNavigation):
