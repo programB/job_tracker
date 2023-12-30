@@ -702,6 +702,7 @@ class ResultsPage(BaseNavigation):
     goto_subpage
         switch to a subpage
     """
+
     def __init__(self, driver, visual_mode=False):
         """
         Parameters
@@ -804,29 +805,35 @@ class ResultsPage(BaseNavigation):
 
         Raises RuntimeError if element controlling pages switching
         cannot be found.
+        Raises ValueError on attempt to switch to a subpage outside the
+        range given by tot_no_of_subpages
 
         Parameters
         ----------
         n : int
             desired subpage to go to
         """
-        page_field, _ = self.get_current_subpage()
+        page_field, page_no = self.get_current_subpage()
+        if page_field is None:
+            raise RuntimeError(f"could not switch to subpage {n}, page selector not found")
+
+        tot_no_of_subpages = self.tot_no_of_subpages
+        if (page_no == 0) or (page_no > tot_no_of_subpages):
+            raise ValueError(f"failed to switch to not existing subpage no. {n}, there are only {tot_no_of_subpages} subpages")
+
         actions = ActionChains(self.driver)
         mod_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
-        if page_field is not None:
-            # Clear the field by ctrl+a and Delete,
-            #   (page_field.clear() doesn't work and page_field always gets
-            #    automatically set to '1' - probably page's js is doing this)
-            # then enter and submit the desired subpage number
-            # fmt: off
-            actions.key_down(mod_key).send_keys_to_element(page_field, "a") \
-                .send_keys_to_element(page_field, Keys.DELETE).key_up(mod_key)\
-                .send_keys_to_element(page_field, str(n)) \
-                .send_keys_to_element(page_field, Keys.ENTER) \
-                .perform()
-            # fmt: on
-            # page_field.clear()
-            # page_field.send_keys(n)
-            # page_field.send_keys(Keys.ENTER)
-        else:
-            raise RuntimeError(f"could not switch to subpage {n}, page selector not found")
+        # Clear the field by ctrl+a and Delete,
+        #   (page_field.clear() doesn't work and page_field always gets
+        #    automatically set to '1' - probably page's js is doing this)
+        # then enter and submit the desired subpage number
+        # fmt: off
+        actions.key_down(mod_key).send_keys_to_element(page_field, "a") \
+            .send_keys_to_element(page_field, Keys.DELETE).key_up(mod_key)\
+            .send_keys_to_element(page_field, str(n)) \
+            .send_keys_to_element(page_field, Keys.ENTER) \
+            .perform()
+        # fmt: on
+        # page_field.clear()
+        # page_field.send_keys(n)
+        # page_field.send_keys(Keys.ENTER)
