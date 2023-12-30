@@ -750,4 +750,11 @@ class ResultsPage(BaseNavigation):
             if page != self.current_subpage()[1]:
                 self.goto_subpage(n=page)
             offers.extend(self.subpage_offers)
-        return offers
+        # Some offers are repeated on consecutive subpages
+        # de-duplicate the list before returning
+        unique_offers = []
+        for offer in offers:
+            if all([offer.id != u_offer.id for u_offer in unique_offers]):
+                unique_offers.append(offer)
+        del offers
+        return unique_offers
