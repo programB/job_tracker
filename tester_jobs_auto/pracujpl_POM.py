@@ -676,22 +676,52 @@ class Advertisement:
 
 
 class ResultsPage(BaseNavigation):
-    """docstring for ResultsPage."""
+    """Class modeling the page with the search results
 
+    Attributes
+    ----------
+    driver : WebDriver
+        selenium webdriver object
+    visual_mode: bool
+        decides whether all newly found elements will get highlighted
+        for human inspection
+
+    Properties
+    ----------
+    tot_no_of_subpages: int
+        Total number of subpages as reported by the webpage
+    subpage_offers: list[Advertisement]
+        List of valid job offers from the current subpage
+    all_offers: list[Advertisement]
+        List of unique offers from all subpages
+
+    Methods
+    -------
+    get_current_subpage
+        current subpage number and controlling element
+    goto_subpage
+        switch to a subpage
+    """
     def __init__(self, driver, visual_mode=False):
+        """
+        Parameters
+        ----------
+        driver : WebDriver
+            selenium webdriver object
+        visual_mode: bool
+            decides whether all newly found elements will get highlighted
+            for human inspection
+        """
         super(ResultsPage, self).__init__(driver, visual_mode)
-
-    def current_subpage(self) -> tuple[WebElement | None, int]:
-        try:
-            csb_element = self.find((By.XPATH, "//input[@name='top-pagination']"))
-        except SE.NoSuchElementException:
-            logging.warning("Current subpage number couldn't be established")
-            return (None, 0)
-        else:
-            return (csb_element, int(csb_element.get_attribute("value")))
 
     @property
     def tot_no_of_subpages(self) -> int:
+        """Total number of subpages as reported by the webpage
+
+        Returns
+        -------
+        int
+        """
         try:
             tot_no_element = self.find(
                 (By.XPATH, "//span[@data-test='top-pagination-max-page-number']"),
@@ -703,12 +733,16 @@ class ResultsPage(BaseNavigation):
             return int(tot_no_element.text)
 
     @property
-    def total_offer_count(self):
-        # TODO: Implement
-        pass
-
-    @property
     def subpage_offers(self) -> list[Advertisement]:
+        """Produces a list of valid job offers from the current subpage
+
+        Offers will be a valid job offers (not other ads)
+        Offers ARE NOT guaranteed to be unique.
+
+        Returns
+        -------
+        list[Advertisement]
+        """
         sp_offers = []
         offers_section = self.find(
             (By.XPATH, "//div[@data-test='section-offers']"),
@@ -721,8 +755,62 @@ class ResultsPage(BaseNavigation):
                 sp_offers.append(ad)
         return sp_offers
 
+    @property
+    def all_offers(self) -> list[Advertisement]:
+        """Produces a list of unique offers from all subpages
+
+        Returns
+        -------
+        list[Advertisement]
+        """
+        offers = []
+        for page in range(1, self.tot_no_of_subpages + 1):
+            if page != self.get_current_subpage()[1]:
+                self.goto_subpage(n=page)
+            offers.extend(self.subpage_offers)
+        # Some offers are repeated on consecutive subpages
+        # de-duplicate the list before returning
+        unique_offers = []
+        for offer in offers:
+            if all([offer.id != u_offer.id for u_offer in unique_offers]):
+                unique_offers.append(offer)
+        del offers
+        return unique_offers
+
+    def get_current_subpage(self) -> tuple[WebElement | None, int]:
+        """Current subpage as found in the input field on the website
+
+        If the input field is found on the webpage associated WebElement,
+        is returned as well as the numerical value of the subpage itself.
+
+        Returns
+        -------
+        tuple[WebElement | None, int]
+            if the input field is found its WebElement is returned and its
+            value attribute (subpage number)
+            if not found (None,0) is returned.
+            (valid subpage numbering always starts from 1)
+        """
+        try:
+            csb_element = self.find((By.XPATH, "//input[@name='top-pagination']"))
+        except SE.NoSuchElementException:
+            logging.warning("Current subpage number couldn't be established")
+            return (None, 0)
+        else:
+            return (csb_element, int(csb_element.get_attribute("value")))
+
     def goto_subpage(self, n: int) -> None:
-        page_field, _ = self.current_subpage()
+        """Switch to a subpage
+
+        Raises RuntimeError if element controlling pages switching
+        cannot be found.
+
+        Parameters
+        ----------
+        n : int
+            desired subpage to go to
+        """
+        page_field, _ = self.get_current_subpage()
         actions = ActionChains(self.driver)
         mod_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
         if page_field is not None:
@@ -742,19 +830,3 @@ class ResultsPage(BaseNavigation):
             # page_field.send_keys(Keys.ENTER)
         else:
             raise RuntimeError(f"could not switch to subpage {n}, page selector not found")
-
-    @property
-    def all_offers(self) -> list[Advertisement]:
-        offers = []
-        for page in range(1, self.tot_no_of_subpages + 1):
-            if page != self.current_subpage()[1]:
-                self.goto_subpage(n=page)
-            offers.extend(self.subpage_offers)
-        # Some offers are repeated on consecutive subpages
-        # de-duplicate the list before returning
-        unique_offers = []
-        for offer in offers:
-            if all([offer.id != u_offer.id for u_offer in unique_offers]):
-                unique_offers.append(offer)
-        del offers
-        return unique_offers

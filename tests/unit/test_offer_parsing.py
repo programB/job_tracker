@@ -59,7 +59,7 @@ def test_should_check_navigation_to_desired_subpage(standard_search):
     # hence assuming the subpage 2 always exists should be safe.
     desired_subpage = 2
     results_page.goto_subpage(desired_subpage)
-    _, cur_subpage_number = results_page.current_subpage()
+    _, cur_subpage_number = results_page.get_current_subpage()
 
     assert cur_subpage_number == desired_subpage
 
