@@ -90,20 +90,17 @@ class PracujplMainPage(BaseNavigation):
         ]
         self._search_bar_box = [
             None,
-            (By.XPATH, "//div[@data-test='section-search-bar']"),
+            (
+                By.XPATH,
+                "//div[@data-test='section-search-bar' or @data-test='section-search-bar-it']",
+            ),
         ]
 
-        # Working code
         self._btn_search_submit = [
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-with-filters']/button",
-                # ".//descendant::button[6]",  # works
-                # ".//descendant::button[last()]",  # doesn't work. selects [1]
-                # ".//descendant::button::[last()]",  # :( invalid xpath expression
-                # ".//descendant::button:last-child",  # :( unresolvable namespaces
-                # ".//descendant::button:last-of-type",  # :( unresolvable namespaces
+                ".//descendant::div[@data-test='section-search-with-filters' or @data-test='section-search-with-filters-it']/button",
             ),
         ]
         self.job_level = OptionsMenu(
@@ -163,30 +160,73 @@ class PracujplMainPage(BaseNavigation):
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][1]",
+                ".//descendant::label[contains(text(), 'Stanowisko, firma, słowo kluczowe') or contains(text(), 'Посада, компанія, ключове слово')]/preceding-sibling::input[@data-test='input-field']",
             ),
         ]
         self._category_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][2]",
+                ".//descendant::label[contains(text(), 'Kategoria') or contains(text(), 'Категорія')]/preceding-sibling::input[@data-test='input-field']",
             ),
         ]
         self._location_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][3]",
+                ".//descendant::label[contains(text(), 'Lokalizacja') or contains(text(), 'Розташування')]/preceding-sibling::input[@data-test='input-field']",
             ),
         ]
         self._distance_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][4]",
+                ".//descendant::label[contains(text(), 'Odległość') or contains(text(), 'Відстань')]/preceding-sibling::input[@data-test='input-field']",
             ),
         ]
+
+    @property
+    def _search_mode_selector(self):
+        try:
+            return self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='section-subservices']",
+                )
+            )
+        except SE.NoSuchElementException as e:
+            logging.error("couldn't find search mode selector")
+            raise e
+
+    @property
+    def search_mode(self):
+        selector = self.find(
+            (By.XPATH, ".//descendant::span[contains(@class, 'selected')]"),
+            root_element=self._search_mode_selector,
+        )
+        match selector.get_attribute("data-test"):
+            case "tab-item-default":
+                return "default"
+            case "tab-item-it":
+                return "it"
+            case _:
+                return None
+
+    @search_mode.setter
+    def search_mode(self, mode: str):
+        match mode:
+            case "default":
+                xpath = ".//descendant::span[@data-test='tab-item-default']"
+            case "it":
+                xpath = ".//descendant::span[@data-test='tab-item-it']"
+            case _:
+                logging.error(f"unknown search mode {mode}, valid: 'default', 'it'")
+                return
+        selector = self.find(
+            (By.XPATH, xpath),
+            root_element=self._search_mode_selector,
+        )
+        selector.click()
 
     def gohome(self):
         self.visit("https://www.pracuj.pl")
