@@ -3,6 +3,7 @@ from typing import Tuple
 
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
 from .base_navigation import BaseNavigation
@@ -227,6 +228,16 @@ class PracujplMainPage(BaseNavigation):
             root_element=self._search_mode_selector,
         )
         selector.click()
+
+    @property
+    def search_term(self) -> str:
+        value = self.search_field.get_attribute("value")
+        return "" if value is None else value
+
+    @search_term.setter
+    def search_term(self, value: str):
+        self.search_field.send_keys(value)
+        self.search_field.send_keys(Keys.ENTER)
 
     def gohome(self):
         self.visit("https://www.pracuj.pl")
