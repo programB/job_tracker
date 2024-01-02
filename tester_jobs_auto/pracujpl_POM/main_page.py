@@ -239,6 +239,16 @@ class PracujplMainPage(BaseNavigation):
         self.search_field.send_keys(value)
         self.search_field.send_keys(Keys.ENTER)
 
+    @property
+    def location(self) -> str:
+        value = self.location_field.get_attribute("value")
+        return "" if value is None else value
+
+    @location.setter
+    def location(self, value: str):
+        self.location_field.send_keys(value)
+        self.location_field.send_keys(Keys.ENTER)
+
     def gohome(self):
         self.visit("https://www.pracuj.pl")
         if self.reject_cookies:
