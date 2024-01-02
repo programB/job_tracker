@@ -136,7 +136,7 @@ class PracujplMainPage(BaseNavigation):
                 "praktyki": "//descendant::div[@data-test='select-option-7']",
             },
         )
-        self.employment_type = OptionsMenu(
+        self.employment_type_menu = OptionsMenu(
             self.driver,
             main_locator=(By.XPATH, "//div[@data-test='dropdown-element-ws']"),
             btn_rel_locator="//descendant::button[1]",
@@ -248,6 +248,18 @@ class PracujplMainPage(BaseNavigation):
     def location(self, value: str):
         self.location_field.send_keys(value)
         self.location_field.send_keys(Keys.ENTER)
+
+    @property
+    def employment_type(self) -> list[str]:
+        selected = []
+        for emp_type in self.employment_type_menu._option_locators.keys():
+            if self.employment_type_menu.is_selected(emp_type):
+                selected.append(emp_type)
+        return selected
+
+    @employment_type.setter
+    def employment_type(self, choices: list[str]):
+        self.employment_type_menu.select(choices)
 
     def gohome(self):
         self.visit("https://www.pracuj.pl")
