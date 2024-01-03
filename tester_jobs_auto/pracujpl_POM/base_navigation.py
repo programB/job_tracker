@@ -29,10 +29,6 @@ class BaseNavigation:
         tries to find a given element on the webpage, may highlight it
     find_all(element, root_element, highlight_color=None)
         tries to find all elements, that match criteria, in the webpage
-    click(element)
-        causes the browsers to click the webpage element
-    enter_text(element, text)
-        causes the browsers to enter the given text into the webpage element
     is_displayed(locator)
        checks whether an element indicated by locator is visible on the webpage
     """
@@ -188,33 +184,6 @@ class BaseNavigation:
             for el_found in elements_found:
                 self._highlight(el_found, color=highlight_color)
         return elements_found
-
-    def click(self, element: WebElement) -> None:
-        """Causes the browsers to left click a webpage element
-
-        Using this on an element that is not clickable has no effect.
-
-        Parameters
-        ----------
-        element : WebElement
-            a *existing* element on the current webpage (should be clickable)
-        """
-        element.click()
-
-    def enter_text(self, element: WebElement, text: str) -> None:
-        """Causes the browsers to enter the given text into the webpage element
-
-        Raises ElementNotInteractableException error on attempt to enter
-        a text into an element that does not support it (eg. not a text field)
-
-        Parameters
-        ----------
-        element : WebElement
-            an existing element on the current webpage that accepts text input
-        text : str
-            string to be entered into the element
-        """
-        element.send_keys(text)
 
     def is_displayed(self, locator: Tuple[str, str]) -> bool:
         """Checks if element indicated by locator is visible on the webpage
