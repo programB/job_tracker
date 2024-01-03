@@ -290,6 +290,7 @@ class PracujplMainPage(BaseNavigation):
 
     @_distance.setter
     def _distance(self, distance: Distance):
+        self.driver.maximize_window()
         option_rel_locators = {
             Distance.ZERO_KM: ".//li[@data-test='select-option-0']",
             Distance.TEN_KM: ".//li[@data-test='select-option-10']",
@@ -330,6 +331,7 @@ class PracujplMainPage(BaseNavigation):
 
     @employment_type.setter
     def employment_type(self, choices: list[str]):
+        self.driver.maximize_window()
         self.employment_type_menu.select(choices)
 
     def gohome(self):
