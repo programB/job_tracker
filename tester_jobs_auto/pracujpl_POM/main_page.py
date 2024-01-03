@@ -1,4 +1,6 @@
 import logging
+import re
+from enum import Enum
 from typing import Tuple
 
 from selenium.common import exceptions as SE
@@ -7,6 +9,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
 from .base_navigation import BaseNavigation
+
+
+class Distance(Enum):
+    """Enum represents finite choice of search radii (around desired location)"""
+
+    ZERO_KM = 0
+    TEN_KM = 10
+    TWENTY_KM = 20
+    THIRTY_KM = 30
+    FIFTY_KM = 50
+    HUNDRED_KM = 100
 
 
 class OptionsMenu:
@@ -178,13 +191,6 @@ class PracujplMainPage(BaseNavigation):
                 ".//descendant::label[contains(text(), 'Lokalizacja') or contains(text(), 'Розташування')]/preceding-sibling::input[@data-test='input-field']",
             ),
         ]
-        self._distance_field = [
-            None,
-            (
-                By.XPATH,
-                ".//descendant::label[contains(text(), 'Odległość') or contains(text(), 'Відстань')]/preceding-sibling::input[@data-test='input-field']",
-            ),
-        ]
 
     @property
     def _search_mode_selector(self):
@@ -250,6 +256,55 @@ class PracujplMainPage(BaseNavigation):
         self.location_field.send_keys(Keys.ENTER)
 
     @property
+    def distance_dropdown(self) -> WebElement:
+        try:
+            dist_dropdown = self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='dropdown-element-rd']",
+                )
+            )
+        except SE.NoSuchElementException as e:
+            logging.error("couldn't find distance dropdown")
+            raise e
+        return dist_dropdown
+
+    @property
+    def distance(self) -> Distance:
+        try:
+            d_filed = self.find(
+                (By.XPATH, ".//descendant::input[@data-test='input-field' and @value]"),
+                root_element=self.distance_dropdown,
+            )
+            str_d_value = d_filed.get_attribute("value")
+        except SE.NoSuchElementException as e:
+            logging.error("couldn't find distance dropdown")
+            raise e
+        # example str_d_value looks like this: "+30 km"
+        m = re.match(r"^\+(?P<dist>[0-9]*)\skm$", str_d_value)
+        for dist in list(Distance):
+            if int(m["dist"]) == dist.value:
+                return dist
+        else:
+            return Distance.ZERO_KM
+
+    @distance.setter
+    def distance(self, distance: Distance):
+        option_rel_locators = {
+            Distance.ZERO_KM: ".//li[@data-test='select-option-0']",
+            Distance.TEN_KM: ".//li[@data-test='select-option-10']",
+            Distance.TWENTY_KM: ".//li[@data-test='select-option-20']",
+            Distance.THIRTY_KM: ".//li[@data-test='select-option-30']",
+            Distance.FIFTY_KM: ".//li[@data-test='select-option-50']",
+            Distance.HUNDRED_KM: ".//li[@data-test='select-option-100']",
+        }
+        self.distance_dropdown.click()
+        self.find(
+            (By.XPATH, option_rel_locators.get(distance)),
+            root_element=self.distance_dropdown,
+        ).click()
+
+    @property
     def employment_type(self) -> list[str]:
         selected = []
         for emp_type in self.employment_type_menu._option_locators.keys():
@@ -313,12 +368,6 @@ class PracujplMainPage(BaseNavigation):
     def location_field(self) -> WebElement:
         return self._get_search_bar_control(
             self._location_field,
-        )
-
-    @property
-    def distance_field(self) -> WebElement:
-        return self._get_search_bar_control(
-            self._distance_field,
         )
 
     def _get_search_bar_control(self, control):
