@@ -246,17 +246,17 @@ class PracujplMainPage(BaseNavigation):
         self.search_field.send_keys(Keys.ENTER)
 
     @property
-    def location(self) -> str:
+    def _location(self) -> str:
         value = self.location_field.get_attribute("value")
         return "" if value is None else value
 
-    @location.setter
-    def location(self, value: str):
+    @_location.setter
+    def _location(self, value: str):
         self.location_field.send_keys(value)
         self.location_field.send_keys(Keys.ENTER)
 
     @property
-    def distance_dropdown(self) -> WebElement:
+    def _distance_dropdown(self) -> WebElement:
         try:
             dist_dropdown = self.find(
                 (
@@ -270,11 +270,11 @@ class PracujplMainPage(BaseNavigation):
         return dist_dropdown
 
     @property
-    def distance(self) -> Distance:
+    def _distance(self) -> Distance:
         try:
             d_filed = self.find(
                 (By.XPATH, ".//descendant::input[@data-test='input-field' and @value]"),
-                root_element=self.distance_dropdown,
+                root_element=self._distance_dropdown,
             )
             str_d_value = d_filed.get_attribute("value")
         except SE.NoSuchElementException as e:
@@ -288,8 +288,8 @@ class PracujplMainPage(BaseNavigation):
         else:
             return Distance.ZERO_KM
 
-    @distance.setter
-    def distance(self, distance: Distance):
+    @_distance.setter
+    def _distance(self, distance: Distance):
         option_rel_locators = {
             Distance.ZERO_KM: ".//li[@data-test='select-option-0']",
             Distance.TEN_KM: ".//li[@data-test='select-option-10']",
@@ -298,11 +298,27 @@ class PracujplMainPage(BaseNavigation):
             Distance.FIFTY_KM: ".//li[@data-test='select-option-50']",
             Distance.HUNDRED_KM: ".//li[@data-test='select-option-100']",
         }
-        self.distance_dropdown.click()
+        self._distance_dropdown.click()
         self.find(
             (By.XPATH, option_rel_locators.get(distance)),
-            root_element=self.distance_dropdown,
+            root_element=self._distance_dropdown,
         ).click()
+
+    @property
+    def location_and_distance(self) -> tuple[str, Distance]:
+        """Location (and radius around it) in which to search for offers
+
+        Returns
+        -------
+        tuple[str, Distance]
+          name of the city, radius around that location
+        """
+        return (self._location, self._distance)
+
+    @location_and_distance.setter
+    def location_and_distance(self, value: tuple[str, Distance]):
+        self._location = value[0]
+        self._distance = value[1]
 
     @property
     def employment_type(self) -> list[str]:
