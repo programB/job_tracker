@@ -364,11 +364,11 @@ class PracujplMainPage(BaseNavigation):
                 raise e
         return self._search_bar_box[0]
 
-    @property
-    def btn_search_submit(self) -> WebElement:
-        return self._get_search_bar_control(
+    def start_searching(self):
+        btn_search_submit = self._get_search_bar_control(
             self._btn_search_submit,
         )
+        btn_search_submit.click()
 
     @property
     def search_field(self) -> WebElement:
