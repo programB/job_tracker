@@ -1,11 +1,25 @@
 import logging
+import re
+from enum import Enum
 from typing import Tuple
 
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 
 from .base_navigation import BaseNavigation
+
+
+class Distance(Enum):
+    """Enum represents finite choice of search radii (around desired location)"""
+
+    ZERO_KM = 0
+    TEN_KM = 10
+    TWENTY_KM = 20
+    THIRTY_KM = 30
+    FIFTY_KM = 50
+    HUNDRED_KM = 100
 
 
 class OptionsMenu:
@@ -47,6 +61,8 @@ class OptionsMenu:
                 finally:
                     # fold menu
                     self.menu.click()
+            else:
+                logging.warning(f"unable to select unknown option: {option}")
 
     def is_selected(self, option: str) -> bool:
         if option in self._option_locators.keys():
@@ -75,33 +91,80 @@ class OptionsMenu:
         self.driver.execute_script(script, element)
 
 
+class CookieChoice(BaseNavigation):
+    def __init__(self, driver, visual_mode=False) -> None:
+        super().__init__(driver, visual_mode)
+
+    @property
+    def _overlay_cookie_consent(self) -> WebElement | None:
+        cookie_overlay = None
+        try:
+            cookie_overlay = self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='modal-cookie-bottom-bar']",
+                ),
+            )
+        except SE.NoSuchElementException:
+            logging.info("cookie consent modal was not found")
+        return cookie_overlay
+
+    def _is_visible(self) -> bool:
+        cookie_overlay = self._overlay_cookie_consent
+        if cookie_overlay is not None:
+            return cookie_overlay.is_displayed()
+        else:
+            return False
+
+    def reject_non_essential_cookies(self):
+        if self._is_visible():
+            btn_customize_cookies = self.find(
+                (
+                    By.XPATH,
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",
+                ),
+            )
+            btn_customize_cookies.click()
+            btn_save_cookie_settings = self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",
+                ),
+            )
+            btn_save_cookie_settings.click()
+
+    def accept_all_cookies(self):
+        if self._is_visible():
+            btn_accept_all_cookies = self.find(
+                (
+                    By.XPATH,
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",
+                ),
+            )
+            btn_accept_all_cookies.click()
+
+
 class PracujplMainPage(BaseNavigation):
     def __init__(self, driver, visual_mode=False, reject_cookies=False) -> None:
         super().__init__(driver, visual_mode)
-        self.reject_cookies = reject_cookies
-        self._overlay_cookie_consent = [
+        self.visit("https://www.pracuj.pl")
+        if reject_cookies:
+            CookieChoice(driver, visual_mode).reject_non_essential_cookies()
+        else:
+            CookieChoice(driver, visual_mode).accept_all_cookies()
+        self._search_bar_box = [
             None,
             (
                 By.XPATH,
-                "//div[@data-test='modal-cookie-bottom-bar']",
+                "//div[@data-test='section-search-bar' or @data-test='section-search-bar-it']",
             ),
         ]
-        self._search_bar_box = [
-            None,
-            (By.XPATH, "//div[@data-test='section-search-bar']"),
-        ]
 
-        # Working code
         self._btn_search_submit = [
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-with-filters']/button",
-                # ".//descendant::button[6]",  # works
-                # ".//descendant::button[last()]",  # doesn't work. selects [1]
-                # ".//descendant::button::[last()]",  # :( invalid xpath expression
-                # ".//descendant::button:last-child",  # :( unresolvable namespaces
-                # ".//descendant::button:last-of-type",  # :( unresolvable namespaces
+                ".//descendant::div[@data-test='section-search-with-filters' or @data-test='section-search-with-filters-it']/button",
             ),
         ]
         self.job_level = OptionsMenu(
@@ -136,7 +199,7 @@ class PracujplMainPage(BaseNavigation):
                 "praktyki": "//descendant::div[@data-test='select-option-7']",
             },
         )
-        self.employment_type = OptionsMenu(
+        self.employment_type_menu = OptionsMenu(
             self.driver,
             main_locator=(By.XPATH, "//div[@data-test='dropdown-element-ws']"),
             btn_rel_locator="//descendant::button[1]",
@@ -161,48 +224,165 @@ class PracujplMainPage(BaseNavigation):
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][1]",
+                ".//descendant::label[contains(text(), 'Stanowisko, firma, słowo kluczowe') or contains(text(), 'Посада, компанія, ключове слово')]/preceding-sibling::input[@data-test='input-field']",
             ),
         ]
         self._category_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][2]",
+                ".//descendant::label[contains(text(), 'Kategoria') or contains(text(), 'Категорія')]/preceding-sibling::input[@data-test='input-field']",
             ),
         ]
         self._location_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][3]",
+                ".//descendant::label[contains(text(), 'Lokalizacja') or contains(text(), 'Розташування')]/preceding-sibling::input[@data-test='input-field']",
             ),
         ]
-        self._distance_field = [
-            None,
-            (
-                By.XPATH,
-                ".//descendant::div[@data-test='section-search-bar-parameters']//descendant::input[@data-test='input-field'][4]",
-            ),
-        ]
-
-    def gohome(self):
-        self.visit("https://www.pracuj.pl")
-        if self.reject_cookies:
-            self._reject_non_essential_cookies()
-        else:
-            self._accept_all_cookies()
 
     @property
-    def overlay_cookie_consent(self):
-        if self._overlay_cookie_consent[0] is None:
-            try:
-                self._overlay_cookie_consent[0] = self.find(
-                    self._overlay_cookie_consent[1],
+    def _search_mode_selector(self):
+        try:
+            return self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='section-subservices']",
                 )
-            except SE.NoSuchElementException as e:
-                logging.info("cookie consent modal was not found")
-        return self._overlay_cookie_consent[0]
+            )
+        except SE.NoSuchElementException as e:
+            logging.error("couldn't find search mode selector")
+            raise e
+
+    @property
+    def search_mode(self):
+        selector = self.find(
+            (By.XPATH, ".//descendant::span[contains(@class, 'selected')]"),
+            root_element=self._search_mode_selector,
+        )
+        match selector.get_attribute("data-test"):
+            case "tab-item-default":
+                return "default"
+            case "tab-item-it":
+                return "it"
+            case _:
+                return None
+
+    @search_mode.setter
+    def search_mode(self, mode: str):
+        match mode:
+            case "default":
+                xpath = ".//descendant::span[@data-test='tab-item-default']"
+            case "it":
+                xpath = ".//descendant::span[@data-test='tab-item-it']"
+            case _:
+                logging.error(f"unknown search mode {mode}, valid: 'default', 'it'")
+                return
+        selector = self.find(
+            (By.XPATH, xpath),
+            root_element=self._search_mode_selector,
+        )
+        selector.click()
+
+    @property
+    def search_term(self) -> str:
+        value = self.search_field.get_attribute("value")
+        return "" if value is None else value
+
+    @search_term.setter
+    def search_term(self, value: str):
+        self.search_field.send_keys(value)
+        self.search_field.send_keys(Keys.ENTER)
+
+    @property
+    def _location(self) -> str:
+        value = self.location_field.get_attribute("value")
+        return "" if value is None else value
+
+    @_location.setter
+    def _location(self, value: str):
+        self.location_field.send_keys(value)
+        self.location_field.send_keys(Keys.ENTER)
+
+    @property
+    def _distance_dropdown(self) -> WebElement:
+        try:
+            dist_dropdown = self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='dropdown-element-rd']",
+                )
+            )
+        except SE.NoSuchElementException as e:
+            logging.error("couldn't find distance dropdown")
+            raise e
+        return dist_dropdown
+
+    @property
+    def _distance(self) -> Distance:
+        try:
+            d_filed = self.find(
+                (By.XPATH, ".//descendant::input[@data-test='input-field' and @value]"),
+                root_element=self._distance_dropdown,
+            )
+            str_d_value = d_filed.get_attribute("value")
+        except SE.NoSuchElementException as e:
+            logging.error("couldn't find distance dropdown")
+            raise e
+        # example str_d_value looks like this: "+30 km"
+        m = re.match(r"^\+(?P<dist>[0-9]*)\skm$", str_d_value)
+        for dist in list(Distance):
+            if int(m["dist"]) == dist.value:
+                return dist
+        else:
+            return Distance.ZERO_KM
+
+    @_distance.setter
+    def _distance(self, distance: Distance):
+        self.driver.maximize_window()
+        option_rel_locators = {
+            Distance.ZERO_KM: ".//li[@data-test='select-option-0']",
+            Distance.TEN_KM: ".//li[@data-test='select-option-10']",
+            Distance.TWENTY_KM: ".//li[@data-test='select-option-20']",
+            Distance.THIRTY_KM: ".//li[@data-test='select-option-30']",
+            Distance.FIFTY_KM: ".//li[@data-test='select-option-50']",
+            Distance.HUNDRED_KM: ".//li[@data-test='select-option-100']",
+        }
+        self._distance_dropdown.click()
+        self.find(
+            (By.XPATH, option_rel_locators.get(distance)),
+            root_element=self._distance_dropdown,
+        ).click()
+
+    @property
+    def location_and_distance(self) -> tuple[str, Distance]:
+        """Location (and radius around it) in which to search for offers
+
+        Returns
+        -------
+        tuple[str, Distance]
+          name of the city, radius around that location
+        """
+        return (self._location, self._distance)
+
+    @location_and_distance.setter
+    def location_and_distance(self, value: tuple[str, Distance]):
+        self._location = value[0]
+        self._distance = value[1]
+
+    @property
+    def employment_type(self) -> list[str]:
+        selected = []
+        for emp_type in self.employment_type_menu._option_locators.keys():
+            if self.employment_type_menu.is_selected(emp_type):
+                selected.append(emp_type)
+        return selected
+
+    @employment_type.setter
+    def employment_type(self, choices: list[str]):
+        self.driver.maximize_window()
+        self.employment_type_menu.select(choices)
 
     @property
     def search_bar_box(self) -> WebElement:
@@ -216,11 +396,11 @@ class PracujplMainPage(BaseNavigation):
                 raise e
         return self._search_bar_box[0]
 
-    @property
-    def btn_search_submit(self) -> WebElement:
-        return self._get_search_bar_control(
+    def start_searching(self):
+        btn_search_submit = self._get_search_bar_control(
             self._btn_search_submit,
         )
+        btn_search_submit.click()
 
     @property
     def search_field(self) -> WebElement:
@@ -240,12 +420,6 @@ class PracujplMainPage(BaseNavigation):
             self._location_field,
         )
 
-    @property
-    def distance_field(self) -> WebElement:
-        return self._get_search_bar_control(
-            self._distance_field,
-        )
-
     def _get_search_bar_control(self, control):
         if control[0] is None:
             try:
@@ -256,31 +430,3 @@ class PracujplMainPage(BaseNavigation):
                 logging.critical(f"{control[0]} was not found")
                 raise e
         return control[0]
-
-    def _reject_non_essential_cookies(self):
-        # if self.find(self.overlay_cookie_consent, highlight=self._visual_mode):
-        if self.overlay_cookie_consent is not None:
-            btn_customize_cookies = self.find(
-                (
-                    By.XPATH,
-                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",
-                ),
-            )
-            btn_customize_cookies.click()
-            btn_save_cookie_settings = self.find(
-                (
-                    By.XPATH,
-                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",
-                ),
-            )
-            btn_save_cookie_settings.click()
-
-    def _accept_all_cookies(self):
-        if self.overlay_cookie_consent is not None:
-            btn_accept_all_cookies = self.find(
-                (
-                    By.XPATH,
-                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",
-                ),
-            )
-            btn_accept_all_cookies.click()
