@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Tuple
+from typing import List, Tuple
 
 from selenium.common import exceptions as SE
 from selenium.webdriver.remote.webelement import WebElement
@@ -27,6 +27,8 @@ class BaseNavigation:
         causes the browsers to go to the url
     find(element, highlight=False)
         tries to find a given element on the webpage, may highlight it
+    find_all(element, root_element, highlight_color=None)
+        tries to find all elements, that match criteria, in the webpage
     click(element)
         causes the browsers to click the webpage element
     enter_text(element, text)
@@ -136,6 +138,56 @@ class BaseNavigation:
         elif highlight_color is not None:
             self._highlight(element_found, color=highlight_color)
         return element_found
+
+    def find_all(
+        self,
+        element: tuple[str, str],
+        root_element: WebElement | None = None,
+        highlight_color: str | None = None,
+    ) -> List[WebElement]:
+        """Tries to find all elements, that match criteria, in the webpage
+
+        When element(s) are found a list of corresponding WebElement objects
+        is return if nothing can be found an empty list is returned.
+        (this method as oposed to the .find method) WILL NOT rise exceptions.
+
+        If elements exists on the webpage they can optionally be highlighted
+        using the _highlight method
+
+
+        Parameters
+        ----------
+        element : Tuple(str, str)
+            element to be looked for. The first object of the tuple is the
+            method to be used to look for it as (as defined by the
+            selenium By enum eg.: By.TAG_NAME, BY.XPATH),
+            second is the expression defining what to look for.
+            example: (By.TAG_NAME, "div")
+        root_element: WebElement | None
+            an element relative to which the search should be carried out,
+            if None the search will be performed from webpage's root
+        highlight : bool, optional
+            decide if the element that could be found should be highlighted
+            for visual check by a human (default is False - don't highlight)
+
+        Returns
+        -------
+        list[WebElement]
+            list of objects representing elements found
+            (empty if none found)
+        """
+        if root_element is None:
+            elements_found = self.driver.find_elements(*element)
+        else:
+            elements_found = root_element.find_elements(*element)
+
+        if self._visual_mode:
+            for el_found in elements_found:
+                self._highlight(el_found)
+        elif highlight_color is not None:
+            for el_found in elements_found:
+                self._highlight(el_found, color=highlight_color)
+        return elements_found
 
     def click(self, element: WebElement) -> None:
         """Causes the browsers to left click a webpage element
