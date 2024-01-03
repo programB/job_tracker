@@ -147,17 +147,17 @@ class Advertisement:
             # Unusual but acceptable
             logging.warning("offer does not provide contract type information")
 
-        # TODO: this requires selecting only IT offers on the main page
-        #      as generic offers do not contain technology tags
-        # try:
-        #     tech_tags_elements = technology_tags_div.find_elements(
-        #         By.XPATH,
-        #         ".//descendant::span[@data-test='technologies-item']",
-        #     )
-        #     for tag in tech_tags_elements:
-        #         self._offer_dict["technology_tags"].append(tag.text)
-        # except SE.NoSuchElementException:
-        #     logging.warning("offer does not provide technology tags")
+        # find_elements does not raise any exceptions
+        # but returns empty list if no matching tags are found
+        # hence if..else
+        if tech_tags_elements := default_offer_div.find_elements(
+            By.XPATH,
+            ".//descendant::span[@data-test='technologies-item']",
+        ):
+            for tag in tech_tags_elements:
+                self._offer_dict["technology_tags"].append(tag.text)
+        else:
+            logging.warning("offer does not provide technology tags")
         #
         # finalny the timestamp
         self._offer_dict["webscrap_timestamp"] = time.time()
@@ -238,9 +238,9 @@ class Advertisement:
         """
         return self._offer_dict["contract_type"]
 
-    # @property
-    # def technology_tags(self) -> list[str]:
-    #     return self._offer_dict["technology_tags"]
+    @property
+    def technology_tags(self) -> list[str]:
+        return self._offer_dict["technology_tags"]
 
     @property
     def webscrap_timestamp(self) -> float:
