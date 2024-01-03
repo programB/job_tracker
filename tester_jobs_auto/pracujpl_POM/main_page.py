@@ -91,17 +91,67 @@ class OptionsMenu:
         self.driver.execute_script(script, element)
 
 
+class CookieChoice(BaseNavigation):
+    def __init__(self, driver, visual_mode=False) -> None:
+        super().__init__(driver, visual_mode)
+
+    @property
+    def _overlay_cookie_consent(self) -> WebElement | None:
+        cookie_overlay = None
+        try:
+            cookie_overlay = self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='modal-cookie-bottom-bar']",
+                ),
+            )
+        except SE.NoSuchElementException:
+            logging.info("cookie consent modal was not found")
+        return cookie_overlay
+
+    def _is_visible(self) -> bool:
+        cookie_overlay = self._overlay_cookie_consent
+        if cookie_overlay is not None:
+            return cookie_overlay.is_displayed()
+        else:
+            return False
+
+    def reject_non_essential_cookies(self):
+        if self._is_visible():
+            btn_customize_cookies = self.find(
+                (
+                    By.XPATH,
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",
+                ),
+            )
+            btn_customize_cookies.click()
+            btn_save_cookie_settings = self.find(
+                (
+                    By.XPATH,
+                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",
+                ),
+            )
+            btn_save_cookie_settings.click()
+
+    def accept_all_cookies(self):
+        if self._is_visible():
+            btn_accept_all_cookies = self.find(
+                (
+                    By.XPATH,
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",
+                ),
+            )
+            btn_accept_all_cookies.click()
+
+
 class PracujplMainPage(BaseNavigation):
     def __init__(self, driver, visual_mode=False, reject_cookies=False) -> None:
         super().__init__(driver, visual_mode)
-        self.reject_cookies = reject_cookies
-        self._overlay_cookie_consent = [
-            None,
-            (
-                By.XPATH,
-                "//div[@data-test='modal-cookie-bottom-bar']",
-            ),
-        ]
+        self.visit("https://www.pracuj.pl")
+        if reject_cookies:
+            CookieChoice(driver, visual_mode).reject_non_essential_cookies()
+        else:
+            CookieChoice(driver, visual_mode).accept_all_cookies()
         self._search_bar_box = [
             None,
             (
@@ -334,24 +384,6 @@ class PracujplMainPage(BaseNavigation):
         self.driver.maximize_window()
         self.employment_type_menu.select(choices)
 
-    def gohome(self):
-        self.visit("https://www.pracuj.pl")
-        if self.reject_cookies:
-            self._reject_non_essential_cookies()
-        else:
-            self._accept_all_cookies()
-
-    @property
-    def overlay_cookie_consent(self):
-        if self._overlay_cookie_consent[0] is None:
-            try:
-                self._overlay_cookie_consent[0] = self.find(
-                    self._overlay_cookie_consent[1],
-                )
-            except SE.NoSuchElementException as e:
-                logging.info("cookie consent modal was not found")
-        return self._overlay_cookie_consent[0]
-
     @property
     def search_bar_box(self) -> WebElement:
         if self._search_bar_box[0] is None:
@@ -398,31 +430,3 @@ class PracujplMainPage(BaseNavigation):
                 logging.critical(f"{control[0]} was not found")
                 raise e
         return control[0]
-
-    def _reject_non_essential_cookies(self):
-        # if self.find(self.overlay_cookie_consent, highlight=self._visual_mode):
-        if self.overlay_cookie_consent is not None:
-            btn_customize_cookies = self.find(
-                (
-                    By.XPATH,
-                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",
-                ),
-            )
-            btn_customize_cookies.click()
-            btn_save_cookie_settings = self.find(
-                (
-                    By.XPATH,
-                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",
-                ),
-            )
-            btn_save_cookie_settings.click()
-
-    def _accept_all_cookies(self):
-        if self.overlay_cookie_consent is not None:
-            btn_accept_all_cookies = self.find(
-                (
-                    By.XPATH,
-                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",
-                ),
-            )
-            btn_accept_all_cookies.click()
