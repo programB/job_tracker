@@ -330,6 +330,7 @@ class PracujplMainPage(BaseNavigation):
 
     @property
     def _distance_dropdown(self) -> WebElement:
+        self.driver.maximize_window()
         try:
             dist_dropdown = self.find(
                 (
@@ -363,7 +364,6 @@ class PracujplMainPage(BaseNavigation):
 
     @_distance.setter
     def _distance(self, distance: Distance):
-        self.driver.maximize_window()
         option_rel_locators = {
             Distance.ZERO_KM: ".//li[@data-test='select-option-0']",
             Distance.TEN_KM: ".//li[@data-test='select-option-10']",
