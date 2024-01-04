@@ -1,8 +1,8 @@
 import pytest
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 
 from tester_jobs_auto.pracujpl_POM import PracujplMainPage, ResultsPage
+from tester_jobs_auto.pracujpl_POM.main_page import Distance
 
 temp_skip = False
 
@@ -17,21 +17,12 @@ def selenium_driver():
 @pytest.fixture
 def standard_search(selenium_driver):
     main_page = PracujplMainPage(selenium_driver, reject_cookies=True)
-    main_page.gohome()
-    selenium_driver.maximize_window()
-    main_page.employment_type.select(["full_time"])
-    # time.sleep(1)
 
-    main_page.location_field.send_keys("Warszawa")
-    main_page.location_field.send_keys(Keys.ENTER)
-    # time.sleep(3)
+    main_page.search_term = "Tester"
+    main_page.employment_type = ["full_time"]
+    main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
+    main_page.start_searching()
 
-    main_page.search_field.send_keys("Tester")
-    main_page.location_field.send_keys(Keys.ENTER)
-    # time.sleep(3)
-
-    submit_btn = main_page.btn_search_submit
-    submit_btn.click()
     yield main_page
 
 
@@ -91,4 +82,9 @@ def test_should_check_offers_have_not_empty_essential_params(standard_search):
 @pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_collect_offers_from_all_subpages(standard_search):
     results_page = ResultsPage(standard_search.driver)
+    # The search criteria in standard_search fixture are general enough
+    # for the returned number of offers to fill more then 1 subpage
+    # AND strict enough for the number of subpages to be sensibly small
+    # (a single digit number) so going through all of them
+    # would not take forever.
     assert len(results_page.all_offers) != 0
