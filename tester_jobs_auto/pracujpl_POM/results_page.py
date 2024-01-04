@@ -343,8 +343,10 @@ class ResultsPage(BaseNavigation):
         list[Advertisement]
         """
         sp_offers = []
-        offers_section = self.find(
-            (By.XPATH, "//div[@data-test='section-offers']"),
+        offers_section = self.wait_with_timeout.until(
+            expected_conditions.presence_of_element_located(
+                (By.XPATH, "//div[@data-test='section-offers']"),
+            )
         )
         all_child_divs = self.find_all(
             (By.XPATH, "./div"),
