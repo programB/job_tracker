@@ -1,17 +1,9 @@
 import pytest
-from selenium import webdriver
 
 from tester_jobs_auto.pracujpl_POM import PracujplMainPage, ResultsPage
 from tester_jobs_auto.pracujpl_POM.main_page import Distance
 
 temp_skip = False
-
-
-@pytest.fixture
-def selenium_driver():
-    driver = webdriver.Chrome()
-    yield driver
-    driver.quit()
 
 
 @pytest.fixture
@@ -28,6 +20,11 @@ def standard_search(selenium_driver):
 
 @pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_create_ResultPage_object(selenium_driver):
+    """
+    GIVEN a selenium driver object
+    WHEN ResultsPage object is created
+    THEN check the the object was created
+    """
     assert ResultsPage(selenium_driver) is not None
 
 

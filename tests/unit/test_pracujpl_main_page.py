@@ -1,16 +1,8 @@
 import pytest
-from selenium import webdriver
 
 from tester_jobs_auto.pracujpl_POM import PracujplMainPage
 
 temp_skip = False
-
-
-@pytest.fixture
-def selenium_driver():
-    driver = webdriver.Chrome()
-    yield driver
-    driver.quit()
 
 
 @pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")

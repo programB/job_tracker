@@ -3,7 +3,6 @@ import logging
 import time
 
 import pytest
-from selenium import webdriver
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -11,13 +10,6 @@ from selenium.webdriver.remote.webelement import WebElement
 from tester_jobs_auto.pracujpl_POM import BaseNavigation
 
 temporary_skip = False
-
-
-@pytest.fixture
-def selenium_driver():
-    driver = webdriver.Chrome()
-    yield driver
-    driver.quit()
 
 
 @pytest.fixture
