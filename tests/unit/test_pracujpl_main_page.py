@@ -2,21 +2,16 @@ import pytest
 
 from tester_jobs_auto.pracujpl_POM import PracujplMainPage
 
-temp_skip = False
 
-
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_create_PracujplMainPage_object(selenium_driver):
     assert PracujplMainPage(selenium_driver) is not None
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_visit_pracujpl_home_on_object_creation(selenium_driver):
     _ = PracujplMainPage(selenium_driver)
     assert "Praca - Pracuj.pl" in selenium_driver.title
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_essential_search_options_are_available(selenium_driver):
     main_page = PracujplMainPage(
         selenium_driver,
@@ -31,7 +26,6 @@ def test_should_check_essential_search_options_are_available(selenium_driver):
     assert location_field.is_displayed() and location_field.is_enabled()
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_distance_field_is_shown_when_requested(selenium_driver):
     # _distance_dropdown only gets shown if browser window is maximized.
     # Test should succeed only if the window gets maximized when
@@ -40,7 +34,6 @@ def test_should_check_distance_field_is_shown_when_requested(selenium_driver):
     assert main_page._distance_dropdown.is_displayed()
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 @pytest.mark.parametrize("reject_param", [True, False])
 def test_should_enter_text_into_search_filed(selenium_driver, reject_param):
     main_page = PracujplMainPage(

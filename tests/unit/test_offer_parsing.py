@@ -3,8 +3,6 @@ import pytest
 from tester_jobs_auto.pracujpl_POM import PracujplMainPage, ResultsPage
 from tester_jobs_auto.pracujpl_POM.main_page import Distance
 
-temp_skip = False
-
 
 @pytest.fixture
 def standard_search(selenium_driver):
@@ -18,7 +16,6 @@ def standard_search(selenium_driver):
     yield main_page
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_create_ResultPage_object(selenium_driver):
     """
     GIVEN a selenium driver object
@@ -28,7 +25,6 @@ def test_should_create_ResultPage_object(selenium_driver):
     assert ResultsPage(selenium_driver) is not None
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_tot_number_of_subpages(standard_search):
     results_page = ResultsPage(standard_search.driver)
 
@@ -38,7 +34,6 @@ def test_should_check_tot_number_of_subpages(standard_search):
     assert results_page.tot_no_of_subpages >= 2
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_navigation_to_desired_subpage(standard_search):
     results_page = ResultsPage(standard_search.driver)
 
@@ -52,20 +47,17 @@ def test_should_check_navigation_to_desired_subpage(standard_search):
     assert cur_subpage_number == desired_subpage
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_offers_list_is_not_empty(standard_search):
     results_page = ResultsPage(standard_search.driver)
     assert len(results_page.subpage_offers) != 0
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_only_valid_offers_are_collected(standard_search):
     results_page = ResultsPage(standard_search.driver)
     for offer in results_page.subpage_offers:
         assert offer.is_valid_offer
 
 
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_check_offers_have_not_empty_essential_params(standard_search):
     results_page = ResultsPage(standard_search.driver)
     for offer in results_page.subpage_offers:
@@ -77,7 +69,6 @@ def test_should_check_offers_have_not_empty_essential_params(standard_search):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_collect_offers_from_all_subpages(standard_search):
     results_page = ResultsPage(standard_search.driver)
     # The search criteria in standard_search fixture are general enough

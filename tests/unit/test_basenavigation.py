@@ -9,8 +9,6 @@ from selenium.webdriver.remote.webelement import WebElement
 
 from tester_jobs_auto.pracujpl_POM import BaseNavigation
 
-temporary_skip = False
-
 
 @pytest.fixture
 def nav_window(selenium_driver):
@@ -31,18 +29,10 @@ def non_existing_tag_on_existing_website():
     return (non_existing_tag, website)
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 def test_should_create_BaseNavigation(selenium_driver):
     assert BaseNavigation(selenium_driver) is not None
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 @pytest.mark.parametrize(
     "property",
     [
@@ -53,10 +43,6 @@ def test_should_assure_properties_existence(property):
     assert hasattr(BaseNavigation, property)
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 @pytest.mark.parametrize(
     "method",
     [
@@ -75,37 +61,21 @@ def test_should_assure_methods_existence(method):
     assert callable(BaseNavigation.__dict__[method])
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 def test_should_visit_an_existing_webpage(nav_window):
     nav_window.visit("https://www.google.com")
     assert "google".casefold() in nav_window.driver.title.casefold()
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 def test_should_fail_to_visit_a_not_existing_webpage(nav_window):
     with pytest.raises(ConnectionError):
         nav_window.visit("https://www.glubiel.com")
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 def test_should_find_an_existing_tag_on_a_webpage(nav_window):
     nav_window.visit("https://www.google.com")
     assert isinstance(nav_window.find((By.TAG_NAME, "body")), WebElement)
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 @pytest.mark.xfail(
     reason="This test requires user observing if the tag was highlighted",
 )
@@ -123,10 +93,6 @@ def test_should_find_and_highlight_an_existing_tag_on_a_webpage(nav_window):
     )
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 def test_should_fail_to_find_not_existing_tag_on_a_webpage(
     nav_window,
     non_existing_tag_on_existing_website,
@@ -137,10 +103,6 @@ def test_should_fail_to_find_not_existing_tag_on_a_webpage(
         nav_window.find(non_existing_tag)
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 @pytest.mark.xfail(
     reason="This test requires user observing if button was clicked",
 )
@@ -162,10 +124,6 @@ def test_should_click_a_button(nav_window):
         raise e
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 def test_should_confirm_visibility_of_displayed_element(
     nav_window,
     existing_tag_on_existing_website,
@@ -176,10 +134,6 @@ def test_should_confirm_visibility_of_displayed_element(
     assert nav_window.is_displayed(existing_tag) is True
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 def test_should_fail_to_see_a_non_existing_element(
     nav_window,
     non_existing_tag_on_existing_website,
@@ -190,10 +144,6 @@ def test_should_fail_to_see_a_non_existing_element(
     assert nav_window.is_displayed(non_existing_tag) is False
 
 
-@pytest.mark.skipif(
-    temporary_skip is True,
-    reason="skipping to concentrate on the latest test",
-)
 def test_should_modify_default_timeout(
     nav_window,
     non_existing_tag_on_existing_website,
