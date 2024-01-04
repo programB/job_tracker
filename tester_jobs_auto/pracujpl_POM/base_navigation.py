@@ -53,24 +53,23 @@ class BaseNavigation:
         # self.driver: WebDriver = driver
         self.driver = driver
         self._visual_mode = visual_mode
-        self._timeout_sec = 5
+        self._timeout_sec = 5.0
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
 
     @property
-    def timeout_sec(self):
-        """timeout getter"""
-        return self._timeout_sec
-
-    @timeout_sec.setter
-    def timeout_sec(self, value):
-        """timeout setter it modifies the _wait object when called
+    def timeout_sec(self) -> float:
+        """get/set timeout for the wait_with_timeout property
 
         Parameters
         ----------
-        value : int
-            new timeout value
+        timeout: float
+            Number of seconds before timing out
         """
-        self._timeout_sec = value
+        return self._timeout_sec
+
+    @timeout_sec.setter
+    def timeout_sec(self, timeout: float):
+        self._timeout_sec = timeout
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
 
     def visit(self, url: str) -> None:
