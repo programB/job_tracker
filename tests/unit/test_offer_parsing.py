@@ -76,6 +76,7 @@ def test_should_check_offers_have_not_empty_essential_params(standard_search):
         assert offer.contract_type != ""
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(temp_skip, reason="BECAUSE WIP on the LATEST TEST ONLY")
 def test_should_collect_offers_from_all_subpages(standard_search):
     results_page = ResultsPage(standard_search.driver)
