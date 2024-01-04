@@ -7,6 +7,7 @@ from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions
 
 from .base_navigation import BaseNavigation
 
@@ -22,7 +23,7 @@ class Distance(Enum):
     HUNDRED_KM = 100
 
 
-class OptionsMenu:
+class OptionsMenu(BaseNavigation):
     def __init__(
         self,
         # driver: WebDriver,
@@ -30,18 +31,27 @@ class OptionsMenu:
         main_locator: Tuple[str, str],
         btn_rel_locator: str,
         option_rel_locators: dict,
+        visual_mode=False,
     ) -> None:
         self.driver = driver
         self._main_locator = main_locator
         self._btn_rel_locator = btn_rel_locator
         self._option_locators = option_rel_locators
+        super().__init__(driver, visual_mode)
 
     @property
     def menu(self) -> WebElement:
-        return self.driver.find_element(
-            self._main_locator[0],
-            self._main_locator[1] + self._btn_rel_locator,
+        if self.timeout_sec < 3.0:
+            self.timeout_sec = 3.0
+
+        # x will be set to self.driver
+        menu: WebElement = self.wait_with_timeout.until(
+            lambda x: x.find_element(
+                self._main_locator[0],
+                self._main_locator[1] + self._btn_rel_locator,
+            )
         )
+        return menu
 
     def select(self, options: list[str]) -> None:
         for option in options:
@@ -49,9 +59,13 @@ class OptionsMenu:
                 try:
                     # unfold menu
                     self.menu.click()
-                    element = self.driver.find_element(
-                        self._main_locator[0],
-                        self._main_locator[1] + self._option_locators[option],
+                    element = self.wait_with_timeout.until(
+                        expected_conditions.visibility_of_element_located(
+                            (
+                                self._main_locator[0],
+                                self._main_locator[1] + self._option_locators[option],
+                            )
+                        )
                     )
                     if "selected" not in element.get_attribute("class"):
                         self._scroll_into_view(element)
@@ -69,9 +83,13 @@ class OptionsMenu:
             try:
                 # unfold menu
                 self.menu.click()
-                element = self.driver.find_element(
-                    self._main_locator[0],
-                    self._main_locator[1] + self._option_locators[option],
+                element = self.wait_with_timeout.until(
+                    expected_conditions.visibility_of_element_located(
+                        (
+                            self._main_locator[0],
+                            self._main_locator[1] + self._option_locators[option],
+                        )
+                    )
                 )
                 if "selected" in element.get_attribute("class"):
                     # fold menu
@@ -99,12 +117,15 @@ class CookieChoice(BaseNavigation):
     def _overlay_cookie_consent(self) -> WebElement | None:
         cookie_overlay = None
         try:
-            cookie_overlay = self.find(
-                (
-                    By.XPATH,
-                    "//div[@data-test='modal-cookie-bottom-bar']",
-                ),
+            cookie_overlay = self.wait_with_timeout.until(
+                expected_conditions.visibility_of_element_located(
+                    (
+                        By.XPATH,
+                        "//div[@data-test='modal-cookie-bottom-bar']",
+                    ),
+                )
             )
+
         except SE.NoSuchElementException:
             logging.info("cookie consent modal was not found")
         return cookie_overlay
@@ -245,10 +266,12 @@ class PracujplMainPage(BaseNavigation):
     @property
     def _search_mode_selector(self):
         try:
-            return self.find(
-                (
-                    By.XPATH,
-                    "//div[@data-test='section-subservices']",
+            return self.wait_with_timeout.until(
+                expected_conditions.visibility_of_element_located(
+                    (
+                        By.XPATH,
+                        "//div[@data-test='section-subservices']",
+                    )
                 )
             )
         except SE.NoSuchElementException as e:
@@ -424,7 +447,6 @@ class PracujplMainPage(BaseNavigation):
         if control[0] is None:
             try:
                 logging.warning(f"Looking for {control}")
-                # control[0] = self.search_bar_box.find_element(*control[1])
                 control[0] = self.find(control[1], root_element=self.search_bar_box)
             except SE.NoSuchElementException as e:
                 logging.critical(f"{control[0]} was not found")

@@ -7,6 +7,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions
 
 from .base_navigation import BaseNavigation
 
@@ -53,6 +54,12 @@ class Advertisement(BaseNavigation):
 
     def _build_dict(self):
         """Scraps the information under root_element, fils _offer_dict"""
+
+        # NOTE: Advertisement object is constructed by parsing child div
+        # elements below the root_element passed (which is a box div element
+        # holding all the offers). In this case all the offers are present
+        # and visible and there should be no need to use any of the selenium
+        # wait strategies to parse the contents of individual offers.
         try:
             default_offer_div = self.root_element.find_element(
                 By.XPATH,
@@ -312,9 +319,12 @@ class ResultsPage(BaseNavigation):
         int
         """
         try:
-            tot_no_element = self.find(
-                (By.XPATH, "//span[@data-test='top-pagination-max-page-number']"),
+            tot_p_locator = (
+                By.XPATH,
+                "//span[@data-test='top-pagination-max-page-number']",
             )
+            tot_no_element = self.wait_with_timeout.until(expected_conditions.visibility_of_element_located(tot_p_locator))
+            self.is_displayed(tot_p_locator)
         except SE.NoSuchElementException:
             logging.warning("Total number of subpages couldn't be established")
             return 0
