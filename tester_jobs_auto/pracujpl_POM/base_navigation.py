@@ -57,6 +57,16 @@ class BaseNavigation:
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
 
     @property
+    def wait_with_timeout(self) -> WebDriverWait:
+        """WebDriverWait object set to wait for timeout_sec
+
+        Returns
+        -------
+        WebDriverWait
+        """
+        return self._wait
+
+    @property
     def timeout_sec(self) -> float:
         """get/set timeout for the wait_with_timeout property
 
