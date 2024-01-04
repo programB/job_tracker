@@ -7,14 +7,20 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions
 
 from .base_navigation import BaseNavigation
 
 
-class Advertisement:
+class Advertisement(BaseNavigation):
     """Models a single advertisement on the results subpage"""
 
-    def __init__(self, root_element: WebElement) -> None:
+    def __init__(
+        self,
+        driver,
+        root_element: WebElement | None = None,
+        visual_mode=False,
+    ):
         """
 
         Parameters
@@ -29,6 +35,7 @@ class Advertisement:
             physical locations for the candidate to choose from
             False otherwise
         """
+        super().__init__(driver, visual_mode)
         self.root_element = root_element
         self._offer_dict = {
             "id": 0,
@@ -47,6 +54,12 @@ class Advertisement:
 
     def _build_dict(self):
         """Scraps the information under root_element, fils _offer_dict"""
+
+        # NOTE: Advertisement object is constructed by parsing child div
+        # elements below the root_element passed (which is a box div element
+        # holding all the offers). In this case all the offers are present
+        # and visible and there should be no need to use any of the selenium
+        # wait strategies to parse the contents of individual offers.
         try:
             default_offer_div = self.root_element.find_element(
                 By.XPATH,
@@ -147,12 +160,15 @@ class Advertisement:
             # Unusual but acceptable
             logging.warning("offer does not provide contract type information")
 
-        # find_elements does not raise any exceptions
+        # find_all (using find_elements) does not raise any exceptions
         # but returns empty list if no matching tags are found
         # hence if..else
-        if tech_tags_elements := default_offer_div.find_elements(
-            By.XPATH,
-            ".//descendant::span[@data-test='technologies-item']",
+        if tech_tags_elements := self.find_all(
+            (
+                By.XPATH,
+                ".//descendant::span[@data-test='technologies-item']",
+            ),
+            root_element=default_offer_div,
         ):
             for tag in tech_tags_elements:
                 self._offer_dict["technology_tags"].append(tag.text)
@@ -303,9 +319,12 @@ class ResultsPage(BaseNavigation):
         int
         """
         try:
-            tot_no_element = self.find(
-                (By.XPATH, "//span[@data-test='top-pagination-max-page-number']"),
+            tot_p_locator = (
+                By.XPATH,
+                "//span[@data-test='top-pagination-max-page-number']",
             )
+            tot_no_element = self.wait_with_timeout.until(expected_conditions.visibility_of_element_located(tot_p_locator))
+            self.is_displayed(tot_p_locator)
         except SE.NoSuchElementException:
             logging.warning("Total number of subpages couldn't be established")
             return 0
@@ -327,10 +346,13 @@ class ResultsPage(BaseNavigation):
         offers_section = self.find(
             (By.XPATH, "//div[@data-test='section-offers']"),
         )
-        all_child_divs = offers_section.find_elements(By.XPATH, "./div")
+        all_child_divs = self.find_all(
+            (By.XPATH, "./div"),
+            root_element=offers_section,
+        )
         logging.warning(f"len(all_child_divs): {len(all_child_divs)}")
         for child_div in all_child_divs:
-            ad = Advertisement(child_div)
+            ad = Advertisement(self.driver, child_div)
             if ad.is_valid_offer:
                 sp_offers.append(ad)
         return sp_offers
