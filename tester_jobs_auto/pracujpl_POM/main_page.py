@@ -24,6 +24,8 @@ class Distance(Enum):
 
 
 class OptionsMenu(BaseNavigation):
+    """Represents any folding menu with multiple choices"""
+
     def __init__(
         self,
         # driver: WebDriver,
@@ -33,6 +35,30 @@ class OptionsMenu(BaseNavigation):
         option_rel_locators: dict,
         visual_mode=False,
     ) -> None:
+        """
+
+        Parameters
+        ----------
+        driver : WebDriver
+            selenium webdriver object
+        visual_mode : bool
+            global switch causing elements found using the find
+            and find_all methods to get highlighted
+        main_locator : Tuple[str, str]
+            locator pointing to a top level grouping element
+            The first object of the tuple is the
+            method to be used to look for it
+            (use the selenium By enum eg.: By.TAG_NAME, BY.XPATH),
+            second is the expression defining what to look for.
+            example: (By.TAG_NAME, "div")
+        btn_rel_locator : str
+            locator string used to find the top level clickable element
+            that revels options (when clicked)
+            (it must use the same searching BY method as the main_locator)
+        option_rel_locators : dict
+            dict of locator strings pointing to individual options
+            (they must use the same searching BY method as the main_locator)
+        """
         self.driver = driver
         self._main_locator = main_locator
         self._btn_rel_locator = btn_rel_locator
@@ -54,6 +80,15 @@ class OptionsMenu(BaseNavigation):
         return menu
 
     def select(self, options: list[str]) -> None:
+        """Select options from the menu using the _option_locators dictionary
+
+        Unknown options are skipped (warning is logged)
+
+        Parameters
+        ----------
+        options : list[str]
+            a list desired keys from the _option_locators dictionary
+        """
         for option in options:
             if option in self._option_locators.keys():
                 try:
@@ -79,6 +114,17 @@ class OptionsMenu(BaseNavigation):
                 logging.warning(f"unable to select unknown option: {option}")
 
     def is_selected(self, option: str) -> bool:
+        """Check the webpage if given option is indeed selected
+
+        Parameters
+        ----------
+        option : str
+            A valid key from the _option_locators dictionary
+
+        Returns
+        -------
+        bool
+        """
         if option in self._option_locators.keys():
             try:
                 # unfold menu
@@ -110,11 +156,30 @@ class OptionsMenu(BaseNavigation):
 
 
 class CookieChoice(BaseNavigation):
+    """Represents cookie consent overlay"""
+
     def __init__(self, driver, visual_mode=False) -> None:
+        """
+
+        Parameters
+        ----------
+        driver : WebDriver
+            selenium webdriver object
+        visual_mode : bool
+            global switch causing elements found using the find
+            and find_all methods to get highlighted
+        """
         super().__init__(driver, visual_mode)
 
     @property
     def _overlay_cookie_consent(self) -> WebElement | None:
+        """Looks for cookie consent overlay top level element
+
+        Returns
+        -------
+        WebElement | None
+            WebElement if element was found None otherwise (logs failure)
+        """
         cookie_overlay = None
         try:
             cookie_overlay = self.wait_with_timeout.until(
@@ -131,6 +196,12 @@ class CookieChoice(BaseNavigation):
         return cookie_overlay
 
     def _is_visible(self) -> bool:
+        """Check cookie consent overlay visibility
+
+        Returns
+        -------
+        bool
+        """
         cookie_overlay = self._overlay_cookie_consent
         if cookie_overlay is not None:
             return cookie_overlay.is_displayed()
@@ -138,6 +209,7 @@ class CookieChoice(BaseNavigation):
             return False
 
     def reject_non_essential_cookies(self):
+        """Chooses to reject non essential cookies and dismisses the overlay"""
         if self._is_visible():
             btn_customize_cookies = self.find(
                 (
@@ -155,6 +227,7 @@ class CookieChoice(BaseNavigation):
             btn_save_cookie_settings.click()
 
     def accept_all_cookies(self):
+        """Chooses to accept all cookies and dismisses the overlay"""
         if self._is_visible():
             btn_accept_all_cookies = self.find(
                 (
@@ -166,7 +239,23 @@ class CookieChoice(BaseNavigation):
 
 
 class PracujplMainPage(BaseNavigation):
+    """Models pracuj.pl home page"""
+
     def __init__(self, driver, visual_mode=False, reject_cookies=False) -> None:
+        """
+
+        Parameters
+        ----------
+        driver : WebDriver
+            selenium webdriver object
+        visual_mode: bool
+            decides whether all newly found elements will get highlighted
+            for human inspection
+        reject_cookies : bool
+            when True: causes non-essential cookies to be rejected
+            on visiting the homepage
+            when False: causes all cookies to be accepted
+        """
         super().__init__(driver, visual_mode)
         self.visit("https://www.pracuj.pl")
         if reject_cookies:
@@ -279,7 +368,20 @@ class PracujplMainPage(BaseNavigation):
             raise e
 
     @property
-    def search_mode(self):
+    def search_mode(self) -> str:
+        """The broad domain of job offers to search in
+
+        Currently supported are:
+        'default' - all job offers are considered before specific filters
+        are applied
+        'it' - restricts the search to IT sector job offers (other filter
+        can still be applied)
+
+        Returns
+        -------
+        mode : str
+            currently set mode, empty string means unsupported mode
+        """
         selector = self.find(
             (By.XPATH, ".//descendant::span[contains(@class, 'selected')]"),
             root_element=self._search_mode_selector,
@@ -290,7 +392,7 @@ class PracujplMainPage(BaseNavigation):
             case "tab-item-it":
                 return "it"
             case _:
-                return None
+                return ""
 
     @search_mode.setter
     def search_mode(self, mode: str):
@@ -310,6 +412,12 @@ class PracujplMainPage(BaseNavigation):
 
     @property
     def search_term(self) -> str:
+        """Key word to search for
+
+        Returns
+        -------
+        str
+        """
         value = self.search_field.get_attribute("value")
         return "" if value is None else value
 
@@ -396,6 +504,14 @@ class PracujplMainPage(BaseNavigation):
 
     @property
     def employment_type(self) -> list[str]:
+        """Employment type (can be multiple) from a predefined list
+
+        'part_time', 'temporary', 'full_time'
+
+        Returns
+        -------
+        list[str]
+        """
         selected = []
         for emp_type in self.employment_type_menu._option_locators.keys():
             if self.employment_type_menu.is_selected(emp_type):
@@ -420,6 +536,7 @@ class PracujplMainPage(BaseNavigation):
         return self._search_bar_box[0]
 
     def start_searching(self):
+        """Begin the search with currently set criteria"""
         btn_search_submit = self._get_search_bar_control(
             self._btn_search_submit,
         )

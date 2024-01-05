@@ -9,31 +9,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 
 class BaseNavigation:
-    """A class of basic operations on a webpage
+    """Provides webpage basic operations"""
 
-    Attributes
-    ----------
-    driver : WebDriver
-        selenium webdriver object
-    timeout_sec: int
-        a timeout setting used by the find method
-    visual_mode: bool
-        decides whether all newly found elements will get highlighted
-        for human inspection
-
-    Methods
-    -------
-    visit(url)
-        causes the browsers to go to the url
-    find(element, highlight=False)
-        tries to find a given element on the webpage, may highlight it
-    find_all(element, root_element, highlight_color=None)
-        tries to find all elements, that match criteria, in the webpage
-    is_displayed(locator)
-       checks whether an element indicated by locator is visible on the webpage
-    """
-
-    _color_index: int = 0
+    _color_index = 0
     _colors = ["pink", "yellow", "lime", "lightblue", "lightgreen"]
 
     @classmethod
@@ -49,6 +27,9 @@ class BaseNavigation:
         ----------
         driver : WebDriver
             selenium webdriver object
+        visual_mode : bool
+            global switch causing elements found using the find
+            and find_all methods to get highlighted
         """
         # self.driver: WebDriver = driver
         self.driver = driver
@@ -58,7 +39,11 @@ class BaseNavigation:
 
     @property
     def wait_with_timeout(self) -> WebDriverWait:
-        """WebDriverWait object set to wait for timeout_sec
+        """WebDriverWait object that uses the timeout_sec property to wait
+
+        Example:
+        element = driver_object.wait_with_timeout.
+            until(expected_conditions.visibility_of_element_located(locator))
 
         Returns
         -------
@@ -68,7 +53,7 @@ class BaseNavigation:
 
     @property
     def timeout_sec(self) -> float:
-        """get/set timeout for the wait_with_timeout property
+        """get/set timeout. Used by: wait_with_timeout, is_displayed()
 
         Parameters
         ----------
@@ -83,14 +68,16 @@ class BaseNavigation:
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
 
     def visit(self, url: str) -> None:
-        """Causes the browsers to visit the url given
-
-        Raises ConnectionError if the browsers fails to navigate to the url
+        """Causes the browsers to visit the url
 
         Parameters
         ----------
         url : str
             valid url of an existing webpage (eg. http://www.google.com)
+
+        Raises
+        ------
+        ConnectionError if the browsers fails to navigate to the url
         """
         try:
             self.driver.get(url)
@@ -109,29 +96,37 @@ class BaseNavigation:
     ) -> WebElement:
         """Tries to find a given element in the current webpage
 
-        When element is found it returns a corresponding WebElement object
-        If element can't be found it raises NoSuchElementException
-
-        If element exists on the webpage it can optionally be highlighted
-        using the _highlight method
+        Search from the page root or below a existing DOM object.
+        Returns WebElement object on success or rises NoSuchElementException
+        If element exists it can optionally be highlighted.
 
 
         Parameters
         ----------
         element : Tuple(str, str)
-            element to be looked for. The first object of the tuple is the
-            method to be used to look for it as (as defined by the
-            selenium By enum eg.: By.TAG_NAME, BY.XPATH),
+            element to look for. The first object of the tuple is the
+            method to be used to look for it
+            (use the selenium By enum eg.: By.TAG_NAME, BY.XPATH),
             second is the expression defining what to look for.
             example: (By.TAG_NAME, "div")
-        highlight : bool, optional
-            decide if the element that could be found should be highlighted
-            for visual check by a human (default is False - don't highlight)
+        root_element: WebElement | None, optional
+            element below which to search. If not provided the search
+            will be carried out from the document root.
+        highlight_color : str | None , optional
+            a html compatible color string  (eg. 'red') used to highlight
+            the element (if found) for visual check by a human.
+            (default is None - don't highlight BUT element highlighting may be
+             forced globally by setting visual_mode True)
 
         Returns
         -------
         WebElement
             an object representing element found
+
+        Raises
+        ------
+        NoSuchElementException
+            If element couldn't be found
         """
         if root_element is None:
             element_found = self.driver.find_element(*element)
@@ -146,38 +141,37 @@ class BaseNavigation:
 
     def find_all(
         self,
-        element: tuple[str, str],
+        element: Tuple[str, str],
         root_element: WebElement | None = None,
         highlight_color: str | None = None,
     ) -> List[WebElement]:
-        """Tries to find all elements, that match criteria, in the webpage
+        """Tries to find all elements passed in the current webpage
 
-        When element(s) are found a list of corresponding WebElement objects
-        is return if nothing can be found an empty list is returned.
-        (this method as oposed to the .find method) WILL NOT rise exceptions.
-
-        If elements exists on the webpage they can optionally be highlighted
-        using the _highlight method
-
+        Search from the page root or below a existing DOM object.
+        Returns WebElement objects list (empty if nothing is found,
+        dosen't rise exceptions)
+        If elements exist they can optionally be highlighted
 
         Parameters
         ----------
         element : Tuple(str, str)
-            element to be looked for. The first object of the tuple is the
-            method to be used to look for it as (as defined by the
-            selenium By enum eg.: By.TAG_NAME, BY.XPATH),
+            element to look for. The first object of the tuple is the
+            method to be used to look for it
+            (use the selenium By enum eg.: By.TAG_NAME, BY.XPATH),
             second is the expression defining what to look for.
             example: (By.TAG_NAME, "div")
-        root_element: WebElement | None
-            an element relative to which the search should be carried out,
-            if None the search will be performed from webpage's root
-        highlight : bool, optional
-            decide if the element that could be found should be highlighted
-            for visual check by a human (default is False - don't highlight)
+        root_element: WebElement | None, optional
+            element below which to search. If not provided the search
+            will be carried out from the document root.
+        highlight_color : str | None , optional
+            a html compatible color string  (eg. 'red') used to highlight
+            the element (if found) for visual check by a human.
+            (default is None - don't highlight BUT element highlighting may be
+             forced globally by setting visual_mode True)
 
         Returns
         -------
-        list[WebElement]
+        List[WebElement]
             list of objects representing elements found
             (empty if none found)
         """
@@ -197,25 +191,33 @@ class BaseNavigation:
     def is_displayed(self, locator: Tuple[str, str]) -> bool:
         """Checks if element indicated by locator is visible on the webpage
 
-        This method uses the _wait object to allow a delay for an element
-        to appear.
+        This method uses the wait_with_timeout object to allow a delay
+        for an element to appear.
         It returns True if element is visible and False if element is not
         visible or doesn't exist at all in the DOM tree of the current webpage
 
         Parameters
         ----------
         locator : Tuple[str, str]
-            element to be looked for. The first object of the tuple is the
-            method to be used to look for it as (as defined by the
-            selenium By enum eg.: By.TAG_NAME, BY.XPATH),
+            element to look for.
+            The first object of the tuple is the
+            method to be used to look for it
+            (use the selenium By enum eg.: By.TAG_NAME, BY.XPATH),
             second is the expression defining what to look for.
             example: (By.TAG_NAME, "div")
+
         Returns
         -------
         bool
+
+        Raises
+        ------
+        TimeoutException
+            If element dose not become visible within timeout period
+
         """
         try:
-            self._wait.until(
+            self.wait_with_timeout.until(
                 expected_conditions.visibility_of_element_located(locator),
             )
             return True
@@ -223,7 +225,19 @@ class BaseNavigation:
             logging.warning(f"timeout: {locator} not visible")
             return False
 
-    def set_visual_mode(self, state):
+    def set_visual_mode(self, state: bool):
+        """Highlight newly found elements
+
+        If set to True elements found using find and find_all methods
+        will get highlighted.
+        If set to False elements will not get highlighted unless
+        find or find_all methods are passed highlight_color to force
+        highlight on a one off basis
+
+        Parameters
+        ----------
+        state : bool
+        """
         self._visual_mode = state
 
     def _highlight(self, element: WebElement, color="red"):
