@@ -25,15 +25,13 @@ class Advertisement(BaseNavigation):
 
         Parameters
         ----------
+        driver : WebDriver
+            selenium webdriver object
         root_element : WebElement
             a tag from which to start looking for information
-        is_valid_offer : bool
-            True for ads that are genuine job offers
-            False for sponsored ads or general ads
-        is_multiple_location_offer : bool
-            True if the same job opening is available in different
-            physical locations for the candidate to choose from
-            False otherwise
+        visual_mode: bool
+            decides whether all newly found elements will get highlighted
+            for human inspection
         """
         super().__init__(driver, visual_mode)
         self.root_element = root_element
@@ -53,7 +51,7 @@ class Advertisement(BaseNavigation):
         self._build_dict()
 
     def _build_dict(self):
-        """Scraps the information under root_element, fils _offer_dict"""
+        """Extracts information under the root_element, fills _offer_dict"""
 
         # NOTE: Advertisement object is constructed by parsing child div
         # elements below the root_element passed (which is a box div element
@@ -142,7 +140,7 @@ class Advertisement(BaseNavigation):
             ).get_attribute("innerText")
             # ).text
             # the text property isn't working as the text has some
-            # pseudoselectors eg:
+            # pseudo selectors eg:
             # <li class="mobile-hidden tiles_iwlrcdk" data-test="offer-additional-info-0">
             # Specjalista (Mid / Regular)
             # ::after
@@ -175,7 +173,7 @@ class Advertisement(BaseNavigation):
         else:
             logging.warning("offer does not provide technology tags")
         #
-        # finalny the timestamp
+        # finally the timestamp
         self._offer_dict["webscrap_timestamp"] = time.time()
         # if the code reaches this point it means this is a valid job offer
         self.is_valid_offer = True
@@ -256,6 +254,17 @@ class Advertisement(BaseNavigation):
 
     @property
     def technology_tags(self) -> list[str]:
+        """Technology tags specified in the offer
+
+        These are known to exist only for IT offers when search mode
+        is set to 'it'. A tag can be a programming language eg. 'JavaScript'
+        or specific application candidates are expected to be familiar with
+        eg. 'Jira'
+
+        Returns
+        -------
+        list[str]
+        """
         return self._offer_dict["technology_tags"]
 
     @property
@@ -266,37 +275,9 @@ class Advertisement(BaseNavigation):
         """
         return self._offer_dict["webscrap_timestamp"]
 
-    # def to_json(self):
-    #     return json.dumps(self._offer_dict)
-
 
 class ResultsPage(BaseNavigation):
-    """Class modeling the page with the search results
-
-    Attributes
-    ----------
-    driver : WebDriver
-        selenium webdriver object
-    visual_mode: bool
-        decides whether all newly found elements will get highlighted
-        for human inspection
-
-    Properties
-    ----------
-    tot_no_of_subpages: int
-        Total number of subpages as reported by the webpage
-    subpage_offers: list[Advertisement]
-        List of valid job offers from the current subpage
-    all_offers: list[Advertisement]
-        List of unique offers from all subpages
-
-    Methods
-    -------
-    get_current_subpage
-        current subpage number and controlling element
-    goto_subpage
-        switch to a subpage
-    """
+    """Class modeling the page with the search results"""
 
     def __init__(self, driver, visual_mode=False):
         """
@@ -406,15 +387,16 @@ class ResultsPage(BaseNavigation):
     def goto_subpage(self, n: int) -> None:
         """Switch to a subpage
 
-        Raises RuntimeError if element controlling pages switching
-        cannot be found.
-        Raises ValueError on attempt to switch to a subpage outside the
-        range given by tot_no_of_subpages
-
         Parameters
         ----------
         n : int
-            desired subpage to go to
+            subpage number to go to
+
+        Raises
+        ------
+        RuntimeError if the element controlling page switching cannot be found
+        ValueError on attempt to switch to a subpage outside the
+        range given by tot_no_of_subpages
         """
         page_field, page_no = self.get_current_subpage()
         if page_field is None:
@@ -428,7 +410,7 @@ class ResultsPage(BaseNavigation):
         mod_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
         # Clear the field by ctrl+a and Delete,
         #   (page_field.clear() doesn't work and page_field always gets
-        #    automatically set to '1' - probably page's js is doing this)
+        #    automatically set to '1' - page's JavaScript is doing this)
         # then enter and submit the desired subpage number
         # fmt: off
         actions.key_down(mod_key).send_keys_to_element(page_field, "a") \
