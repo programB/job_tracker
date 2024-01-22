@@ -1,3 +1,6 @@
 venv/
+venv_OLD/
 __pycache__/
 zzz_temp
+*.egg-info/
+ABC/
