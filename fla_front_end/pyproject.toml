@@ -7,5 +7,4 @@ name = "job-tracker-backend"
 version = "0.0.1"
 dependencies = [
   "Flask",
-  "selenium",
 ]
