@@ -3,8 +3,9 @@ requires = ["setuptools>=69.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "job-tracker-backend"
+name = "job-tracker-frontend"
 version = "0.0.1"
 dependencies = [
   "Flask",
+  "python-dotenv",
 ]

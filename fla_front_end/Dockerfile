@@ -51,10 +51,14 @@ RUN python -m pip install --no-cache-dir -r pip-requirements.txt && \
   python -m pip install --no-cache-dir -c constraints.txt "."
 
 # Copy over project's sources
+COPY --chown=regularuser .env ./
 COPY --chown=regularuser src/ src/
 
 # Install project's package
 RUN python -m pip install . -c constraints.txt
 
+WORKDIR /home/regularuser/src
+
 # run whatever needs to be run
-# CMD []
+CMD ["flask", "--app", "job_tracker_frontend", "run", \
+  "--host", "0.0.0.0", "--port", "5000"]
