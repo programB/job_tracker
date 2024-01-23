@@ -51,6 +51,7 @@ RUN python -m pip install --no-cache-dir -r pip-requirements.txt && \
   python -m pip install --no-cache-dir -c constraints.txt "."
 
 # Copy over project's sources
+COPY --chown=regularuser .env ./
 COPY --chown=regularuser src/ src/
 
 # Install project's package
