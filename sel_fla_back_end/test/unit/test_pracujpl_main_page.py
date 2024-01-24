@@ -1,6 +1,6 @@
 import pytest
 
-from tester_jobs_auto.pracujpl_POM import PracujplMainPage
+from job_tracker.pracujpl_POM import PracujplMainPage
 
 
 def test_should_create_PracujplMainPage_object(selenium_driver):
