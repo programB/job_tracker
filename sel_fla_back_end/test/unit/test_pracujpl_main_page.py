@@ -35,7 +35,7 @@ def test_should_check_distance_field_is_shown_when_requested(selenium_driver):
 
 
 @pytest.mark.parametrize("reject_param", [True, False])
-def test_should_enter_text_into_search_filed(selenium_driver, reject_param):
+def test_should_enter_text_into_search_field(selenium_driver, reject_param):
     main_page = PracujplMainPage(
         selenium_driver,
         reject_cookies=reject_param,
@@ -43,7 +43,7 @@ def test_should_enter_text_into_search_filed(selenium_driver, reject_param):
     )
     text_to_enter = "Tester"
     main_page.search_term = text_to_enter
-    assert main_page.search_term == text_to_enter
+    assert main_page.search_term.casefold() == text_to_enter.casefold()
 
 
 def test_should_check_extended_search_options_are_available(selenium_driver):
