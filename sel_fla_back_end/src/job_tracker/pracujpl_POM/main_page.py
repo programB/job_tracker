@@ -424,7 +424,9 @@ class PracujplMainPage(BaseNavigation):
     @search_term.setter
     def search_term(self, value: str):
         self.search_field.send_keys(value)
-        self.search_field.send_keys(Keys.ENTER)
+        # Sending the enter key started to cause
+        # the search to begin immediately.
+        # self.search_field.send_keys(Keys.ENTER)
 
     @property
     def _location(self) -> str:
