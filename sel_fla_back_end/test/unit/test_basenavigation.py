@@ -7,7 +7,7 @@ from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
-from tester_jobs_auto.pracujpl_POM import BaseNavigation
+from job_tracker.pracujpl_POM import BaseNavigation
 
 
 @pytest.fixture

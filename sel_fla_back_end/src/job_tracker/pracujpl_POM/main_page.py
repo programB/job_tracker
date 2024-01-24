@@ -424,7 +424,9 @@ class PracujplMainPage(BaseNavigation):
     @search_term.setter
     def search_term(self, value: str):
         self.search_field.send_keys(value)
-        self.search_field.send_keys(Keys.ENTER)
+        # Sending the enter key started to cause
+        # the search to begin immediately.
+        # self.search_field.send_keys(Keys.ENTER)
 
     @property
     def _location(self) -> str:
@@ -525,14 +527,13 @@ class PracujplMainPage(BaseNavigation):
 
     @property
     def search_bar_box(self) -> WebElement:
-        if self._search_bar_box[0] is None:
-            try:
-                self._search_bar_box[0] = self.find(
-                    self._search_bar_box[1],
-                )
-            except SE.NoSuchElementException as e:
-                logging.critical("search box was not found")
-                raise e
+        try:
+            self._search_bar_box[0] = self.find(
+                self._search_bar_box[1],
+            )
+        except SE.NoSuchElementException as e:
+            logging.critical("search box was not found")
+            raise e
         return self._search_bar_box[0]
 
     def start_searching(self):
@@ -561,11 +562,10 @@ class PracujplMainPage(BaseNavigation):
         )
 
     def _get_search_bar_control(self, control):
-        if control[0] is None:
-            try:
-                logging.warning(f"Looking for {control}")
-                control[0] = self.find(control[1], root_element=self.search_bar_box)
-            except SE.NoSuchElementException as e:
-                logging.critical(f"{control[0]} was not found")
-                raise e
+        try:
+            logging.warning(f"Looking for {control}")
+            control[0] = self.find(control[1], root_element=self.search_bar_box)
+        except SE.NoSuchElementException as e:
+            logging.critical(f"{control[0]} was not found")
+            raise e
         return control[0]

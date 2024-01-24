@@ -9,3 +9,8 @@ dependencies = [
   "Flask",
   "selenium",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]

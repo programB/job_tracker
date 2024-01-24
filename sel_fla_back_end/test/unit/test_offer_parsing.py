@@ -1,7 +1,7 @@
 import pytest
 
-from tester_jobs_auto.pracujpl_POM import PracujplMainPage, ResultsPage
-from tester_jobs_auto.pracujpl_POM.main_page import Distance
+from job_tracker.pracujpl_POM import PracujplMainPage, ResultsPage
+from job_tracker.pracujpl_POM.main_page import Distance
 
 
 @pytest.fixture
