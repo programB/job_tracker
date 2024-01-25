@@ -1,0 +1,34 @@
+services:
+  chromeindocker:
+    image: selenium/standalone-chrome:4.17.0-20240123
+    networks:
+      - selenium-network
+    ports:
+      - "4444:4444" # selenium grid
+      - "5900:5900" # VNC
+      - "7900:7900" # novnc
+    # Due to a bug the system inside the container has very large limit
+    # on the number of opened files,
+    # this leads to extremely long image set up time.
+    # (https://github.com/SeleniumHQ/docker-selenium/issues/2045)
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # some pages will fail to load (error code: SIGTRAP)
+    # if allocated memory size is to small
+    shm_size: "2gb"
+    environment:
+      - SE_VNC_NO_PASSWORD=1
+
+  job-tracker-backend:
+    build: .
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    networks:
+      - selenium-network
+    depends_on:
+      - chromeindocker
+
+networks:
+  selenium-network:

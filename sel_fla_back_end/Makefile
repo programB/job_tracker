@@ -1,7 +1,8 @@
-.PHONY: docker_image, docker_image_from_scratch, get_global_requirements, remove_global_requirements, clean_source_tree, run_in_docker, run_chrome_in_docker
+.PHONY: docker_image, docker_image_from_scratch, get_global_requirements, remove_global_requirements, clean_source_tree, run_in_docker, run_chrome_in_docker, compose_up, compose_down, compose_app_shell
 
 IMAGE_TAG=job-tracker-backend
 CONTAINER_NAME=job-tracker-backend-service
+COMPOSE_YAML_FILE = testrunner-docker-compose.yaml
 
 docker_image:
 	make get_global_requirements
@@ -32,3 +33,12 @@ run_chrome_in_docker:
 	# When no longer needed stop the this container using:
 	#   docker stop standalone-chrome
 	# It will be automatically removed.
+
+compose_up:
+	docker compose --file ${COMPOSE_YAML_FILE} up -d
+
+compose_down:
+	docker compose --file ${COMPOSE_YAML_FILE} down
+
+compose_app_shell:
+	docker compose --file ${COMPOSE_YAML_FILE} exec job-tracker-backend sh
