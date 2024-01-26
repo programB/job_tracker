@@ -54,7 +54,10 @@ def selenium_driver(selenium_grid_url, selenium_grid_port):
         #          Adding trailing slash leads to errors like eg.
         #          "selenium.common.exceptions.WebDriverException: \
         #           Message: Unable to find handler for (POST) //session"
-        # driver = webdriver.Remote("http://chromeindocker:4444/", options=options)
+        # driver = webdriver.Remote(
+        #     "http://chromeindocker:4444/",
+        #     options=options,
+        # )
 
         driver = webdriver.Remote(
             command_executor=selenium_grid_url + ":" + port,

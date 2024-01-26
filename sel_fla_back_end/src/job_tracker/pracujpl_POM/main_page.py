@@ -1,19 +1,22 @@
 import logging
 import re
 from enum import Enum
-from typing import Tuple
+from typing import TYPE_CHECKING
 
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
+
+if TYPE_CHECKING:
+    from selenium.webdriver.remote.webelement import WebElement
+    from typing import Tuple
 
 from .base_navigation import BaseNavigation
 
 
 class Distance(Enum):
-    """Enum represents finite choice of search radii (around desired location)"""
+    """Represents finite choice of search radii (around desired location)"""
 
     ZERO_KM = 0
     TEN_KM = 10
@@ -98,7 +101,7 @@ class OptionsMenu(BaseNavigation):
                         expected_conditions.visibility_of_element_located(
                             (
                                 self._main_locator[0],
-                                self._main_locator[1] + self._option_locators[option],
+                                self._main_locator[1] + self._option_locators[option],  # noqa: E501
                             )
                         )
                     )
@@ -133,7 +136,7 @@ class OptionsMenu(BaseNavigation):
                     expected_conditions.visibility_of_element_located(
                         (
                             self._main_locator[0],
-                            self._main_locator[1] + self._option_locators[option],
+                            self._main_locator[1] + self._option_locators[option],  # noqa: E501
                         )
                     )
                 )
@@ -214,14 +217,14 @@ class CookieChoice(BaseNavigation):
             btn_customize_cookies = self.find(
                 (
                     By.XPATH,
-                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",  # noqa: E501
                 ),
             )
             btn_customize_cookies.click()
             btn_save_cookie_settings = self.find(
                 (
                     By.XPATH,
-                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",
+                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",  # noqa: E501
                 ),
             )
             btn_save_cookie_settings.click()
@@ -232,7 +235,7 @@ class CookieChoice(BaseNavigation):
             btn_accept_all_cookies = self.find(
                 (
                     By.XPATH,
-                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",  # noqa: E501
                 ),
             )
             btn_accept_all_cookies.click()
@@ -241,7 +244,12 @@ class CookieChoice(BaseNavigation):
 class PracujplMainPage(BaseNavigation):
     """Models pracuj.pl home page"""
 
-    def __init__(self, driver, visual_mode=False, reject_cookies=False) -> None:
+    def __init__(
+        self,
+        driver,
+        visual_mode=False,
+        reject_cookies=False,
+    ) -> None:
         """
 
         Parameters
@@ -266,7 +274,7 @@ class PracujplMainPage(BaseNavigation):
             None,
             (
                 By.XPATH,
-                "//div[@data-test='section-search-bar' or @data-test='section-search-bar-it']",
+                "//div[@data-test='section-search-bar' or @data-test='section-search-bar-it']",  # noqa: E501
             ),
         ]
 
@@ -274,7 +282,7 @@ class PracujplMainPage(BaseNavigation):
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-with-filters' or @data-test='section-search-with-filters-it']/button",
+                ".//descendant::div[@data-test='section-search-with-filters' or @data-test='section-search-with-filters-it']/button",  # noqa: E501
             ),
         ]
         self.job_level = OptionsMenu(
@@ -285,12 +293,12 @@ class PracujplMainPage(BaseNavigation):
                 "trainee": "//descendant::div[@data-test='select-option-1']",
                 "assistant": "//descendant::div[@data-test='select-option-3']",
                 "junior": "//descendant::div[@data-test='select-option-17']",
-                "mid_regular": "//descendant::div[@data-test='select-option-4']",
+                "mid_regular": "//descendant::div[@data-test='select-option-4']",  # noqa: E501
                 "senior": "//descendant::div[@data-test='select-option-18']",
                 "expert": "//descendant::div[@data-test='select-option-19']",
                 "manager": "//descendant::div[@data-test='select-option-5']",
                 "director": "//descendant::div[@data-test='select-option-6']",
-                "president": "//descendant::div[@data-test='select-option-21']",
+                "president": "//descendant::div[@data-test='select-option-21']",  # noqa: E501
                 "laborer": "//descendant::div[@data-test='select-option-21']",
             },
         )
@@ -303,9 +311,9 @@ class PracujplMainPage(BaseNavigation):
                 "o_dzielo": "//descendant::div[@data-test='select-option-1']",
                 "zlecenie": "//descendant::div[@data-test='select-option-2']",
                 "B2B": "//descendant::div[@data-test='select-option-3']",
-                "o_zastepstwo": "//descendant::div[@data-test='select-option-4']",
+                "o_zastepstwo": "//descendant::div[@data-test='select-option-4']",  # noqa: E501
                 "agencyjna": "//descendant::div[@data-test='select-option-5']",
-                "o_prace_tymczasowa": "//descendant::div[@data-test='select-option-6']",
+                "o_prace_tymczasowa": "//descendant::div[@data-test='select-option-6']",  # noqa: E501
                 "praktyki": "//descendant::div[@data-test='select-option-7']",
             },
         )
@@ -324,31 +332,31 @@ class PracujplMainPage(BaseNavigation):
             main_locator=(By.XPATH, "//div[@data-test='dropdown-element-wm']"),
             btn_rel_locator="//descendant::button[1]",
             option_rel_locators={
-                "full_office": "//descendant::div[@data-test='select-option-full-office']",
-                "hybrid": "//descendant::div[@data-test='select-option-hybrid']",
-                "home_office": "//descendant::div[@data-test='select-option-home-office']",
-                "mobile": "//descendant::div[@data-test='select-option-mobile']",
+                "full_office": "//descendant::div[@data-test='select-option-full-office']",  # noqa: E501
+                "hybrid": "//descendant::div[@data-test='select-option-hybrid']",  # noqa: E501
+                "home_office": "//descendant::div[@data-test='select-option-home-office']",  # noqa: E501
+                "mobile": "//descendant::div[@data-test='select-option-mobile']",  # noqa: E501
             },
         )
         self._search_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::label[contains(text(), 'Stanowisko, firma, słowo kluczowe') or contains(text(), 'Посада, компанія, ключове слово')]/preceding-sibling::input[@data-test='input-field']",
+                ".//descendant::label[contains(text(), 'Stanowisko, firma, słowo kluczowe') or contains(text(), 'Посада, компанія, ключове слово')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501
             ),
         ]
         self._category_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::label[contains(text(), 'Kategoria') or contains(text(), 'Категорія')]/preceding-sibling::input[@data-test='input-field']",
+                ".//descendant::label[contains(text(), 'Kategoria') or contains(text(), 'Категорія')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501
             ),
         ]
         self._location_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::label[contains(text(), 'Lokalizacja') or contains(text(), 'Розташування')]/preceding-sibling::input[@data-test='input-field']",
+                ".//descendant::label[contains(text(), 'Lokalizacja') or contains(text(), 'Розташування')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501
             ),
         ]
 
@@ -402,7 +410,7 @@ class PracujplMainPage(BaseNavigation):
             case "it":
                 xpath = ".//descendant::span[@data-test='tab-item-it']"
             case _:
-                logging.error(f"unknown search mode {mode}, valid: 'default', 'it'")
+                logging.error(f"unknown search mode {mode}, valid: 'default', 'it'")  # noqa: E501
                 return
         selector = self.find(
             (By.XPATH, xpath),
@@ -457,7 +465,7 @@ class PracujplMainPage(BaseNavigation):
     def _distance(self) -> Distance:
         try:
             d_filed = self.find(
-                (By.XPATH, ".//descendant::input[@data-test='input-field' and @value]"),
+                (By.XPATH, ".//descendant::input[@data-test='input-field' and @value]"),  # noqa: E501
                 root_element=self._distance_dropdown,
             )
             str_d_value = d_filed.get_attribute("value")
@@ -564,7 +572,7 @@ class PracujplMainPage(BaseNavigation):
     def _get_search_bar_control(self, control):
         try:
             logging.warning(f"Looking for {control}")
-            control[0] = self.find(control[1], root_element=self.search_bar_box)
+            control[0] = self.find(control[1], root_element=self.search_bar_box)  # noqa: E501
         except SE.NoSuchElementException as e:
             logging.critical(f"{control[0]} was not found")
             raise e

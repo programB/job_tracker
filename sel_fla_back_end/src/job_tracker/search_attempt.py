@@ -1,9 +1,12 @@
 import logging
+
+from pracujpl_POM import Distance, PracujplMainPage, ResultsPage
+from selenium import webdriver
+
 # import random
 # import time
 
-from pracujpl_POM import PracujplMainPage, ResultsPage, Distance
-from selenium import webdriver
+
 # from selenium.webdriver.common.keys import Keys
 
 driver = webdriver.Chrome()
@@ -13,16 +16,22 @@ main_page = PracujplMainPage(driver, reject_cookies=True)
 
 if main_page.search_mode == "default":
     main_page.search_mode = "it"
-tags = main_page.search_mode == 'it'
+tags = main_page.search_mode == "it"
 # main_page.search_mode = "default"
 
 # main_page.employment_type.select(["full_time"])
-# logging.warning(f"Current selection of employment types is: {main_page.employment_type}")
+# logging.warning(
+#     f"Current selection of employment types is: \
+# {main_page.employment_type}"
+# )
 # logging.warning("selectnig full_time")
 
 main_page.employment_type = ["full_time"]
 
-# logging.warning(f"Current selection of employment types is: {main_page.employment_type}")
+# logging.warning(
+#     f"Current selection of employment types is: \
+# {main_page.employment_type}"
+# )
 # time.sleep(1)
 
 # main_page.location_field.send_keys("Warszawa")
@@ -57,15 +66,24 @@ results_page = ResultsPage(driver)
 # time.sleep(2)
 
 cur_subpage_element, cur_subpage_number = results_page.get_current_subpage()
-logging.warning(f"Current subpage is: {cur_subpage_element} and its number is : {cur_subpage_number}")
-logging.warning(f"Total number of subpages is: {results_page.tot_no_of_subpages}")
+logging.warning(
+    f"Current subpage is: {cur_subpage_element} and \
+its number is : {cur_subpage_number}"
+)
+logging.warning(
+    f"Total number of subpages is: \
+{results_page.tot_no_of_subpages}"
+)
 # time.sleep(2)
 
 # desired_subpage = random.randrange(1, results_page.tot_no_of_subpages)
 # desired_subpage = 3
 # results_page.goto_subpage(desired_subpage)
 # cur_subpage_element, cur_subpage_number = results_page.current_subpage()
-# logging.warning(f"Current subpage is: {cur_subpage_element} and its number is : {cur_subpage_number}")
+# logging.warning(
+#     f"Current subpage is: {cur_subpage_element} and \
+# its number is : {cur_subpage_number}"
+# )
 
 # subpage_offers = results_page.subpage_offers
 # time.sleep(2)

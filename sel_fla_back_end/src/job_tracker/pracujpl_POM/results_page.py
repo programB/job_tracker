@@ -1,13 +1,16 @@
 import logging
 import platform
 import time
+from typing import TYPE_CHECKING
 
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
+
+if TYPE_CHECKING:
+    from selenium.webdriver.remote.webelement import WebElement
 
 from .base_navigation import BaseNavigation
 
@@ -59,20 +62,20 @@ class Advertisement(BaseNavigation):
         # and visible and there should be no need to use any of the selenium
         # wait strategies to parse the contents of individual offers.
         try:
-            default_offer_div = self.root_element.find_element(
+            top_div = self.root_element.find_element(
                 By.XPATH,
-                "./div[@data-test='default-offer' and @data-test-offerid and @data-test-location]",
+                "./div[@data-test='default-offer' and @data-test-offerid and @data-test-location]",  # noqa: E501
             )
-            self._offer_dict["id"] = default_offer_div.get_attribute("data-test-offerid")
+            self._offer_dict["id"] = top_div.get_attribute("data-test-offerid")
         except SE.NoSuchElementException:
             # There are commercial ads among genuine offers
             # that should be ignored
-            logging.error(f"no valid offer found in the div {self.root_element}")
+            logging.error(f"no valid offer found in div {self.root_element}")
             self.is_valid_offer = False
             return
 
         try:
-            match default_offer_div.get_attribute("data-test-location"):
+            match top_div.get_attribute("data-test-location"):
                 case "single":
                     self.is_multiple_location_offer = False
                 case "multiple":
@@ -83,7 +86,7 @@ class Advertisement(BaseNavigation):
             logging.warning("unknown offer type (neither single nor multiple)")
 
         try:
-            link = default_offer_div.find_element(By.XPATH, "./div/a").get_attribute("href")
+            link = top_div.find_element(By.XPATH, "./div/a").get_attribute("href")  # noqa: E501
             self._offer_dict["link"] = link
         except SE.NoSuchElementException:
             # Some job offers advertise the same position in multiple
@@ -100,7 +103,7 @@ class Advertisement(BaseNavigation):
             else:
                 # search_xpath = ".//h2[@data-test='offer-title']/a"
                 search_xpath = ".//descendant::h2[@data-test='offer-title']/a"
-            self._offer_dict["title"] = default_offer_div.find_element(
+            self._offer_dict["title"] = top_div.find_element(
                 By.XPATH,
                 search_xpath,
             ).text
@@ -112,7 +115,7 @@ class Advertisement(BaseNavigation):
             raise webelement_not_found
 
         try:
-            self._offer_dict["salary"] = default_offer_div.find_element(
+            self._offer_dict["salary"] = top_div.find_element(
                 By.XPATH,
                 ".//descendant::span[@data-test='offer-salary']",
             ).text
@@ -122,7 +125,7 @@ class Advertisement(BaseNavigation):
             logging.warning("offer does not provide salary information")
 
         try:
-            self._offer_dict["company_name"] = default_offer_div.find_element(
+            self._offer_dict["company_name"] = top_div.find_element(
                 By.XPATH,
                 ".//descendant::*[@data-test='text-company-name']",
             ).text
@@ -134,14 +137,15 @@ class Advertisement(BaseNavigation):
             return
 
         try:
-            self._offer_dict["job_level"] = default_offer_div.find_element(
+            self._offer_dict["job_level"] = top_div.find_element(
                 By.XPATH,
                 ".//descendant::li[@data-test='offer-additional-info-0']",
             ).get_attribute("innerText")
             # ).text
             # the text property isn't working as the text has some
             # pseudo selectors eg:
-            # <li class="mobile-hidden tiles_iwlrcdk" data-test="offer-additional-info-0">
+            # <li class="mobile-hidden tiles_iwlrcdk"
+            #     data-test="offer-additional-info-0">
             # Specjalista (Mid / Regular)
             # ::after
             # </li>
@@ -150,7 +154,7 @@ class Advertisement(BaseNavigation):
             logging.warning("offer does not provide job level information")
 
         try:
-            self._offer_dict["contract_type"] = default_offer_div.find_element(
+            self._offer_dict["contract_type"] = top_div.find_element(
                 By.XPATH,
                 ".//descendant::li[@data-test='offer-additional-info-1']",
             ).get_attribute("innerText")
@@ -166,7 +170,7 @@ class Advertisement(BaseNavigation):
                 By.XPATH,
                 ".//descendant::span[@data-test='technologies-item']",
             ),
-            root_element=default_offer_div,
+            root_element=top_div,
         ):
             for tag in tech_tags_elements:
                 self._offer_dict["technology_tags"].append(tag.text)
@@ -300,12 +304,14 @@ class ResultsPage(BaseNavigation):
         int
         """
         try:
-            tot_p_locator = (
+            tot_locator = (
                 By.XPATH,
                 "//span[@data-test='top-pagination-max-page-number']",
             )
-            tot_no_element = self.wait_with_timeout.until(expected_conditions.visibility_of_element_located(tot_p_locator))
-            self.is_displayed(tot_p_locator)
+            tot_no_element = self.wait_with_timeout.until(
+                expected_conditions.visibility_of_element_located(tot_locator),
+            )
+            self.is_displayed(tot_locator)
         except SE.NoSuchElementException:
             logging.warning("Total number of subpages couldn't be established")
             return 0
@@ -377,7 +383,9 @@ class ResultsPage(BaseNavigation):
             (valid subpage numbering always starts from 1)
         """
         try:
-            csb_element = self.find((By.XPATH, "//input[@name='top-pagination']"))
+            csb_element = self.find(
+                (By.XPATH, "//input[@name='top-pagination']"),
+            )
         except SE.NoSuchElementException:
             logging.warning("Current subpage number couldn't be established")
             return (None, 0)
@@ -400,14 +408,20 @@ class ResultsPage(BaseNavigation):
         """
         page_field, page_no = self.get_current_subpage()
         if page_field is None:
-            raise RuntimeError(f"could not switch to subpage {n}, page selector not found")
+            raise RuntimeError(
+                f"could not switch to subpage {n}, \
+            page selector not found"
+            )
 
         tot_no_of_subpages = self.tot_no_of_subpages
         if (page_no == 0) or (page_no > tot_no_of_subpages):
-            raise ValueError(f"failed to switch to not existing subpage no. {n}, there are only {tot_no_of_subpages} subpages")
+            raise ValueError(
+                f"failed to switch to not existing subpage no. {n}, \
+            there are only {tot_no_of_subpages} subpages"
+            )
 
         actions = ActionChains(self.driver)
-        mod_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
+        mod_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL  # noqa: E501
         # Clear the field by ctrl+a and Delete,
         #   (page_field.clear() doesn't work and page_field always gets
         #    automatically set to '1' - page's JavaScript is doing this)

@@ -1,9 +1,12 @@
 import logging
 import time
-from typing import List, Tuple
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from selenium.webdriver.remote.webelement import WebElement
+    from typing import List, Tuple
 
 from selenium.common import exceptions as SE
-from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
