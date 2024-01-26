@@ -86,7 +86,9 @@ class Advertisement(BaseNavigation):
             logging.warning("unknown offer type (neither single nor multiple)")
 
         try:
-            link = top_div.find_element(By.XPATH, "./div/a").get_attribute("href")  # noqa: E501
+            link = top_div.find_element(By.XPATH, "./div/a").get_attribute(
+                "href"
+            )  # noqa: E501
             self._offer_dict["link"] = link
         except SE.NoSuchElementException:
             # Some job offers advertise the same position in multiple
@@ -421,7 +423,9 @@ class ResultsPage(BaseNavigation):
             )
 
         actions = ActionChains(self.driver)
-        mod_key = Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL  # noqa: E501
+        mod_key = (
+            Keys.COMMAND if platform.system() == "Darwin" else Keys.CONTROL
+        )  # noqa: E501
         # Clear the field by ctrl+a and Delete,
         #   (page_field.clear() doesn't work and page_field always gets
         #    automatically set to '1' - page's JavaScript is doing this)

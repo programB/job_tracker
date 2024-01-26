@@ -101,7 +101,8 @@ class OptionsMenu(BaseNavigation):
                         expected_conditions.visibility_of_element_located(
                             (
                                 self._main_locator[0],
-                                self._main_locator[1] + self._option_locators[option],  # noqa: E501
+                                self._main_locator[1]
+                                + self._option_locators[option],  # noqa: E501
                             )
                         )
                     )
@@ -136,7 +137,8 @@ class OptionsMenu(BaseNavigation):
                     expected_conditions.visibility_of_element_located(
                         (
                             self._main_locator[0],
-                            self._main_locator[1] + self._option_locators[option],  # noqa: E501
+                            self._main_locator[1]
+                            + self._option_locators[option],  # noqa: E501
                         )
                     )
                 )
@@ -410,7 +412,9 @@ class PracujplMainPage(BaseNavigation):
             case "it":
                 xpath = ".//descendant::span[@data-test='tab-item-it']"
             case _:
-                logging.error(f"unknown search mode {mode}, valid: 'default', 'it'")  # noqa: E501
+                logging.error(
+                    f"unknown search mode {mode}, valid: 'default', 'it'"
+                )  # noqa: E501
                 return
         selector = self.find(
             (By.XPATH, xpath),
@@ -465,7 +469,10 @@ class PracujplMainPage(BaseNavigation):
     def _distance(self) -> Distance:
         try:
             d_filed = self.find(
-                (By.XPATH, ".//descendant::input[@data-test='input-field' and @value]"),  # noqa: E501
+                (
+                    By.XPATH,
+                    ".//descendant::input[@data-test='input-field' and @value]",  # noqa: E501
+                ),
                 root_element=self._distance_dropdown,
             )
             str_d_value = d_filed.get_attribute("value")
@@ -572,7 +579,9 @@ class PracujplMainPage(BaseNavigation):
     def _get_search_bar_control(self, control):
         try:
             logging.warning(f"Looking for {control}")
-            control[0] = self.find(control[1], root_element=self.search_bar_box)  # noqa: E501
+            control[0] = self.find(
+                control[1], root_element=self.search_bar_box
+            )  # noqa: E501
         except SE.NoSuchElementException as e:
             logging.critical(f"{control[0]} was not found")
             raise e
