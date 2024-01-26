@@ -48,10 +48,11 @@ COPY --chown=regularuser pip-requirements.txt pyproject.toml constraints.txt ./
 #  only the dependencies, will not have to get rebuild).
 RUN python -m pip install --no-cache-dir -r pip-requirements.txt && \
   python -m pip install --no-cache-dir --upgrade setuptools && \
-  python -m pip install --no-cache-dir -c constraints.txt "."
+  python -m pip install --no-cache-dir -c constraints.txt ".[dev]"
 
 # Copy over project's sources
 COPY --chown=regularuser src/ src/
+COPY --chown=regularuser test/ test/
 
 # Install project's package
 RUN python -m pip install . -c constraints.txt

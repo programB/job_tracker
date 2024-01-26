@@ -13,4 +13,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pyclean",
+]
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+markers = [
+  "slow: mark a test that takes a long time to run.",
 ]
