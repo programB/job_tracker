@@ -1,14 +1,17 @@
+from __future__ import annotations
+
 import logging
 import time
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from selenium.webdriver.remote.webelement import WebElement
-    from typing import List, Tuple
-
 from selenium.common import exceptions as SE
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
+
+if TYPE_CHECKING:
+    from typing import List, Tuple
+
+    from selenium.webdriver.remote.webelement import WebElement
 
 
 class BaseNavigation:
@@ -85,11 +88,10 @@ class BaseNavigation:
         try:
             self.driver.get(url)
         except Exception as e:
-            logging.warning(f"problem visiting the page at: {url}")
+            logging.warning("problem visiting the page at: %s", url)
             if "ERR_NAME_NOT_RESOLVED" in str(e):
-                raise ConnectionError
-            else:
-                raise e
+                raise ConnectionError from e
+            raise e
 
     def find(
         self,
@@ -225,7 +227,7 @@ class BaseNavigation:
             )
             return True
         except SE.TimeoutException:
-            logging.warning(f"timeout: {locator} not visible")
+            logging.warning("timeout: %s not visible", locator)
             return False
 
     def set_visual_mode(self, state: bool):

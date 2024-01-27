@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import re
 from enum import Enum
@@ -8,11 +10,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 
+from .base_navigation import BaseNavigation
+
 if TYPE_CHECKING:
-    from selenium.webdriver.remote.webelement import WebElement
     from typing import Tuple
 
-from .base_navigation import BaseNavigation
+    from selenium.webdriver.remote.webelement import WebElement
 
 
 class Distance(Enum):
@@ -70,8 +73,7 @@ class OptionsMenu(BaseNavigation):
 
     @property
     def menu(self) -> WebElement:
-        if self.timeout_sec < 3.0:
-            self.timeout_sec = 3.0
+        self.timeout_sec = max(self.timeout_sec, 3.0)
 
         # x will be set to self.driver
         menu: WebElement = self.wait_with_timeout.until(
@@ -102,7 +104,9 @@ class OptionsMenu(BaseNavigation):
                             (
                                 self._main_locator[0],
                                 self._main_locator[1]
-                                + self._option_locators[option],  # noqa: E501
+                                + self._option_locators[
+                                    option
+                                ],  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                             )
                         )
                     )
@@ -110,12 +114,12 @@ class OptionsMenu(BaseNavigation):
                         self._scroll_into_view(element)
                         element.click()
                 except SE.NoSuchElementException:
-                    logging.warning(f"{option} not found in the menu")
+                    logging.warning("%s not found in the menu", option)
                 finally:
                     # fold menu
                     self.menu.click()
             else:
-                logging.warning(f"unable to select unknown option: {option}")
+                logging.warning("unable to select unknown option: %s", option)
 
     def is_selected(self, option: str) -> bool:
         """Check the webpage if given option is indeed selected
@@ -138,20 +142,20 @@ class OptionsMenu(BaseNavigation):
                         (
                             self._main_locator[0],
                             self._main_locator[1]
-                            + self._option_locators[option],  # noqa: E501
+                            + self._option_locators[
+                                option
+                            ],  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                         )
                     )
                 )
-                if "selected" in element.get_attribute("class"):
-                    # fold menu
-                    self.menu.click()
-                    return True
-                else:
-                    # fold menu
-                    self.menu.click()
-                    return False
+                # FIRST check selection condition THEN close menu.
+                # Shortening this to self.menu.click(); return "selected" in...
+                # leads to StaleElementReferenceException
+                is_sel: bool = "selected" in element.get_attribute("class")
+                self.menu.click()
+                return is_sel
             except SE.NoSuchElementException:
-                logging.warning(f"{option} not found in the menu")
+                logging.warning("%s not found in the menu", option)
                 return False
         return False
 
@@ -162,19 +166,6 @@ class OptionsMenu(BaseNavigation):
 
 class CookieChoice(BaseNavigation):
     """Represents cookie consent overlay"""
-
-    def __init__(self, driver, visual_mode=False) -> None:
-        """
-
-        Parameters
-        ----------
-        driver : WebDriver
-            selenium webdriver object
-        visual_mode : bool
-            global switch causing elements found using the find
-            and find_all methods to get highlighted
-        """
-        super().__init__(driver, visual_mode)
 
     @property
     def _overlay_cookie_consent(self) -> WebElement | None:
@@ -208,10 +199,7 @@ class CookieChoice(BaseNavigation):
         bool
         """
         cookie_overlay = self._overlay_cookie_consent
-        if cookie_overlay is not None:
-            return cookie_overlay.is_displayed()
-        else:
-            return False
+        return (cookie_overlay is not None) and cookie_overlay.is_displayed()
 
     def reject_non_essential_cookies(self):
         """Chooses to reject non essential cookies and dismisses the overlay"""
@@ -219,14 +207,14 @@ class CookieChoice(BaseNavigation):
             btn_customize_cookies = self.find(
                 (
                     By.XPATH,
-                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",  # noqa: E501
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-customizeCookie']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                 ),
             )
             btn_customize_cookies.click()
             btn_save_cookie_settings = self.find(
                 (
                     By.XPATH,
-                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",  # noqa: E501
+                    "//div[@data-test='modal-cookie-customize']//descendant::button[@data-test='button-submit']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                 ),
             )
             btn_save_cookie_settings.click()
@@ -237,7 +225,7 @@ class CookieChoice(BaseNavigation):
             btn_accept_all_cookies = self.find(
                 (
                     By.XPATH,
-                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",  # noqa: E501
+                    "//div[contains(@class, 'cookies')]//descendant::button[@data-test='button-submitCookie']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                 ),
             )
             btn_accept_all_cookies.click()
@@ -276,7 +264,7 @@ class PracujplMainPage(BaseNavigation):
             None,
             (
                 By.XPATH,
-                "//div[@data-test='section-search-bar' or @data-test='section-search-bar-it']",  # noqa: E501
+                "//div[@data-test='section-search-bar' or @data-test='section-search-bar-it']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
             ),
         ]
 
@@ -284,7 +272,7 @@ class PracujplMainPage(BaseNavigation):
             None,
             (
                 By.XPATH,
-                ".//descendant::div[@data-test='section-search-with-filters' or @data-test='section-search-with-filters-it']/button",  # noqa: E501
+                ".//descendant::div[@data-test='section-search-with-filters' or @data-test='section-search-with-filters-it']/button",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
             ),
         ]
         self.job_level = OptionsMenu(
@@ -295,12 +283,12 @@ class PracujplMainPage(BaseNavigation):
                 "trainee": "//descendant::div[@data-test='select-option-1']",
                 "assistant": "//descendant::div[@data-test='select-option-3']",
                 "junior": "//descendant::div[@data-test='select-option-17']",
-                "mid_regular": "//descendant::div[@data-test='select-option-4']",  # noqa: E501
+                "mid_regular": "//descendant::div[@data-test='select-option-4']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                 "senior": "//descendant::div[@data-test='select-option-18']",
                 "expert": "//descendant::div[@data-test='select-option-19']",
                 "manager": "//descendant::div[@data-test='select-option-5']",
                 "director": "//descendant::div[@data-test='select-option-6']",
-                "president": "//descendant::div[@data-test='select-option-21']",  # noqa: E501
+                "president": "//descendant::div[@data-test='select-option-21']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                 "laborer": "//descendant::div[@data-test='select-option-21']",
             },
         )
@@ -313,9 +301,9 @@ class PracujplMainPage(BaseNavigation):
                 "o_dzielo": "//descendant::div[@data-test='select-option-1']",
                 "zlecenie": "//descendant::div[@data-test='select-option-2']",
                 "B2B": "//descendant::div[@data-test='select-option-3']",
-                "o_zastepstwo": "//descendant::div[@data-test='select-option-4']",  # noqa: E501
+                "o_zastepstwo": "//descendant::div[@data-test='select-option-4']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                 "agencyjna": "//descendant::div[@data-test='select-option-5']",
-                "o_prace_tymczasowa": "//descendant::div[@data-test='select-option-6']",  # noqa: E501
+                "o_prace_tymczasowa": "//descendant::div[@data-test='select-option-6']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                 "praktyki": "//descendant::div[@data-test='select-option-7']",
             },
         )
@@ -334,31 +322,31 @@ class PracujplMainPage(BaseNavigation):
             main_locator=(By.XPATH, "//div[@data-test='dropdown-element-wm']"),
             btn_rel_locator="//descendant::button[1]",
             option_rel_locators={
-                "full_office": "//descendant::div[@data-test='select-option-full-office']",  # noqa: E501
-                "hybrid": "//descendant::div[@data-test='select-option-hybrid']",  # noqa: E501
-                "home_office": "//descendant::div[@data-test='select-option-home-office']",  # noqa: E501
-                "mobile": "//descendant::div[@data-test='select-option-mobile']",  # noqa: E501
+                "full_office": "//descendant::div[@data-test='select-option-full-office']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
+                "hybrid": "//descendant::div[@data-test='select-option-hybrid']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
+                "home_office": "//descendant::div[@data-test='select-option-home-office']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
+                "mobile": "//descendant::div[@data-test='select-option-mobile']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
             },
         )
         self._search_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::label[contains(text(), 'Stanowisko, firma, słowo kluczowe') or contains(text(), 'Посада, компанія, ключове слово')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501
+                ".//descendant::label[contains(text(), 'Stanowisko, firma, słowo kluczowe') or contains(text(), 'Посада, компанія, ключове слово')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
             ),
         ]
         self._category_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::label[contains(text(), 'Kategoria') or contains(text(), 'Категорія')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501
+                ".//descendant::label[contains(text(), 'Kategoria') or contains(text(), 'Категорія')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
             ),
         ]
         self._location_field = [
             None,
             (
                 By.XPATH,
-                ".//descendant::label[contains(text(), 'Lokalizacja') or contains(text(), 'Розташування')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501
+                ".//descendant::label[contains(text(), 'Lokalizacja') or contains(text(), 'Розташування')]/preceding-sibling::input[@data-test='input-field']",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
             ),
         ]
 
@@ -413,8 +401,9 @@ class PracujplMainPage(BaseNavigation):
                 xpath = ".//descendant::span[@data-test='tab-item-it']"
             case _:
                 logging.error(
-                    f"unknown search mode {mode}, valid: 'default', 'it'"
-                )  # noqa: E501
+                    "unknown search mode %s, valid: 'default', 'it'",
+                    mode,
+                )
                 return
         selector = self.find(
             (By.XPATH, xpath),
@@ -471,7 +460,7 @@ class PracujplMainPage(BaseNavigation):
             d_filed = self.find(
                 (
                     By.XPATH,
-                    ".//descendant::input[@data-test='input-field' and @value]",  # noqa: E501
+                    ".//descendant::input[@data-test='input-field' and @value]",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
                 ),
                 root_element=self._distance_dropdown,
             )
@@ -484,8 +473,7 @@ class PracujplMainPage(BaseNavigation):
         for dist in list(Distance):
             if int(m["dist"]) == dist.value:
                 return dist
-        else:
-            return Distance.ZERO_KM
+        return Distance.ZERO_KM
 
     @_distance.setter
     def _distance(self, distance: Distance):
@@ -578,11 +566,12 @@ class PracujplMainPage(BaseNavigation):
 
     def _get_search_bar_control(self, control):
         try:
-            logging.warning(f"Looking for {control}")
+            logging.warning("Looking for %s", control)
             control[0] = self.find(
-                control[1], root_element=self.search_bar_box
-            )  # noqa: E501
+                control[1],
+                root_element=self.search_bar_box,
+            )
         except SE.NoSuchElementException as e:
-            logging.critical(f"{control[0]} was not found")
+            logging.critical("%s was not found", control[0])
             raise e
         return control[0]

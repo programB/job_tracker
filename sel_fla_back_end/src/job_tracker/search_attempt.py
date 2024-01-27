@@ -1,7 +1,8 @@
 import logging
 
-from pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 from selenium import webdriver
+
+from .pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 
 # import random
 # import time
@@ -67,12 +68,13 @@ results_page = ResultsPage(driver)
 
 cur_subpage_element, cur_subpage_number = results_page.get_current_subpage()
 logging.warning(
-    f"Current subpage is: {cur_subpage_element} and \
-its number is : {cur_subpage_number}"
+    "Current subpage is: %s and its number is : %s",
+    cur_subpage_element,
+    cur_subpage_number,
 )
 logging.warning(
-    f"Total number of subpages is: \
-{results_page.tot_no_of_subpages}"
+    "Total number of subpages is: %s",
+    results_page.tot_no_of_subpages,
 )
 # time.sleep(2)
 
@@ -110,7 +112,8 @@ print(f"total number of offers: {len(all_offers)}")
 #     print(f" contract: {offer.contract_type}")
 #     print(f" link:     {offer.link}")
 #     print("----------------------------")
-with open("./search_result.txt", "w") as datafile:
+datafile_path = "../../../Temp_data/search_result.txt"
+with open(datafile_path, "w", encoding="utf-8") as datafile:
     for i, offer in enumerate(all_offers):
         datafile.write(f"({i})  Offer: {offer.title} (id: {offer.id})\n")
         datafile.write(f" company:  {offer.company_name}\n")

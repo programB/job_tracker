@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import platform
 import time
@@ -9,10 +11,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 
+from .base_navigation import BaseNavigation
+
 if TYPE_CHECKING:
     from selenium.webdriver.remote.webelement import WebElement
-
-from .base_navigation import BaseNavigation
 
 
 class Advertisement(BaseNavigation):
@@ -53,7 +55,9 @@ class Advertisement(BaseNavigation):
         self.is_multiple_location_offer = False
         self._build_dict()
 
-    def _build_dict(self):
+    def _build_dict(
+        self,
+    ):  # noqa: E501 pylint: disable=locally-disabled, too-many-statements, too-many-branches
         """Extracts information under the root_element, fills _offer_dict"""
 
         # NOTE: Advertisement object is constructed by parsing child div
@@ -64,13 +68,13 @@ class Advertisement(BaseNavigation):
         try:
             top_div = self.root_element.find_element(
                 By.XPATH,
-                "./div[@data-test='default-offer' and @data-test-offerid and @data-test-location]",  # noqa: E501
+                "./div[@data-test='default-offer' and @data-test-offerid and @data-test-location]",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
             )
             self._offer_dict["id"] = top_div.get_attribute("data-test-offerid")
         except SE.NoSuchElementException:
             # There are commercial ads among genuine offers
             # that should be ignored
-            logging.error(f"no valid offer found in div {self.root_element}")
+            logging.error("no valid offer found in div %s", self.root_element)
             self.is_valid_offer = False
             return
 
@@ -112,7 +116,7 @@ class Advertisement(BaseNavigation):
         except SE.NoSuchElementException as webelement_not_found:
             # Everything should have a title!
             # We should give up here
-            logging.warning(f"_offer_dict: {self._offer_dict}")
+            logging.warning("_offer_dict: %s", self._offer_dict)
             logging.warning("offer does not have a title")
             raise webelement_not_found
 
@@ -285,18 +289,6 @@ class Advertisement(BaseNavigation):
 class ResultsPage(BaseNavigation):
     """Class modeling the page with the search results"""
 
-    def __init__(self, driver, visual_mode=False):
-        """
-        Parameters
-        ----------
-        driver : WebDriver
-            selenium webdriver object
-        visual_mode: bool
-            decides whether all newly found elements will get highlighted
-            for human inspection
-        """
-        super(ResultsPage, self).__init__(driver, visual_mode)
-
     @property
     def tot_no_of_subpages(self) -> int:
         """Total number of subpages as reported by the webpage
@@ -317,8 +309,7 @@ class ResultsPage(BaseNavigation):
         except SE.NoSuchElementException:
             logging.warning("Total number of subpages couldn't be established")
             return 0
-        else:
-            return int(tot_no_element.text)
+        return int(tot_no_element.text)
 
     @property
     def subpage_offers(self) -> list[Advertisement]:
@@ -341,7 +332,7 @@ class ResultsPage(BaseNavigation):
             (By.XPATH, "./div"),
             root_element=offers_section,
         )
-        logging.warning(f"len(all_child_divs): {len(all_child_divs)}")
+        logging.warning("len(all_child_divs): %s", len(all_child_divs))
         for child_div in all_child_divs:
             ad = Advertisement(self.driver, child_div)
             if ad.is_valid_offer:
@@ -365,7 +356,7 @@ class ResultsPage(BaseNavigation):
         # de-duplicate the list before returning
         unique_offers = []
         for offer in offers:
-            if all([offer.id != u_offer.id for u_offer in unique_offers]):
+            if all((offer.id != u_offer.id for u_offer in unique_offers)):
                 unique_offers.append(offer)
         del offers
         return unique_offers
@@ -391,8 +382,7 @@ class ResultsPage(BaseNavigation):
         except SE.NoSuchElementException:
             logging.warning("Current subpage number couldn't be established")
             return (None, 0)
-        else:
-            return (csb_element, int(csb_element.get_attribute("value")))
+        return (csb_element, int(csb_element.get_attribute("value")))
 
     def goto_subpage(self, n: int) -> None:
         """Switch to a subpage
