@@ -20,6 +20,7 @@ dev = [
     "black",
     "pylint",
     "pylint-pytest",
+    "bandit",
 ]
 
 [tool.black]
