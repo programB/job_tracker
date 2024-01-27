@@ -18,6 +18,7 @@ dev = [
     "flake8-type-checking",
     "isort",
     "black",
+    "pylint",
 ]
 
 [tool.pytest.ini_options]
