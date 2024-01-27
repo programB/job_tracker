@@ -19,6 +19,7 @@ dev = [
     "isort",
     "black",
     "pylint",
+    "pylint-pytest",
 ]
 
 [tool.pytest.ini_options]
@@ -31,6 +32,7 @@ markers = [
 # creates a sample configuration file
 # with all available options set and explained in comments.
 [tool.pylint.main]
+load-plugins = ["pylint_pytest"] # silence false-positives when using pytest fixtures
 # Specify a score threshold under which the program will exit with error.
 fail-under = 9.5 # Accept less then perfect (10/10) code...
 fail-on = ["F", "E"] # ...but always fail on (fatal) errors regardless of score.
