@@ -20,6 +20,17 @@ services:
     shm_size: "2gb"
     environment:
       - SE_VNC_NO_PASSWORD=1
+    healthcheck:
+      # Use a script inside this image (provided by selenium devs)
+      # to check whether the grid is ready to accept and process
+      # requests.
+      # This healthcheck is then used by other
+      # services in this file to decide if their containers
+      # can start or not (yet)
+      test: '/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444  || exit 1'
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
   job-tracker-backend:
     build: .
@@ -29,6 +40,41 @@ services:
       - selenium-network
     depends_on:
       - chromeindocker
+
+  job-tracker-backend-tests:
+    profiles:
+      - testing
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      SELENIUM_GRID_URL: http://chromeindocker
+      SELENIUM_GRID_PORT: 4444
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    networks:
+      - selenium-network
+    depends_on:
+      chromeindocker:
+        # Use the healthcheck defined for the chromeindocker service above
+        # to find out if that service is indeed ready
+        # and the job-tracker-backend-tests container can be started already.
+        condition: service_healthy
+    # Override Dockerfile.dev CMD and run tests (only the slow ones).
+    # (In the future e2e test will be run here).
+    # Note: docker compose will try to substitute host's environment variables
+    #       if a single $ sign is used (compose has access to host's shell).
+    #       To prevent this another $ sign is prepended that will
+    #       be removed by the docker compose and a string literal with
+    #       a single $ sign passed to the shell inside container.
+    #       In order for this to work created command must be passed to that
+    #       shell in single quotes.
+    command: >
+      sh -c 'python -m pytest -m slow
+      --selenium-grid-url $$SELENIUM_GRID_URL
+      --selenium-grid-port $$SELENIUM_GRID_PORT
+      test/unit/
+      -vv'
 
 networks:
   selenium-network:

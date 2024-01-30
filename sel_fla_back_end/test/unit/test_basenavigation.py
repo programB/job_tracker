@@ -34,13 +34,13 @@ def test_should_create_BaseNavigation(selenium_driver):
 
 
 @pytest.mark.parametrize(
-    "property",
+    "prop",
     [
         "timeout_sec",
     ],
 )
-def test_should_assure_properties_existence(property):
-    assert hasattr(BaseNavigation, property)
+def test_should_assure_properties_existence(prop):
+    assert hasattr(BaseNavigation, prop)
 
 
 @pytest.mark.parametrize(
@@ -82,10 +82,10 @@ def test_should_find_an_existing_tag_on_a_webpage(nav_window):
 def test_should_find_and_highlight_an_existing_tag_on_a_webpage(nav_window):
     nav_window.visit("https://www.google.com")
     emph_color = "red"
-    # fmt: off
-    logging.warning("If test is successful you should see entire body of "
-                    f"the page to be highlighted in '{emph_color.upper()}'")
-    # fmt: on
+    logging.warning(
+        "If successful page body should be highlighted in '%s'",
+        emph_color.upper(),
+    )
     time.sleep(3)
     assert isinstance(
         nav_window.find((By.TAG_NAME, "body"), highlight_color=emph_color),
@@ -115,10 +115,10 @@ def test_should_click_a_button(nav_window):
             highlight_color=emph_color,
         )
         btn.click()
-        # fmt: off
-        logging.warning("You should have seen button highlighted in "
-                        f"'{emph_color.upper()}' getting clicked")
-        # fmt: on
+        logging.warning(
+            "You should have seen button highlighted in '%s' getting clicked",
+            emph_color.upper(),
+        )
         time.sleep(3)
     except SE.NoSuchElementException as e:
         raise e

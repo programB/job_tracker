@@ -14,10 +14,46 @@ dependencies = [
 dev = [
     "pytest",
     "pyclean",
+    "flake8",
+    "flake8-type-checking",
+    "isort",
+    "black",
+    "pylint",
+    "pylint-pytest",
+    "bandit",
 ]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
 markers = [
   "slow: mark a test that takes a long time to run.",
+]
+
+# pylint --generate-toml-config > sample.toml
+# creates a sample configuration file
+# with all available options set and explained in comments.
+[tool.pylint.main]
+load-plugins = ["pylint_pytest"] # silence false-positives when using pytest fixtures
+# Specify a score threshold under which the program will exit with error.
+fail-under = 9.5 # Accept less then perfect (10/10) code...
+fail-on = ["F", "E"] # ...but always fail on (fatal) errors regardless of score.
+# Discover python modules and packages in the file system subtree.
+# This is set because of some false-positive E0401 import errors
+# (see https://github.com/pylint-dev/pylint/issues/5319)
+recursive = true
+
+[tool.pylint.format]
+max-line-length = 88  # value must be consistent with the setting for black
+
+[tool.pylint.messages_control]
+disable = [
+  "C0103", # (invalid-name) eg. Constant name <something> doesn't conform to UPPER_CASE naming style
+  "C0114", # (missing-module-docstring)
+  "C0116", # (missing-function-docstring)
 ]
