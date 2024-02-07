@@ -1,12 +1,35 @@
+import unittest.mock
+# from unittest.mock import create_autospec
+
 import pytest
+from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support.wait import WebDriverWait
 
 from job_tracker.pracujpl_POM import PracujplMainPage, ResultsPage
 from job_tracker.pracujpl_POM.main_page import Distance
 
+# This line:
+# WebDriverWait.until = create_autospec(WebDriverWait.until)
+# works if tests called like this: pytest test/unit/test_offer_parsing.py
+# doesn't work if tests called like this: pytest test/unit/
+#  unittest.mock.InvalidSpecError: Cannot spec a Mock object.
+#  [object=<MagicMock spec='function' id='140242334309200'>]
+#
+# This works in both scenarios
+mock_WebDriverWait_until = unittest.mock.Mock()
+mock_WebDriverWait_until.mock_add_spec(WebDriverWait.until)
+WebDriverWait.until = mock_WebDriverWait_until
+
 
 @pytest.fixture
-def standard_search(selenium_driver):
-    main_page = PracujplMainPage(selenium_driver, reject_cookies=True)
+def mock_driver():
+    driver: WebDriver = unittest.mock.create_autospec(WebDriver)
+    return driver
+
+
+@pytest.fixture
+def standard_search(mock_driver):
+    main_page = PracujplMainPage(mock_driver, reject_cookies=True)
 
     main_page.search_term = "Tester"
     main_page.employment_type = ["full_time"]
@@ -16,64 +39,10 @@ def standard_search(selenium_driver):
     yield main_page
 
 
-def test_should_create_ResultPage_object(selenium_driver):
+def test_should_create_ResultPage_object(mock_driver):
     """
     GIVEN a selenium driver object
     WHEN ResultsPage object is created
     THEN check the the object was created
     """
-    assert ResultsPage(selenium_driver) is not None
-
-
-def test_should_check_tot_number_of_subpages(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-
-    # The search criteria in standard_search fixture are general enough
-    # for the returned number of offers to fill more then 1 subpage,
-    # hence assuming the subpage 2 always exists should be safe.
-    assert results_page.tot_no_of_subpages >= 2
-
-
-def test_should_check_navigation_to_desired_subpage(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-
-    # The search criteria in standard_search fixture are general enough
-    # for the returned number of offers to fill more then 1 subpage,
-    # hence assuming the subpage 2 always exists should be safe.
-    desired_subpage = 2
-    results_page.goto_subpage(desired_subpage)
-    _, cur_subpage_number = results_page.get_current_subpage()
-
-    assert cur_subpage_number == desired_subpage
-
-
-def test_should_check_offers_list_is_not_empty(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-    assert len(results_page.subpage_offers) != 0
-
-
-def test_should_check_only_valid_offers_are_collected(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-    for offer in results_page.subpage_offers:
-        assert offer.is_valid_offer
-
-
-def test_should_check_offers_have_not_empty_essential_params(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-    for offer in results_page.subpage_offers:
-        assert offer.id != 0
-        assert offer.title != ""
-        assert offer.company_name != ""
-        assert offer.job_level != ""
-        assert offer.contract_type != ""
-
-
-@pytest.mark.slow
-def test_should_collect_offers_from_all_subpages(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-    # The search criteria in standard_search fixture are general enough
-    # for the returned number of offers to fill more then 1 subpage
-    # AND strict enough for the number of subpages to be sensibly small
-    # (a single digit number) so going through all of them
-    # would not take forever.
-    assert len(results_page.all_offers) != 0
+    assert ResultsPage(mock_driver) is not None

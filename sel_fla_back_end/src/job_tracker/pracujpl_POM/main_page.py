@@ -15,6 +15,7 @@ from .base_navigation import BaseNavigation
 if TYPE_CHECKING:
     from typing import Tuple
 
+    from selenium.webdriver.remote.webdriver import WebDriver
     from selenium.webdriver.remote.webelement import WebElement
 
 
@@ -34,8 +35,7 @@ class OptionsMenu(BaseNavigation):
 
     def __init__(
         self,
-        # driver: WebDriver,
-        driver,
+        driver: WebDriver,
         main_locator: Tuple[str, str],
         btn_rel_locator: str,
         option_rel_locators: dict,
@@ -187,8 +187,8 @@ class CookieChoice(BaseNavigation):
                 )
             )
 
-        except SE.NoSuchElementException:
-            logging.info("cookie consent modal was not found")
+        except (SE.NoSuchElementException, SE.TimeoutException):
+            logging.warning("Cookie consent modal was not found.")
         return cookie_overlay
 
     def _is_visible(self) -> bool:
@@ -237,8 +237,9 @@ class PracujplMainPage(BaseNavigation):
     def __init__(
         self,
         driver,
-        visual_mode=False,
+        url=None,
         reject_cookies=False,
+        visual_mode=False,
     ) -> None:
         """
 
@@ -246,6 +247,8 @@ class PracujplMainPage(BaseNavigation):
         ----------
         driver : WebDriver
             selenium webdriver object
+        url: custom url for the pracuj.pl website.
+            If not given it will be set to https://www.pracuj.pl
         visual_mode: bool
             decides whether all newly found elements will get highlighted
             for human inspection
@@ -255,7 +258,14 @@ class PracujplMainPage(BaseNavigation):
             when False: causes all cookies to be accepted
         """
         super().__init__(driver, visual_mode)
-        self.visit("https://www.pracuj.pl")
+        if url is None:
+            self.visit("https://www.pracuj.pl")
+        else:
+            try:
+                self.visit(url)
+            except Exception as e:
+                logging.fatal("Error connecting to pracuj.pl website at %s", url)
+                raise e
         if reject_cookies:
             CookieChoice(driver, visual_mode).reject_non_essential_cookies()
         else:

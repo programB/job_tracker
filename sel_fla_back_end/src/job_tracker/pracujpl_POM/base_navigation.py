@@ -11,6 +11,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 if TYPE_CHECKING:
     from typing import List, Tuple
 
+    from selenium.webdriver.remote.webdriver import WebDriver
     from selenium.webdriver.remote.webelement import WebElement
 
 
@@ -37,8 +38,7 @@ class BaseNavigation:
             global switch causing elements found using the find
             and find_all methods to get highlighted
         """
-        # self.driver: WebDriver = driver
-        self.driver = driver
+        self.driver: WebDriver = driver
         self._visual_mode = visual_mode
         self._timeout_sec = 5.0
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
@@ -153,8 +153,7 @@ class BaseNavigation:
         """Tries to find all elements passed in the current webpage
 
         Search from the page root or below a existing DOM object.
-        Returns WebElement objects list (empty if nothing is found,
-        dosen't rise exceptions)
+        Returns WebElement objects list (empty if nothing is found)
         If elements exist they can optionally be highlighted
 
         Parameters
