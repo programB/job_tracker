@@ -44,7 +44,7 @@ compose_app_shell:
 	docker compose --file ${COMPOSE_YAML_FILE} exec job-tracker-backend sh
 
 compose_test_up:
-	docker compose --file ${COMPOSE_YAML_FILE} --profile testing up -d
+	docker compose --progress plain --file ${COMPOSE_YAML_FILE} --profile testing up -d
 
 compose_test_down:
 	docker compose --file ${COMPOSE_YAML_FILE} --profile testing down
