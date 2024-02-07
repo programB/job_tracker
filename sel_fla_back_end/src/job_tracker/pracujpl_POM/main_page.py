@@ -237,8 +237,9 @@ class PracujplMainPage(BaseNavigation):
     def __init__(
         self,
         driver,
-        visual_mode=False,
+        url=None,
         reject_cookies=False,
+        visual_mode=False,
     ) -> None:
         """
 
@@ -246,6 +247,8 @@ class PracujplMainPage(BaseNavigation):
         ----------
         driver : WebDriver
             selenium webdriver object
+        url: custom url for the pracuj.pl website.
+            If not given it will be set to https://www.pracuj.pl
         visual_mode: bool
             decides whether all newly found elements will get highlighted
             for human inspection
@@ -255,7 +258,14 @@ class PracujplMainPage(BaseNavigation):
             when False: causes all cookies to be accepted
         """
         super().__init__(driver, visual_mode)
-        self.visit("https://www.pracuj.pl")
+        if url is None:
+            self.visit("https://www.pracuj.pl")
+        else:
+            try:
+                self.visit(url)
+            except Exception as e:
+                logging.fatal("Error connecting to pracuj.pl website at %s", url)
+                raise e
         if reject_cookies:
             CookieChoice(driver, visual_mode).reject_non_essential_cookies()
         else:
