@@ -305,8 +305,7 @@ class ResultsPage(BaseNavigation):
             tot_no_element = self.wait_with_timeout.until(
                 expected_conditions.visibility_of_element_located(tot_locator),
             )
-            self.is_displayed(tot_locator)
-        except SE.NoSuchElementException:
+        except (SE.NoSuchElementException, SE.TimeoutException):
             logging.warning("Total number of subpages couldn't be established")
             return 0
         return int(tot_no_element.text)
