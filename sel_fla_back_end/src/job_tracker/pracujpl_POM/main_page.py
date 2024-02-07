@@ -15,6 +15,7 @@ from .base_navigation import BaseNavigation
 if TYPE_CHECKING:
     from typing import Tuple
 
+    from selenium.webdriver.remote.webdriver import WebDriver
     from selenium.webdriver.remote.webelement import WebElement
 
 
@@ -34,8 +35,7 @@ class OptionsMenu(BaseNavigation):
 
     def __init__(
         self,
-        # driver: WebDriver,
-        driver,
+        driver: WebDriver,
         main_locator: Tuple[str, str],
         btn_rel_locator: str,
         option_rel_locators: dict,
@@ -187,8 +187,8 @@ class CookieChoice(BaseNavigation):
                 )
             )
 
-        except SE.NoSuchElementException:
-            logging.info("cookie consent modal was not found")
+        except (SE.NoSuchElementException, SE.TimeoutException):
+            logging.warning("Cookie consent modal was not found.")
         return cookie_overlay
 
     def _is_visible(self) -> bool:
