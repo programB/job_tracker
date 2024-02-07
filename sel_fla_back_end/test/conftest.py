@@ -20,6 +20,19 @@ If not passed local webdriver will be used.",
 is not passed default value 4444 will be used.",
     )
 
+    parser.addoption(
+        "--http-test-server-url",
+        help="Url of the test http server eg. http://127.0.0.1 \
+Use --test-http-server-port to set port. \
+If not passed server will bind to 127.0.0.1:8000",
+    )
+
+    parser.addoption(
+        "--http-test-server-port",
+        help="Port number of the test http server, if this option \
+is not passed default value 8000 will be used.",
+    )
+
 
 @pytest.fixture(scope="session")
 def selenium_grid_url(request):
@@ -31,6 +44,16 @@ def selenium_grid_port(request):
     return request.config.getoption("--selenium-grid-port")
 
 
+@pytest.fixture(scope="session")
+def http_test_server_url(request):
+    return request.config.getoption("--http-test-server-url")
+
+
+@pytest.fixture(scope="session")
+def http_test_server_port(request):
+    return request.config.getoption("--http-test-server-port")
+
+
 # function scope is the default
 # but stating it here explicitly for clarity
 @pytest.fixture(scope="function")
@@ -39,11 +62,11 @@ def selenium_driver(selenium_grid_url, selenium_grid_port):
     # (with the scope='function' this step is performed
     #  BEFORE EACH test...)
 
+    custom_options = webdriver.ChromeOptions()
+    # custom_options.add_argument('--headless')
+
     if selenium_grid_url:
         port = selenium_grid_port if selenium_grid_port else "4444"
-
-        options = webdriver.ChromeOptions()
-        # options.add_argument('--headless')
 
         # WARNING: /wd/hub path is deprecated
         # driver = webdriver.Remote("http://chromeindocker:4444/wd/hub")
@@ -61,12 +84,12 @@ def selenium_driver(selenium_grid_url, selenium_grid_port):
 
         driver = webdriver.Remote(
             command_executor=selenium_grid_url + ":" + port,
-            options=options,
+            options=custom_options,
         )
     else:
         # Use local driver (local browser)
         # if no Selenium Grid server url was given
-        driver = webdriver.Chrome()
+        driver = webdriver.Chrome(options=custom_options)
 
     yield driver  # yield control to the test function
 
