@@ -8,6 +8,9 @@ version = "0.0.1"
 dependencies = [
   "Flask",
   "selenium",
+  "connexion[swagger-ui]",
+  "connexion[flask]",
+  "connexion[uvicorn]"
 ]
 
 [project.optional-dependencies]

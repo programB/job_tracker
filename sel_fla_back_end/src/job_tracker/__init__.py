@@ -1,11 +1,8 @@
-from flask import Flask
+import connexion
 
 
 def create_app():
-    app = Flask(__name__)
-
-    @app.route("/api/example_endpoint/")
-    def example_endpoint():
-        return "This is an example answer"
+    app = connexion.App(__name__, specification_dir="./")
+    app.add_api("job_tracker_backend_api.yml")
 
     return app
