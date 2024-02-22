@@ -28,7 +28,7 @@ def create_app(custom_config=config.RegularConfig):
     #      properly hence importing them here.
     #      (if models were imported implicitly in any previous steps,
     #       or at the top of the file this is not needed).
-    from job_tracker.models import Company, JobOffer, Tag
+    from job_tracker.models import Company, JobOffer, Tag  # noqa: F401
 
     db.init_app(base_flask_app)
 

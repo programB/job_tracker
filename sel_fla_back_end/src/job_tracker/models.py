@@ -108,7 +108,7 @@ class JobOffer(db.Model):
     # company = db.relationship("Company", backref="joboffer")
     tags = db.relationship(
         "Tag",  # Use this class
-        secondary=joboffer_tag,  # indirect relationship, uses intermediary: joboffer_tag
+        secondary=joboffer_tag,  # indirect relationship - intermediary: joboffer_tag
         backref="joboffer",
     )
 

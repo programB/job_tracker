@@ -10,6 +10,7 @@ class BaseConfig:
 
 class RegularConfig(BaseConfig):
     # SQLALCHEMY_DATABASE_URI = (
-    #     os.environ.get("DATABASE_URI") or f"sqlite:///{root_dir.joinpath('backend.db')}"
+    #     os.environ.get("DATABASE_URI") or
+    #    f"sqlite:///{root_dir.joinpath('backend.db')}"
     # )
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{root_dir.joinpath('jobtracker.db')}"
