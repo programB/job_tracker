@@ -10,7 +10,8 @@ dependencies = [
   "selenium",
   "connexion[swagger-ui]",
   "connexion[flask]",
-  "connexion[uvicorn]"
+  "connexion[uvicorn]",
+  "flask-marshmallow[sqlalchemy]"
 ]
 
 [project.optional-dependencies]
