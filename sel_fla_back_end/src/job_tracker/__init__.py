@@ -3,6 +3,7 @@ from connexion.resolver import RelativeResolver
 
 from job_tracker import config
 from job_tracker.database import db
+from job_tracker.extensions import ma
 
 
 def create_app(custom_config=config.RegularConfig):
@@ -31,6 +32,7 @@ def create_app(custom_config=config.RegularConfig):
     from job_tracker.models import Company, JobOffer, Tag  # noqa: F401
 
     db.init_app(base_flask_app)
+    ma.init_app(base_flask_app)
 
     # Register blueprints (including indirect registration by extensions)
     # resolver = None if __package__ is None else RelativeResolver(__package__ + ".api")

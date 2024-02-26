@@ -1,6 +1,10 @@
+from marshmallow_sqlalchemy import fields
+
 from job_tracker.database import db
+from job_tracker.extensions import ma
 
 
+# orm model for the tag table
 class Tag(db.Model):
     # CREATE TABLE IF NOT EXISTS `tag` (
     #   `tag_id` INT NOT NULL,
@@ -11,9 +15,11 @@ class Tag(db.Model):
     tag_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
 
-    def __init__(self, name, **kwargs):
+    # Adding this so LSP doesn't complain
+    # about passing arguments when creating new objects.
+    # (and it does not expect any).
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.name = name
 
 
 class Company(db.Model):
@@ -41,18 +47,11 @@ class Company(db.Model):
         order_by="desc(JobOffer.collected)",  # When returning offers sort them
     )
 
-    def __init__(
-        self, name, address=None, town=None, postalcode=None, website=None, **kwargs
-    ):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.name = name
-        self.address = address
-        self.town = town
-        self.postalcode = postalcode
-        self.website = website
 
 
-# joboffer_tag is an association table.
+# joboffer_tag is an association/junction table.
 # CREATE TABLE IF NOT EXISTS `joboffertag` (
 #   `joboffer_id` INT NOT NULL,
 #   `tag_id` INT NOT NULL,
@@ -63,7 +62,7 @@ class Company(db.Model):
 #   CONSTRAINT `fk2` FOREIGN KEY (`tag_id`)
 #                    REFERENCES `tag` (`tag_id`)
 # )
-# For association tables, the best practice is to use a table
+# For association/junction tables, the best practice is to use a table
 # instead of a database model.
 # class JobOfferTag(db.Model):
 #     __tablename__ = "joboffertag"
@@ -105,31 +104,59 @@ class JobOffer(db.Model):
     joblevel = db.Column(db.String(45), nullable=True)
     monthlysalary = db.Column(db.Integer, nullable=True)
     detailsurl = db.Column(db.String(45), nullable=True)
-    # company = db.relationship("Company", backref="joboffer")
     tags = db.relationship(
         "Tag",  # Use this class
         secondary=joboffer_tag,  # indirect relationship - intermediary: joboffer_tag
-        backref="joboffer",
+        # backref="joboffer",  # this bref. shows in which offers the tag is used
+        order_by="asc(Tag.name)",
     )
 
-    def __init__(
-        self,
-        title,
-        posted,
-        collected,
-        contracttype=None,
-        jobmode=None,
-        joblevel=None,
-        monthlysalary=None,
-        detailsurl=None,
-        **kwargs
-    ):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.title = title
-        self.posted = posted
-        self.collected = collected
-        self.contracttype = contracttype
-        self.jobmode = jobmode
-        self.joblevel = joblevel
-        self.monthlysalary = monthlysalary
-        self.detailsurl = detailsurl
+
+
+# Declare Models before instantiating Schemas.
+# (sqlalchemy.orm.configure_mappers() will run too soon and fail otherwise)
+
+
+# serializer of the Tag object(s) - converts them to json
+class TagSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Tag
+        load_instance = True  # Optional: deserialize to model instances
+        sqla_session = db.session
+        include_relationships = True
+
+
+class JobOfferSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = JobOffer
+        load_instance = True
+        sqla_session = db.session
+        include_fk = True
+        # 'company_id' will be returned anyway because of include_fk=True
+        # so there is no need to follow the relationship and 'company' filed
+        include_relationships = False
+
+    # 1. Marshmallow will not follow relationships down the hierarchy
+    # (even if include_relationships was set to True)
+    # and tags have to be explicitly nested
+    # 2. When returning tags we care only about the name not the tag_id
+    tags = fields.Nested(TagSchema, many=True, exclude=("tag_id",))
+
+
+class CompanySchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Company
+        load_instance = True
+        sqla_session = db.session
+        include_relationships = True
+
+    offers = fields.Nested(JobOfferSchema, many=True)
+
+
+tag_schema = TagSchema()
+tags_schema = TagSchema(many=True)
+company_schema = CompanySchema()
+joboffer_schema = JobOfferSchema()
+joboffers_schema = JobOfferSchema(many=True)
