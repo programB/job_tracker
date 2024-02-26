@@ -50,11 +50,10 @@ paths:
           schema:
             type: integer
             multipleOf: 10
-            minimum: 1 # This doesn't imply that any offer has to be returned
+            minimum: 10 # This doesn't imply that any offer has to be returned
             maximum: 30
         - name: subpage
           in: query
-          required: true
           description: specifies the starting subpage number
           schema:
             type: integer
@@ -72,6 +71,8 @@ paths:
                   $ref: "#/components/schemas/Offer"
         "400":
           $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
         "500":
           $ref: "#/components/responses/500Error"
 
@@ -158,7 +159,7 @@ components:
     Offer:
       type: object
       properties:
-        id:
+        joboffer_id:
           type: integer
           minimum: 0
         title:
@@ -178,13 +179,15 @@ components:
           type: string
         job_level:
           type: string
-        salary:
-          type: string
-        link:
+        monthly_salary:
+          type: integer
+        detailsurl:
           type: string
           format: uri
+        company_id:
+          type: integer
       example:
-        id: 1
+        joboffer_id: 1
         title: A great job offer
         tags: [ "python", "pytest", "confluence" ]
         posted: 2024-01-01T12:00:00.000Z
@@ -192,8 +195,9 @@ components:
         contract_type: part time
         job_mode: remote
         job_level: junior
-        salary: 1000 USD/month
-        link: http://example_company.com/great_job_offer_1
+        monthly_salary: 1000
+        detailsurl: http://example_company.com/great_job_offer_1
+        company_id: 1
 
   responses:
     400Error:
@@ -206,6 +210,16 @@ components:
               message:
                 type: string
                 example: Bad request
+    404Error:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Resource not found
     500Error:
       description: Internal Server Error
       content:
