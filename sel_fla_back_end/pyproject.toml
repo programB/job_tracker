@@ -62,5 +62,11 @@ max-line-length = 88  # value must be consistent with the setting for black
 disable = [
   "C0103", # (invalid-name) eg. Constant name <something> doesn't conform to UPPER_CASE naming style
   "C0114", # (missing-module-docstring)
+  "C0115", # (missing-class-docstring)
   "C0116", # (missing-function-docstring)
+  "R0901", # (too-many-ancestors)
+  "R0902", # (too-many-instance-attributes)
+  "R0903", # (too-few-public-methods)
+  "R0913", # (too-many-arguments)
+
 ]
