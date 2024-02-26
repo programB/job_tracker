@@ -13,7 +13,7 @@ class TestHappyPaths:
         received_offers = response.json()
         assert len(received_offers) == 3
         ISO8601_format = "%Y-%m-%dT%H:%M:%S"
-        for offer in received_offers:
+        for i, offer in enumerate(received_offers):
             assert offer["title"].startswith("Test offer")
             assert isinstance(
                 datetime.strptime(offer["posted"], ISO8601_format), datetime
@@ -21,10 +21,22 @@ class TestHappyPaths:
             assert isinstance(
                 datetime.strptime(offer["collected"], ISO8601_format), datetime
             )
-            assert offer["jobmode"]
-            assert offer["joblevel"]
+            assert offer["contracttype"] and isinstance(offer["contracttype"], str)
+            assert offer["jobmode"] and isinstance(offer["jobmode"], str)
+            assert offer["joblevel"] and isinstance(offer["joblevel"], str)
             assert offer["monthlysalary"] > 0
             assert offer["detailsurl"].startswith("https:")
+            assert isinstance(offer["tags"], list) and all(
+                isinstance(item, str) for item in offer["tags"]
+            )
+            if i != 2:
+                assert len(offer["tags"]) == 2
+                assert all(
+                    item in ["Java", "Selenium", "Python"] for item in offer["tags"]
+                )
+            else:
+                # Offer 3 has no tags
+                assert offer["tags"] == []
 
     def test_should_get_all_offers_relying_on_default_value_of_subpage(
         self, httpx_test_client, pplimit

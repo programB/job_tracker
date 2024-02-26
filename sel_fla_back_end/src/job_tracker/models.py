@@ -142,7 +142,11 @@ class JobOfferSchema(ma.SQLAlchemyAutoSchema):
     # (even if include_relationships was set to True)
     # and tags have to be explicitly nested
     # 2. When returning tags we care only about the name not the tag_id
-    tags = fields.Nested(TagSchema, many=True, exclude=("tag_id",))
+    # tags = fields.Nested(TagSchema, many=True, exclude=("tag_id",))
+
+    # A hack to return a flat list of Tag names (instead of json structure
+    # with named fields: name and tag_id) within an offer.
+    tags = fields.fields.Pluck(TagSchema, "name", many=True, exclude=("tag_id",))
 
 
 class CompanySchema(ma.SQLAlchemyAutoSchema):
