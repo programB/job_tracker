@@ -28,6 +28,10 @@ dev = [
     "bandit",
 ]
 
+[tool.setuptools.package-data]
+# include API sepcification file in the package
+job_tracker = ["*.yml"]
+
 [tool.black]
 line-length = 88
 
