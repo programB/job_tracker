@@ -1,4 +1,5 @@
 import os
+import pathlib
 import tempfile
 from datetime import datetime
 
@@ -9,7 +10,8 @@ from job_tracker.config import BaseConfig
 from job_tracker.database import db
 from job_tracker.models import Company, JobOffer, Tag
 
-# from connexion import FlaskApp
+data_dir = pathlib.Path(__file__).parent.resolve().joinpath("data")
+fake_offers_f = data_dir.joinpath("test_offers.dat")
 
 
 # This is not a fixture !
@@ -52,40 +54,59 @@ def init_db_and_load_fake_data(sqldb):
     # (2, 1, 'Test offer 2', '2024-01-09 17:01:00', 'full time', 'in office', 'senior', 10000, 'https://fakeaddress.com/2', '2024-01-15 15:40:01'),  # noqa: E501
     # (3, 2, 'Test offer 3', '2024-01-06 8:00:00', 'part time', 'remote', 'trainee', 3000, 'https://otherfakeaddress.com/3', '2024-01-15 15:40:02')  # noqa: E501
     # ;
-    joboffer1 = JobOffer(
-        title="Test offer 1",
-        company=company1,
-        posted=datetime.strptime("2012-06-18 10:34:09", date_format),
-        collected=datetime.strptime("2024-01-15 15:40:00", date_format),
-        contracttype="full time",
-        jobmode="in office",
-        joblevel="junior",
-        monthlysalary=5000,
-        detailsurl="https://fakeaddress.com/1",
-    )
-    joboffer2 = JobOffer(
-        title="Test offer 2",
-        company=company1,
-        posted=datetime.strptime("2024-01-09 17:01:00", date_format),
-        collected=datetime.strptime("2024-01-15 15:40:01", date_format),
-        contracttype="full time",
-        jobmode="in office",
-        joblevel="senior",
-        monthlysalary=10000,
-        detailsurl="https://fakeaddress.com/2",
-    )
-    joboffer3 = JobOffer(
-        title="Test offer 3",
-        company=company2,
-        posted=datetime.strptime("2024-01-06 8:00:00", date_format),
-        collected=datetime.strptime("2024-01-15 15:40:02", date_format),
-        contracttype="part time",
-        jobmode="remote",
-        joblevel="trainee",
-        monthlysalary=3000,
-        detailsurl="https://otherfakeaddress.com/3",
-    )
-    sqldb.session.add_all([joboffer1, joboffer2, joboffer3])
+    # joboffer1 = JobOffer(
+    #     title="Test offer 1",
+    #     company=company1,
+    #     posted=datetime.strptime("2012-06-18 10:34:09", date_format),
+    #     collected=datetime.strptime("2024-01-15 15:40:00", date_format),
+    #     contracttype="full time",
+    #     jobmode="in office",
+    #     joblevel="junior",
+    #     monthlysalary=5000,
+    #     detailsurl="https://fakeaddress.com/1",
+    # )
+    # joboffer2 = JobOffer(
+    #     title="Test offer 2",
+    #     company=company1,
+    #     posted=datetime.strptime("2024-01-09 17:01:00", date_format),
+    #     collected=datetime.strptime("2024-01-15 15:40:01", date_format),
+    #     contracttype="full time",
+    #     jobmode="in office",
+    #     joblevel="senior",
+    #     monthlysalary=10000,
+    #     detailsurl="https://fakeaddress.com/2",
+    # )
+    # joboffer3 = JobOffer(
+    #     title="Test offer 3",
+    #     company=company2,
+    #     posted=datetime.strptime("2024-01-06 8:00:00", date_format),
+    #     collected=datetime.strptime("2024-01-15 15:40:02", date_format),
+    #     contracttype="part time",
+    #     jobmode="remote",
+    #     joblevel="trainee",
+    #     monthlysalary=3000,
+    #     detailsurl="https://otherfakeaddress.com/3",
+    # )
+    # sqldb.session.add_all([joboffer1, joboffer2, joboffer3])
+
+    # Load offers from the file
+    list_of_fake_offers = []
+    with fake_offers_f.open("r") as dataf:
+        for line in dataf:
+            offer_tup = eval(line[:-2])
+            joboffer = JobOffer(
+                title=offer_tup[2],
+                company=company1 if offer_tup[1] == 1 else company2,
+                posted=datetime.strptime(offer_tup[3], date_format),
+                collected=datetime.strptime(offer_tup[9], date_format),
+                contracttype=offer_tup[4],
+                jobmode=offer_tup[5],
+                joblevel=offer_tup[6],
+                monthlysalary=offer_tup[7],
+                detailsurl=offer_tup[8],
+            )
+            list_of_fake_offers.append(joboffer)
+    sqldb.session.add_all(list_of_fake_offers)
 
     # INSERT INTO tag
     # (tag_id, name)
@@ -106,6 +127,9 @@ def init_db_and_load_fake_data(sqldb):
     # (2, 3),
     # (2, 2)
     # ;
+    joboffer1 = list_of_fake_offers[0]
+    joboffer2 = list_of_fake_offers[1]
+    # 3rd and consecutive joboffers are not added since they will not have any tags
     joboffer1.tags.append(tag1)
     joboffer1.tags.append(tag2)
     joboffer2.tags.append(tag3)
