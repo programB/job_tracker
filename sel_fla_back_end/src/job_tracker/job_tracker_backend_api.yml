@@ -87,14 +87,14 @@ paths:
           required: true
           schema:
             type: string
-            format: date-time
+            format: date
         - name: end_date
-          description: ending date (inclusive)
+          description: end date (inclusive)
           required: true
           in: query
           schema:
             type: string
-            format: date-time
+            format: date
         - name: tags
           description: technology tags
           in: query
@@ -142,12 +142,12 @@ components:
       properties:
         date:
           type: string
-          format: date-time
+          format: date
         count:
           type: integer
           minimum: 0
       example:
-        date: 2024-01-01T12:00:00.000Z
+        date: 2024-01-01
         count: 23
 
     TagsArray:
