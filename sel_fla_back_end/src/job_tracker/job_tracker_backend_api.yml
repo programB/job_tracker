@@ -95,6 +95,13 @@ paths:
           schema:
             type: string
             format: date
+        - name: binning
+          description: binning period
+          required: true
+          in: query
+          schema:
+            type: string
+            enum: [ "day", "month", "year" ]
         - name: tags
           description: technology tags
           in: query
