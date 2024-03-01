@@ -159,6 +159,19 @@ class CompanySchema(ma.SQLAlchemyAutoSchema):
     offers = fields.Nested(JobOfferSchema, many=True)
 
 
+class DataPoint(ma.Schema):
+    """Used to serialize statistics (datetime, count)
+    Warning: Casts datatime to date !
+    """
+
+    date = fields.fields.Date()
+    count = fields.fields.Integer()
+
+
+datapoint_schema = DataPoint()
+datapoints_schema = DataPoint(many=True)
+
+
 tag_schema = TagSchema()
 tags_schema = TagSchema(many=True)
 company_schema = CompanySchema()
