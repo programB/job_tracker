@@ -5,16 +5,24 @@ import pytest
 
 @pytest.mark.parametrize("pplimit", [10, 20, 30])
 class TestHappyPaths:
-    def test_should_get_all_existing_offers(self, httpx_test_client, pplimit):
+    def test_should_get_existing_offers(self, httpx_test_client, pplimit):
         response = httpx_test_client.get(
             "/api/offers", params={"perpagelimit": pplimit, "subpage": "1"}
         )
         assert response.status_code == 200
         received_offers = response.json()
-        assert len(received_offers) == 3
+        assert len(received_offers) == pplimit
         ISO8601_format = "%Y-%m-%dT%H:%M:%S"
         for i, offer in enumerate(received_offers):
-            assert offer["title"].startswith("Test offer")
+            if i < 2:
+                assert offer["title"].startswith("Test offer")
+                assert len(offer["tags"]) == 2
+                assert all(
+                    item in ["Java", "Selenium", "Python"] for item in offer["tags"]
+                )
+            else:
+                # Other offers have no tags and have random titles
+                assert offer["tags"] == []
             assert isinstance(
                 datetime.strptime(offer["posted"], ISO8601_format), datetime
             )
@@ -29,14 +37,6 @@ class TestHappyPaths:
             assert isinstance(offer["tags"], list) and all(
                 isinstance(item, str) for item in offer["tags"]
             )
-            if i != 2:
-                assert len(offer["tags"]) == 2
-                assert all(
-                    item in ["Java", "Selenium", "Python"] for item in offer["tags"]
-                )
-            else:
-                # Offer 3 has no tags
-                assert offer["tags"] == []
 
     def test_should_get_all_offers_relying_on_default_value_of_subpage(
         self, httpx_test_client, pplimit
@@ -105,7 +105,7 @@ class TestSubpageViolations:
 
 
 def test_should_get_404error_when_pagination_out_of_range(httpx_test_client):
-    not_existing_subpage = 100
+    not_existing_subpage = 9999
     response = httpx_test_client.get(
         "/api/offers", params={"perpagelimit": 10, "subpage": not_existing_subpage}
     )
