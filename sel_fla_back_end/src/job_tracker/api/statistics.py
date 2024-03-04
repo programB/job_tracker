@@ -1,9 +1,10 @@
-import datetime
+from contextlib import contextmanager
+from datetime import datetime, timedelta
 from enum import Enum
 
 from connexion.problem import problem
 from flask import request
-from sqlalchemy import and_, func, select, true
+from sqlalchemy import and_, delete, func, inspect, select, true
 
 from job_tracker.database import db
 from job_tracker.models import JobOffer, datapoints_schema
@@ -34,10 +35,29 @@ def interval_type(interval: str) -> Interval:
             )
 
 
-def ISO8601_date_type(date: str) -> datetime.datetime:
+def ISO8601_date_type(date: str) -> datetime:
+    """Attempts to create datetime object from date
+
+    If date string conforms to the YYYY-MM-DD format (RFC 3339)
+    it will be converted to datetime object with time set to 00:00:00
+
+    Parameters
+    ----------
+    date : str
+
+    Returns
+    -------
+    datetime
+
+    Raises
+    ------
+    ValueError
+    For date strings not conforming to the YYYY-MM-DD format
+    """
+
     ISO8601_date_format = "%Y-%m-%d"
     try:
-        return datetime.datetime.strptime(date, ISO8601_date_format)
+        return datetime.strptime(date, ISO8601_date_format)
     except ValueError as e:
         raise ValueError(
             (
@@ -47,9 +67,79 @@ def ISO8601_date_type(date: str) -> datetime.datetime:
         ) from e
 
 
+def iterate_months(start_date, end_date):
+    """Yields timestamp of 1st day of every month between start and end dates
+
+    Time is always set to 00:00:00
+    Range includes both start_date and end_date
+    """
+    year = start_date.year
+    month = start_date.month
+    while True:
+        current = datetime(year, month, 1)
+        yield current
+        if current.month == end_date.month and current.year == end_date.year:
+            break
+        else:
+            month = ((month + 1) % 12) or 12
+            if month == 1:
+                year += 1
+
+
+@contextmanager
+def temporary_timestamps_table():
+    r"""Create a temporary table for continuous range of timestamps
+
+    A table is created (if it doesn't already exist) using current
+    database context. Table has a single column which should be filled
+    with a continuous range of timestamps inside the context create
+    by this manager.
+
+    Not data are inserted into the table, the manager just yields
+    the table object.
+    However after the context is closed all the table rows are removed
+    (the table itself is not dropped).
+
+    E.g.::
+
+        with temporary_timestamps_table as TmpContinuousDatesRange:
+            # Create data and populate the table
+            timestamps_range = [
+                start + timedelta(days=x)
+                for x in range(0, (start - end).days + 1)
+            ]
+            for tsp in timestamps_range:
+                db.session.add(TmpContinuousDatesRange(timestamp=tsp))
+
+            # Use in a query
+            a_query = select(TmpContinuousDatesRange.timestamp)
+            timestamps_from_db = db.session.execute(a_query).fetchall()
+
+        for row in timestamps_from_db:
+            print(row)
+    """
+
+    class TmpContinuousDatesRange(db.Model):
+        __tablename__ = "tmp_continuous_dates_range"
+        timestamp = db.Column(db.DateTime, primary_key=True, autoincrement=False)
+
+        def __init__(self, **kwargs) -> None:
+            super().__init__(**kwargs)
+
+    if not inspect(db.engine).has_table(TmpContinuousDatesRange.__tablename__):
+        # Create empty table
+        TmpContinuousDatesRange.metadata.create_all(db.engine)
+
+    yield TmpContinuousDatesRange
+
+    # Remove all data from the table when context is closed
+    # (the table itself is not removed/droped).
+    db.session.execute(delete(TmpContinuousDatesRange))
+
+
 def calculate_stats(
-    start_date: datetime.datetime,
-    end_date: datetime.datetime,
+    start_date: datetime,
+    end_date: datetime,
     binning: Interval,
     tags: list[str] | None = None,
     contract_type: str | None = None,
@@ -61,119 +151,156 @@ def calculate_stats(
     Parameters
     ----------
     tags : only include offers having ALL of the listed tags.
-    contract_type : only include offers with given contract type
-    job_mode : only include offers with given job mode
-    job_level : only include offers with given job level
+    contract_type : only include offers WITH given contract type
+    job_mode : only include offers WITH given job mode
+    job_level : only include offers WITH given job level
 
     start_date : earliest date an offer was collected on
     end_date : latest date an offer was collected on
-    binning : bin matching offer by either day, month or year
+    binning : bin matching offers by either day, month or year
 
     Returns
     -------
-    [(datetime.date, int)]
+    [(date, int)]
     """
 
-    def last_day_of_month(any_date: datetime.datetime) -> datetime.datetime:
+    def last_day_of_month(any_date: datetime) -> datetime:
         # The day 28 exists in every month. 4 days later, it's always next month.
-        date_in_next_month = any_date.replace(day=28) + datetime.timedelta(days=4)
+        date_in_next_month = any_date.replace(day=28) + timedelta(days=4)
         # Subtracting the number of the 'new' current day brings us back
         # to the last day of the previous month.
-        return date_in_next_month - datetime.timedelta(days=date_in_next_month.day)
+        return date_in_next_month - timedelta(days=date_in_next_month.day)
 
-    # Expand date and time criteria based on requested binning method
-    # ignoring pieces of information in the sd and ed datetime objects passed.
-    match binning:
-        # FIXME:The query should return all bins in requested range
-        #       with 0 if no offers match the criteria for a bin,
-        #       now it only returns bins that DO CONTAIN SOME offers
-        case Interval.YEAR:
-            sd = start_date.replace(month=1, day=1).replace(hour=0, minute=0, second=0)
-            ed = end_date.replace(month=12, day=31).replace(
-                hour=23, minute=59, second=59
+    with temporary_timestamps_table() as TmpContinuousDatesRange:
+        # Expand date range (to full years or months)
+        # based on requested binning method,
+        # establish grouping criteria for the sql query,
+        # fill in the TmpContinuousDatesRange table with timestamps.
+        match binning:
+            case Interval.YEAR:
+                mod_sd = start_date.replace(month=1, day=1).replace(
+                    hour=0, minute=0, second=0
+                )
+                mod_ed = end_date.replace(month=12, day=31).replace(
+                    hour=23, minute=59, second=59
+                )
+
+                grouping_criteria = [
+                    func.extract("year", JobOffer.collected),
+                ]
+
+                years = [y for y in range(mod_sd.year, mod_ed.year + 1, 1)]
+                for year in years:
+                    db.session.add(TmpContinuousDatesRange(timestamp=datetime(year, 1, 1)))
+            case Interval.MONTH:
+                mod_sd = start_date.replace(day=1).replace(hour=0, minute=0, second=0)
+                mod_ed = last_day_of_month(end_date).replace(hour=23, minute=59, second=59)
+
+                grouping_criteria = [
+                    func.extract("year", JobOffer.collected),
+                    func.extract("month", JobOffer.collected),
+                ]
+
+                for first_day in iterate_months(mod_sd, mod_ed):
+                    db.session.add(TmpContinuousDatesRange(timestamp=first_day))
+            case Interval.DAY:
+                mod_sd = start_date.replace(hour=0, minute=0, second=0)
+                mod_ed = end_date.replace(hour=23, minute=59, second=59)
+
+                grouping_criteria = [
+                    func.extract("year", JobOffer.collected),
+                    func.extract("month", JobOffer.collected),
+                    func.extract("day", JobOffer.collected),
+                ]
+
+                dates_range = [
+                    mod_sd + timedelta(days=x) for x in range(0, (mod_ed - mod_sd).days + 1)
+                ]
+                for date in dates_range:
+                    db.session.add(TmpContinuousDatesRange(timestamp=date))
+
+        selection_criteria = [
+            JobOffer.collected >= mod_sd,
+            JobOffer.collected <= mod_ed,
+        ]
+        # Don't include other criteria for now (uncomment again for the final solution)
+        # if contract_type is not None:
+        #     selection_criteria.append(JobOffer.contracttype == contract_type)
+        # if job_mode is not None:
+        #     selection_criteria.append(JobOffer.jobmode == job_mode)
+        # if job_level is not None:
+        #     selection_criteria.append(JobOffer.joblevel == job_level)
+        # if tags is not None:
+        #     TODO: This doesn't work
+        #     selection_criteria.append("Python" == any_(JobOffer.tags))
+
+        series = select(TmpContinuousDatesRange.timestamp)
+        series_sq = series.subquery()
+        stmt = (
+            select(
+                JobOffer.collected,
+                func.count(JobOffer.joboffer_id).label("count"),
             )
-            grouping_criteria = [
-                func.extract("year", JobOffer.collected),
-            ]
-        case Interval.MONTH:
-            sd = start_date.replace(day=1).replace(hour=0, minute=0, second=0)
-            ed = last_day_of_month(end_date).replace(hour=23, minute=59, second=59)
-            grouping_criteria = [
-                func.extract("year", JobOffer.collected),
-                func.extract("month", JobOffer.collected),
-            ]
-        case Interval.DAY:
-            sd = start_date.replace(hour=0, minute=0, second=0)
-            ed = end_date.replace(hour=23, minute=59, second=59)
-            grouping_criteria = [
-                func.extract("year", JobOffer.collected),
-                func.extract("month", JobOffer.collected),
-                func.extract("day", JobOffer.collected),
-            ]
-
-    selection_criteria = [
-        JobOffer.collected >= sd,
-        JobOffer.collected <= ed,
-    ]
-    if contract_type is not None:
-        selection_criteria.append(JobOffer.contracttype == contract_type)
-    if job_mode is not None:
-        selection_criteria.append(JobOffer.jobmode == job_mode)
-    if job_level is not None:
-        selection_criteria.append(JobOffer.joblevel == job_level)
-    # if tags is not None:
-    #     TODO: This doesn't work
-    #     selection_criteria.append("Python" == any_(JobOffer.tags))
-
-    # data_points is a list of rows. Each row is an object that has methods
-    # corresponding to the names of "columns" in the select statement, in
-    # this case it will be row.collected and row.count.
-    # To "rename the column" (and hence the object's method name)
-    # use .label("str") method. (for "date" this will result in existence of
-    # row.date instead of row.collected)
-    stmt = (
-        select(
-            JobOffer.collected.label("date"),
-            func.count(JobOffer.joboffer_id),
+            .where(and_(true(), *selection_criteria))
+            .group_by(
+                *grouping_criteria,
+            )
         )
-        .where(and_(true(), *selection_criteria))
-        .group_by(
-            *grouping_criteria,
+        stmt_sq = stmt.subquery()
+
+        # Show what is going on
+        # TODO: Remove when not needed
+        print("############# Bare stmt execution #####################")
+        for result in db.session.execute(stmt).fetchall():
+            print(result)
+        print("#######################################################")
+        print("+++++++++++++ And this is how generated dates look like ++++++++++")
+        for generated_date in db.session.execute(series).fetchall():
+            print(generated_date)
+        print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+
+        comparison_criteria = [
+            func.extract("year", stmt_sq.c.collected)
+            == func.extract("year", series_sq.c.timestamp)
+        ]
+        if not binning == Interval.YEAR:
+            comparison_criteria.append(
+                func.extract("month", stmt_sq.c.collected)
+                == func.extract("month", series_sq.c.timestamp)
+            )
+            if not binning == Interval.MONTH:
+                comparison_criteria.append(
+                    func.extract("day", stmt_sq.c.collected)
+                    == func.extract("day", series_sq.c.timestamp)
+                )
+
+        # data_points is a list of rows. Each row is an object that has methods
+        # corresponding to the names of "columns" in the select statement.
+        # (To "rename the column" and hence the object's method name
+        # use .label("str") method).
+        # data_points serializer expects returned objects
+        # to have .date and .count methods
+        joined_query = (
+            select(
+                series_sq.c.timestamp.label("date"),
+                func.coalesce(stmt_sq.c.count, 0).label("count"),
+            )
+            .outerjoin(stmt_sq, and_(true(), *comparison_criteria))
+            .order_by(series_sq.c.timestamp.asc())
         )
-        .order_by(JobOffer.collected.asc())
-    )
-    data_points = db.session.execute(stmt).fetchall()
+        data_points = db.session.execute(joined_query).fetchall()
+
+    # TODO: Remove when not needed
+    print("!!!!!!!!!! RESULTS INCOMING !!!!!!!!!!!!!!!!!!!")
+    for row in data_points:
+        print(f"Date is: {row.date} Count is: {row.count}")
+    print("!!!!!!!!!!      THE END     !!!!!!!!!!!!!!!!!!!")
     return data_points
-
-
-def condition_and_serialize(stats, interval: Interval) -> list:
-    # This function is a dirty hack to condition the
-    # dates returned by the database based on binning.
-    #
-    # stats is a list, and its member objects methods must be the same
-    # as those of the datapoints_schema in order for dump to work.
-    # (eg. datapt.date and datapt.count)
-    answer_list = datapoints_schema.dump(stats)
-    match interval:
-        case Interval.YEAR:
-            for dp in answer_list:
-                date_items = dp["date"].split("-")
-                date_items[1] = "01"  # set month to Jan
-                date_items[2] = "01"  # set day to 1st
-                dp["date"] = "-".join(date_items)
-        case Interval.MONTH:
-            for dp in answer_list:
-                date_items = dp["date"].split("-")
-                date_items[2] = "01"  # set day to 1st
-                dp["date"] = "-".join(date_items)
-        case Interval.DAY:
-            pass
-    return answer_list
 
 
 def timedependant():
     # connexion automatically validates date FORMAT based on API specification
-    # but casting them here to datetime objects.
+    # but casting them here from string to datetime objects.
     start_date = request.args.get("start_date", type=ISO8601_date_type)
     # connexion will not validate date CORRECTNESS (eg. it will accept 2023-09-44)
     if start_date is None:
@@ -186,8 +313,8 @@ def timedependant():
             status=400, title="Bad request", detail="end_date earlier than start_date"
         )
     # There is no need to validate binning type since connexion
-    # will automatically check this against the specified enum - this casting
-    # is done for the fun of it.
+    # will automatically check this against choices allowed in API specification,
+    # but casting is done since using enum in makes for cleaner code.
     binning = request.args.get("binning", type=interval_type)
     if binning is None:
         return problem(
@@ -201,4 +328,4 @@ def timedependant():
     stats = calculate_stats(
         start_date, end_date, binning, tags, contract_type, job_mode, job_level
     )
-    return condition_and_serialize(stats, interval=binning)
+    return datapoints_schema.dump(stats)
