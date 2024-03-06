@@ -167,9 +167,9 @@ def calculate_stats(
         #     TODO: This doesn't work
         #     selection_criteria.append("Python" == any_(JobOffer.tags))
 
-        series = select(TmpContinuousDatesRange.timestamp)
-        series_sq = series.subquery()
-        stmt = (
+        gen_timestamps = select(TmpContinuousDatesRange.timestamp)
+        gen_timestamps_subq = gen_timestamps.subquery()
+        not_empty_bins = (
             select(
                 JobOffer.collected,
                 func.count(JobOffer.joboffer_id).label("count"),
@@ -179,32 +179,32 @@ def calculate_stats(
                 *grouping_criteria,
             )
         )
-        stmt_sq = stmt.subquery()
+        not_empty_bins_subq = not_empty_bins.subquery()
 
         # Show what is going on
         # TODO: Remove when not needed
         print("############# Bare stmt execution #####################")
-        for result in db.session.execute(stmt).fetchall():
+        for result in db.session.execute(not_empty_bins).fetchall():
             print(result)
         print("#######################################################")
         print("+++++++++++++ And this is how generated dates look like ++++++++++")
-        for generated_date in db.session.execute(series).fetchall():
-            print(generated_date)
+        for generated_timestamp in db.session.execute(gen_timestamps).fetchall():
+            print(generated_timestamp)
         print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
         comparison_criteria = [
-            func.extract("year", stmt_sq.c.collected)
-            == func.extract("year", series_sq.c.timestamp)
+            func.extract("year", not_empty_bins_subq.c.collected)
+            == func.extract("year", gen_timestamps_subq.c.timestamp)
         ]
         if not binning == Interval.YEAR:
             comparison_criteria.append(
-                func.extract("month", stmt_sq.c.collected)
-                == func.extract("month", series_sq.c.timestamp)
+                func.extract("month", not_empty_bins_subq.c.collected)
+                == func.extract("month", gen_timestamps_subq.c.timestamp)
             )
             if not binning == Interval.MONTH:
                 comparison_criteria.append(
-                    func.extract("day", stmt_sq.c.collected)
-                    == func.extract("day", series_sq.c.timestamp)
+                    func.extract("day", not_empty_bins_subq.c.collected)
+                    == func.extract("day", gen_timestamps_subq.c.timestamp)
                 )
 
         # data_points is a list of rows. Each row is an object that has methods
@@ -215,11 +215,11 @@ def calculate_stats(
         # to have .date and .count methods
         joined_query = (
             select(
-                series_sq.c.timestamp.label("date"),
-                func.coalesce(stmt_sq.c.count, 0).label("count"),
+                gen_timestamps_subq.c.timestamp.label("date"),
+                func.coalesce(not_empty_bins_subq.c.count, 0).label("count"),
             )
-            .outerjoin(stmt_sq, and_(true(), *comparison_criteria))
-            .order_by(series_sq.c.timestamp.asc())
+            .outerjoin(not_empty_bins_subq, and_(true(), *comparison_criteria))
+            .order_by(gen_timestamps_subq.c.timestamp.asc())
         )
         data_points = db.session.execute(joined_query).fetchall()
 
