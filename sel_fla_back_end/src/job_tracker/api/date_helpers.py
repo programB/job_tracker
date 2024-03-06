@@ -57,6 +57,9 @@ def ISO8601_date_type(date: str) -> datetime:
 
 
 def last_day_of_month(any_date: datetime) -> datetime:
+    # Based on
+    # https://stackoverflow.com/questions/42950/
+    # /get-the-last-day-of-the-month/13565185#13565185
     # The day 28 exists in every month. 4 days later, it's always next month.
     date_in_next_month = any_date.replace(day=28) + timedelta(days=4)
     # Subtracting the number of the 'new' current day brings us back
@@ -70,6 +73,9 @@ def iterate_months(start_date, end_date):
     Time is always set to 00:00:00
     Range includes both start_date and end_date
     """
+    # Based on
+    # https://stackoverflow.com/questions/34898525/
+    # /generate-list-of-months-between-interval/34899198#34899198
     year = start_date.year
     month = start_date.month
     while True:

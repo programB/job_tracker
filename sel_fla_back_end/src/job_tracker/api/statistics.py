@@ -34,12 +34,12 @@ def temporary_timestamps_table():
 
     A table is created (if it doesn't already exist) using current
     database context. Table has a single column which should be filled
-    with a continuous range of timestamps inside the context create
+    with a continuous range of timestamps inside the context created
     by this manager.
 
-    Not data are inserted into the table, the manager just yields
+    No data are inserted into the table, the manager just yields
     the table object.
-    However after the context is closed all the table rows are removed
+    However after the context is closed all rows are removed from the table
     (the table itself is not dropped).
 
     E.g.::
@@ -181,17 +181,6 @@ def calculate_stats(
         )
         not_empty_bins_subq = not_empty_bins.subquery()
 
-        # Show what is going on
-        # TODO: Remove when not needed
-        print("############# Bare stmt execution #####################")
-        for result in db.session.execute(not_empty_bins).fetchall():
-            print(result)
-        print("#######################################################")
-        print("+++++++++++++ And this is how generated dates look like ++++++++++")
-        for generated_timestamp in db.session.execute(gen_timestamps).fetchall():
-            print(generated_timestamp)
-        print("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-
         comparison_criteria = [
             func.extract("year", not_empty_bins_subq.c.collected)
             == func.extract("year", gen_timestamps_subq.c.timestamp)
@@ -223,19 +212,14 @@ def calculate_stats(
         )
         data_points = db.session.execute(joined_query).fetchall()
 
-    # TODO: Remove when not needed
-    print("!!!!!!!!!! RESULTS INCOMING !!!!!!!!!!!!!!!!!!!")
-    for row in data_points:
-        print(f"Date is: {row.date} Count is: {row.count}")
-    print("!!!!!!!!!!      THE END     !!!!!!!!!!!!!!!!!!!")
     return data_points
 
 
 def timedependant():
-    # connexion automatically validates date FORMAT based on API specification
-    # but casting them here from string to datetime objects.
+    # connexion automatically VALIDATES date FORMAT based on API specification
+    # but casting here from string to datetime object for easier handling.
     start_date: datetime | None = request.args.get("start_date", type=ISO8601_date_type)
-    # connexion will not validate date CORRECTNESS (eg. it will accept 2023-09-44)
+    # connexion WILL NOT validate date CORRECTNESS (eg. it will accept 2023-09-44)
     if start_date is None:
         return problem(status=400, title="Bad request", detail="invalid start_date")
     end_date: datetime | None = request.args.get("end_date", type=ISO8601_date_type)
@@ -245,9 +229,9 @@ def timedependant():
         return problem(
             status=400, title="Bad request", detail="end_date earlier than start_date"
         )
-    # There is no need to validate binning type since connexion
+    # There is no need to validate binning value since connexion
     # will automatically check this against choices allowed in API specification,
-    # but casting is done since using enum in makes for cleaner code.
+    # but casting for easier handling in other functions.
     binning = request.args.get("binning", type=interval_type)
     if binning is None:
         return problem(
