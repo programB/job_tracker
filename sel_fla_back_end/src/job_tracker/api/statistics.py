@@ -67,7 +67,7 @@ def temporary_timestamps_table():
     yield TmpContinuousDatesRange
 
     # Remove all data from the table when context is closed
-    # (the table itself is not removed/droped).
+    # (the table itself is not removed/dropped).
     db.session.execute(delete(TmpContinuousDatesRange))
 
 
@@ -99,17 +99,15 @@ def calculate_stats(
     """
 
     with temporary_timestamps_table() as TmpContinuousDatesRange:
-        # Expand date range (to full years or months)
-        # based on requested binning method,
-        # establish grouping criteria for the sql query,
-        # fill in the TmpContinuousDatesRange table with timestamps.
         match binning:
+            # Expand date range (to full years or months)
+            # based on requested binning method,
+            # establish grouping criteria for the sql query,
+            # fill in the TmpContinuousDatesRange table with timestamps.
             case Interval.YEAR:
-                mod_sd = start_date.replace(month=1, day=1).replace(
-                    hour=0, minute=0, second=0
-                )
-                mod_ed = end_date.replace(month=12, day=31).replace(
-                    hour=23, minute=59, second=59
+                mod_sd = start_date.replace(month=1, day=1, hour=0, minute=0, second=0)
+                mod_ed = end_date.replace(
+                    month=12, day=31, hour=23, minute=59, second=59
                 )
 
                 grouping_criteria = [
@@ -118,10 +116,16 @@ def calculate_stats(
 
                 years = [y for y in range(mod_sd.year, mod_ed.year + 1, 1)]
                 for year in years:
-                    db.session.add(TmpContinuousDatesRange(timestamp=datetime(year, 1, 1)))
+                    db.session.add(
+                        TmpContinuousDatesRange(
+                            timestamp=datetime(year, month=1, day=1)
+                        )
+                    )
             case Interval.MONTH:
-                mod_sd = start_date.replace(day=1).replace(hour=0, minute=0, second=0)
-                mod_ed = last_day_of_month(end_date).replace(hour=23, minute=59, second=59)
+                mod_sd = start_date.replace(day=1, hour=0, minute=0, second=0)
+                mod_ed = last_day_of_month(end_date).replace(
+                    hour=23, minute=59, second=59
+                )
 
                 grouping_criteria = [
                     func.extract("year", JobOffer.collected),
@@ -141,7 +145,8 @@ def calculate_stats(
                 ]
 
                 dates_range = [
-                    mod_sd + timedelta(days=x) for x in range(0, (mod_ed - mod_sd).days + 1)
+                    mod_sd + timedelta(days=x)
+                    for x in range(0, (mod_ed - mod_sd).days + 1)
                 ]
                 for date in dates_range:
                     db.session.add(TmpContinuousDatesRange(timestamp=date))
