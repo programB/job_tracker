@@ -1,6 +1,25 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pytest
+
+
+def iterate_months(start_date, end_date):
+    """Yields timestamp of 1st day of every month between start and end dates
+
+    Time is always set to 00:00:00
+    Range includes both start_date and end_date
+    """
+    year = start_date.year
+    month = start_date.month
+    while True:
+        current = datetime(year, month, 1)
+        yield current
+        if current.month == end_date.month and current.year == end_date.year:
+            break
+        else:
+            month = ((month + 1) % 12) or 12
+            if month == 1:
+                year += 1
 
 
 class TestHappyPaths:
@@ -66,9 +85,26 @@ class TestHappyPaths:
         assert data[0]["date"] == "2023-09-01"  # beginning of the month
         assert data[0]["count"] == 528  # all offers in September of 2023
 
-    def test_should_get_month_statistics_across_multiple_years(self, httpx_test_client):
-        sd = "2023-01-01"
-        ed = "2024-12-31"
+    @pytest.mark.parametrize(
+        "sd, ed, expected_counts",
+        [
+            (
+                date(2023, 1, 1),
+                date(2024, 12, 31),
+                8 * [0] + [528, 472] + 2 * [0] + [3] + 11 * [0],
+            ),
+            (
+                date(2023, 7, 17),
+                date(2024, 4, 11),
+                2 * [0] + [528, 472] + 2 * [0] + [3] + 3 * [0],
+            ),
+        ],
+    )
+    def test_should_get_month_statistics_across_multiple_years(
+        self, httpx_test_client, sd, ed, expected_counts
+    ):
+        # sd = "2023-01-01"
+        # ed = "2024-12-31"
         binning = "month"
         response = httpx_test_client.get(
             "/api/statistics",
@@ -80,22 +116,26 @@ class TestHappyPaths:
         )
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list) and len(data) == 3
-        assert data[0]["date"] == "2023-09-01"  # beginning of the month
-        assert data[0]["count"] == 528  # all offers in September of 2023
-        assert data[1]["date"] == "2023-10-01"  # beginning of the month
-        assert data[1]["count"] == 472  # all offers in October of 2023
-        assert data[2]["date"] == "2024-01-01"  # beginning of the month
-        assert data[2]["count"] == 3  # all offers in January of 2024
+        assert isinstance(data, list)
+        assert len(data) == len(expected_counts)
+        first_day_of_month = iterate_months(sd, ed)
+        for i, dp in enumerate(data):
+            assert dp["date"] == next(first_day_of_month).date().isoformat()
+            assert dp["count"] == expected_counts[i]
 
-    @pytest.mark.xfail(
-        reason="FIXME: Incorrect implementation of statistics calculation"
-    )
     @pytest.mark.parametrize(
         "sd, ed, expected_counts",
         [
-            (date(2023, 9, 21), date(2023, 9, 25), [20, 15, 0, 0, 0]),
-            (date(2023, 10, 20), date(2024, 1, 16), [24, 22, 15] + 91 * [0] + [3]),
+            (
+                date(2023, 9, 21),
+                date(2023, 9, 25),
+                [20, 15, 0, 0, 0],
+            ),
+            (
+                date(2023, 10, 20),
+                date(2024, 1, 16),
+                [24, 22, 15] + 84 * [0] + [3] + [0],
+            ),
         ],
     )
     def test_should_get_day_statistics_for_single_month(

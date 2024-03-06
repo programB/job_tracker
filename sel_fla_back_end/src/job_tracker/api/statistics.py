@@ -20,6 +20,14 @@ from .date_helpers import (
 # pylint: disable=not-callable
 
 
+class TmpContinuousDatesRange(db.Model):
+    __tablename__ = "tmp_continuous_dates_range"
+    timestamp = db.Column(db.DateTime, primary_key=True, autoincrement=False)
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+
 @contextmanager
 def temporary_timestamps_table():
     r"""Create a temporary table for continuous range of timestamps
@@ -52,13 +60,6 @@ def temporary_timestamps_table():
         for row in timestamps_from_db:
             print(row)
     """
-
-    class TmpContinuousDatesRange(db.Model):
-        __tablename__ = "tmp_continuous_dates_range"
-        timestamp = db.Column(db.DateTime, primary_key=True, autoincrement=False)
-
-        def __init__(self, **kwargs) -> None:
-            super().__init__(**kwargs)
 
     if not inspect(db.engine).has_table(TmpContinuousDatesRange.__tablename__):
         # Create empty table
@@ -233,11 +234,11 @@ def calculate_stats(
 def timedependant():
     # connexion automatically validates date FORMAT based on API specification
     # but casting them here from string to datetime objects.
-    start_date = request.args.get("start_date", type=ISO8601_date_type)
+    start_date: datetime | None = request.args.get("start_date", type=ISO8601_date_type)
     # connexion will not validate date CORRECTNESS (eg. it will accept 2023-09-44)
     if start_date is None:
         return problem(status=400, title="Bad request", detail="invalid start_date")
-    end_date = request.args.get("end_date", type=ISO8601_date_type)
+    end_date: datetime | None = request.args.get("end_date", type=ISO8601_date_type)
     if end_date is None:
         return problem(status=400, title="Bad request", detail="invalid end_date")
     if end_date < start_date:
