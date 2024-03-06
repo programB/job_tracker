@@ -155,13 +155,13 @@ def calculate_stats(
             JobOffer.collected >= mod_sd,
             JobOffer.collected <= mod_ed,
         ]
-        # Don't include other criteria for now (uncomment again for the final solution)
-        # if contract_type is not None:
-        #     selection_criteria.append(JobOffer.contracttype == contract_type)
-        # if job_mode is not None:
-        #     selection_criteria.append(JobOffer.jobmode == job_mode)
-        # if job_level is not None:
-        #     selection_criteria.append(JobOffer.joblevel == job_level)
+
+        if contract_type is not None:
+            selection_criteria.append(JobOffer.contracttype == contract_type)
+        if job_mode is not None:
+            selection_criteria.append(JobOffer.jobmode == job_mode)
+        if job_level is not None:
+            selection_criteria.append(JobOffer.joblevel == job_level)
         # if tags is not None:
         #     TODO: This doesn't work
         #     selection_criteria.append("Python" == any_(JobOffer.tags))
