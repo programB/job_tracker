@@ -51,5 +51,9 @@ def create_app(custom_config=config.RegularConfig):
 
     scheduler.start()
 
+    # Init the db here (within the context of created app !)
+    with base_flask_app.app_context():
+        db.create_all()
+
     # Finally return the app
     return connexion_app
