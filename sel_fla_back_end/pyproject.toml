@@ -11,7 +11,8 @@ dependencies = [
   "connexion[swagger-ui]",
   "connexion[flask]",
   "connexion[uvicorn]",
-  "flask-marshmallow[sqlalchemy]"
+  "flask-marshmallow[sqlalchemy]",
+  "flask-apscheduler"
 ]
 
 [project.optional-dependencies]
