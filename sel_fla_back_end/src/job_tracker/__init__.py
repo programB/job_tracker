@@ -3,7 +3,7 @@ from connexion.resolver import RelativeResolver
 
 from job_tracker import config
 from job_tracker.database import db
-from job_tracker.extensions import ma
+from job_tracker.extensions import ma, scheduler
 
 
 def create_app(custom_config=config.RegularConfig):
@@ -33,6 +33,7 @@ def create_app(custom_config=config.RegularConfig):
 
     db.init_app(base_flask_app)
     ma.init_app(base_flask_app)
+    scheduler.init_app(base_flask_app)
 
     # Register blueprints (including indirect registration by extensions)
     # resolver = None if __package__ is None else RelativeResolver(__package__ + ".api")
@@ -42,6 +43,13 @@ def create_app(custom_config=config.RegularConfig):
 
     # Any additional routes (eg. added temporarily for a quick test and
     # besides those already added through blueprints) can go here
+
+    # Add any tasks to the scheduler here
+    # (or import module(s) with functions decorated with @scheduler.task)
+    # and start the scheduler.
+    import job_tracker.tasks
+
+    scheduler.start()
 
     # Finally return the app
     return connexion_app
