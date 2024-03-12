@@ -9,6 +9,7 @@ from job_tracker import create_app
 from job_tracker.config import BaseConfig
 from job_tracker.database import db
 from job_tracker.models import Company, JobOffer, Tag
+from job_tracker.extensions import scheduler
 
 data_dir = pathlib.Path(__file__).parent.resolve().joinpath("data")
 fake_offers_f = data_dir.joinpath("test_offers.dat")
@@ -157,6 +158,12 @@ def connexion_app_instance():
 
     conxn_app = create_app(custom_config=TestConfig)
 
+    # This only exists because app factory starts the scheduler
+    # probably it should be started externally based environment variables
+    jobs = scheduler.get_jobs()
+    for job in jobs:
+        job.remove()
+
     # Get the underlying flask app from the connexion app instance.
     wrapped_flask_app = conxn_app.app
 
@@ -169,6 +176,9 @@ def connexion_app_instance():
     # After the test close and remove the db file.
     os.close(db_fd)
     os.remove(db_fpath)
+    # This only exists because app factory starts the scheduler
+    # probably it should be started externally based environment variables
+    scheduler.shutdown(wait=False)
 
 
 # def test_app_object_creation(connexion_app_instance):
