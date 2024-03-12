@@ -9,7 +9,7 @@ from selenium import webdriver
 from job_tracker.config import root_dir
 from job_tracker.database import db
 from job_tracker.extensions import scheduler
-from job_tracker.models import Company
+from job_tracker.models import Company, JobOffer, Tag
 from job_tracker.pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 
 datafile = root_dir.joinpath("search_results.txt")
@@ -92,7 +92,7 @@ def fetch_offers():
 
         if main_page.search_mode == "default":
             main_page.search_mode = "it"
-        tags = main_page.search_mode == "it"
+        is_tag_list_available = main_page.search_mode == "it"
         main_page.employment_type = ["full_time"]
         main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
         main_page.search_term = "Tester"
@@ -102,14 +102,44 @@ def fetch_offers():
         results_page = ResultsPage(driver)
         all_offers = results_page.all_offers
 
-        with datafile.open("a", encoding="utf-8") as datf:
-            for i, offer in enumerate(all_offers):
-                datf.write(f"({i})  Offer: {offer.title} (id: {offer.id})\n")
-                datf.write(f" company:  {offer.company_name}\n")
-                datf.write(f" salary:   {offer.salary}\n")
-                datf.write(f" level:    {offer.job_level}\n")
-                datf.write(f" contract: {offer.contract_type}\n")
-                datf.write(f" link:     {offer.link}\n")
-                if tags:
-                    datf.write(f" tags:     {offer.technology_tags}\n")
-                datf.write("----------------------------\n")
+    with scheduler.app.app_context():
+        for offer in all_offers:
+            if not JobOffer.query.get(offer.id):  # new, not yet stored offer
+                if not Company.query.get(offer.company_id):  # not yet stored company
+                    new_company = Company(
+                        company_id=offer.company_id,
+                        name=offer.company_name,
+                        address="",
+                        town="",
+                        postalcode="",
+                        website=offer.company_link,
+                    )
+                    db.session.add(new_company)
+                else:
+                    logging.warning("Company (id = %s) already in db", offer.company_id)
+
+                new_offer = JobOffer(
+                    joboffer_id=offer.id,
+                    company_id=offer.company_id,
+                    title=offer.title,
+                    posted=offer.publication_date,
+                    collected=offer.webscrap_timestamp,
+                    contracttype=offer.contract_type,
+                    jobmode="",  # TODO: Not collected at the moment
+                    joblevel=offer.job_level,
+                    monthlysalary=offer.salary,
+                    detailsurl=offer.link,
+                )
+                if is_tag_list_available:
+                    for tag in offer.technology_tags:
+                        existing_tag = Tag.query.filter(Tag.name == tag).one_or_none()
+                        if existing_tag:
+                            new_offer.tags.append(existing_tag)
+                        else:
+                            new_tag = Tag(name=tag)
+                            db.session.add(new_tag)
+                            new_offer.tags.append(new_tag)
+                db.session.add(new_offer)
+                db.session.commit()
+            else:
+                logging.warning("Offer (id = %s) already in db", offer.id)
