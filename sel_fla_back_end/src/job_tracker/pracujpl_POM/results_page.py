@@ -11,7 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 
-from .base_navigation import BaseNavigation
+from .base_navigation import AdsPopup, BaseNavigation
 
 if TYPE_CHECKING:
     from selenium.webdriver.remote.webelement import WebElement
@@ -288,6 +288,16 @@ class Advertisement(BaseNavigation):
 
 class ResultsPage(BaseNavigation):
     """Class modeling the page with the search results"""
+
+    def __init__(
+        self,
+        driver,
+        visual_mode=False,
+        attempt_closing_popups=True,
+    ) -> None:
+        super().__init__(driver, visual_mode)
+        if attempt_closing_popups:
+            AdsPopup(driver, visual_mode).close()
 
     @property
     def tot_no_of_subpages(self) -> int:
