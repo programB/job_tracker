@@ -49,11 +49,11 @@ def init_db_and_load_fake_data(sqldb):
     sqldb.session.add_all([company1, company2])
 
     # INSERT INTO joboffer
-    # (joboffer_id, company_id, title, posted, contracttype, jobmode, joblevel, monthlysalary, detailsurl, collected)   # noqa: E501
+    # (joboffer_id, company_id, title, posted, contracttype, jobmode, joblevel, salary, detailsurl, collected)   # noqa: E501
     # VALUES
-    # (1, 1, 'Test offer 1', '2012-06-18 10:34:09', 'full time', 'in office', 'junior', 5000, 'https://fakeaddress.com/1', '2024-01-15 15:40:00'),  # noqa: E501
-    # (2, 1, 'Test offer 2', '2024-01-09 17:01:00', 'full time', 'in office', 'senior', 10000, 'https://fakeaddress.com/2', '2024-01-15 15:40:01'),  # noqa: E501
-    # (3, 2, 'Test offer 3', '2024-01-06 8:00:00', 'part time', 'remote', 'trainee', 3000, 'https://otherfakeaddress.com/3', '2024-01-15 15:40:02')  # noqa: E501
+    # (1, 1, 'Test offer 1', '2012-06-18 10:34:09', 'full time', 'in office', 'junior', '5000 USD/mo', 'https://fakeaddress.com/1', '2024-01-15 15:40:00'),  # noqa: E501
+    # (2, 1, 'Test offer 2', '2024-01-09 17:01:00', 'full time', 'in office', 'senior', '10000 USD/mo', 'https://fakeaddress.com/2', '2024-01-15 15:40:01'),  # noqa: E501
+    # (3, 2, 'Test offer 3', '2024-01-06 8:00:00', 'part time', 'remote', 'trainee', '3000 USD/mo', 'https://otherfakeaddress.com/3', '2024-01-15 15:40:02')  # noqa: E501
     # ;
     # joboffer1 = JobOffer(
     #     title="Test offer 1",
@@ -63,7 +63,7 @@ def init_db_and_load_fake_data(sqldb):
     #     contracttype="full time",
     #     jobmode="in office",
     #     joblevel="junior",
-    #     monthlysalary=5000,
+    #     salary="5000 USD/mo",
     #     detailsurl="https://fakeaddress.com/1",
     # )
     # joboffer2 = JobOffer(
@@ -74,7 +74,7 @@ def init_db_and_load_fake_data(sqldb):
     #     contracttype="full time",
     #     jobmode="in office",
     #     joblevel="senior",
-    #     monthlysalary=10000,
+    #     salary="10000 USD/mo",
     #     detailsurl="https://fakeaddress.com/2",
     # )
     # joboffer3 = JobOffer(
@@ -85,7 +85,7 @@ def init_db_and_load_fake_data(sqldb):
     #     contracttype="part time",
     #     jobmode="remote",
     #     joblevel="trainee",
-    #     monthlysalary=3000,
+    #     salary="3000 USD/mo",
     #     detailsurl="https://otherfakeaddress.com/3",
     # )
     # sqldb.session.add_all([joboffer1, joboffer2, joboffer3])
@@ -103,7 +103,7 @@ def init_db_and_load_fake_data(sqldb):
                 contracttype=offer_tup[4],
                 jobmode=offer_tup[5],
                 joblevel=offer_tup[6],
-                monthlysalary=offer_tup[7],
+                salary=offer_tup[7],
                 detailsurl=offer_tup[8],
             )
             list_of_fake_offers.append(joboffer)

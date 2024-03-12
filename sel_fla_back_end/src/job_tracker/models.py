@@ -85,7 +85,7 @@ class JobOffer(db.Model):
     #   `contracttype` VARCHAR(45) NULL,
     #   `jobmode` VARCHAR(45) NULL,
     #   `joblevel` VARCHAR(45) NULL,
-    #   `monthlysalary` INT NULL,
+    #   `salary` VARCHAR(255) NULL,
     #   `detailsurl` VARCHAR(45) NULL,
     #   `collected` DATETIME NOT NULL,
     #   PRIMARY KEY (`joboffer_id`),
@@ -102,7 +102,7 @@ class JobOffer(db.Model):
     contracttype = db.Column(db.String(45), nullable=True)
     jobmode = db.Column(db.String(45), nullable=True)
     joblevel = db.Column(db.String(45), nullable=True)
-    monthlysalary = db.Column(db.Integer, nullable=True)
+    salary = db.Column(db.String(255), nullable=True)
     detailsurl = db.Column(db.String(45), nullable=True)
     tags = db.relationship(
         "Tag",  # Use this class

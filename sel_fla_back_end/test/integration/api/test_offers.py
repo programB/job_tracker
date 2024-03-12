@@ -32,7 +32,7 @@ class TestHappyPaths:
             assert offer["contracttype"] and isinstance(offer["contracttype"], str)
             assert offer["jobmode"] and isinstance(offer["jobmode"], str)
             assert offer["joblevel"] and isinstance(offer["joblevel"], str)
-            assert offer["monthlysalary"] > 0
+            assert "USD/mo" in offer["salary"]
             assert offer["detailsurl"].startswith("https:")
             assert isinstance(offer["tags"], list) and all(
                 isinstance(item, str) for item in offer["tags"]

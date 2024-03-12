@@ -186,8 +186,8 @@ components:
           type: string
         job_level:
           type: string
-        monthly_salary:
-          type: integer
+        salary:
+          type: string
         detailsurl:
           type: string
           format: uri
@@ -202,7 +202,7 @@ components:
         contract_type: part time
         job_mode: remote
         job_level: junior
-        monthly_salary: 1000
+        salary: 5 500 zł netto (+ VAT) / mies.
         detailsurl: http://example_company.com/great_job_offer_1
         company_id: 1
 

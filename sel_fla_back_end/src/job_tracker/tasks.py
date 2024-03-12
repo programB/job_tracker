@@ -89,7 +89,7 @@ def fetch_offers():
                     contracttype=offer.contract_type,
                     jobmode="",  # TODO: Not collected at the moment
                     joblevel=offer.job_level,
-                    monthlysalary=offer.salary,
+                    salary=offer.salary,
                     detailsurl=offer.link,
                 )
                 if is_tag_list_available:

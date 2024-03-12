@@ -149,7 +149,7 @@ class Advertisement(BaseNavigation):
             ).text
         except SE.NoSuchElementException:
             # Some genuine offers do not provide salary information, it's OK.
-            self._offer_dict["salary"] = "not specified"
+            self._offer_dict["salary"] = ""
             logging.warning("offer does not provide salary information")
 
         try:
