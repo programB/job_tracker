@@ -45,7 +45,9 @@ class Advertisement(BaseNavigation):
             "link": "",
             "title": "",
             "salary": "",
+            "company_id": 0,
             "company_name": "",
+            "company_link": "",
             "job_level": "",
             "contract_type": "",
             "technology_tags": [],
@@ -77,6 +79,25 @@ class Advertisement(BaseNavigation):
             logging.error("no valid offer found in div %s", self.root_element)
             self.is_valid_offer = False
             return
+
+        try:
+            company_link_element = top_div.find_element(
+                By.XPATH,
+                ".//descendant::div[@data-test='section-company']//descendant::a[@data-test='link-company-profile'][2]",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
+            )
+        except (SE.NoSuchElementException, ValueError, AttributeError):
+            logging.warning(
+                "offer doesn't seem to provide company information, offer skipped"
+            )
+            return
+        else:
+            if company_link_element is not None:
+                company_link = company_link_element.get_attribute("href")
+                self._offer_dict["company_link"] = company_link
+                self._offer_dict["company_id"] = int(company_link.split("/")[-1])
+                self._offer_dict["company_name"] = company_link_element.find_element(
+                    By.XPATH, "./h4"
+                ).text
 
         try:
             match top_div.get_attribute("data-test-location"):
@@ -198,7 +219,7 @@ class Advertisement(BaseNavigation):
 
     @property
     def link(self) -> str:
-        """URL to the offer details
+        """URL to the offer's details
 
         empty string if URL not provided
         """
@@ -218,10 +239,28 @@ class Advertisement(BaseNavigation):
         return self._offer_dict["salary"]
 
     @property
+    def company_id(self) -> int:
+        """Unique company id
+
+        0 means company id couldn't be found
+        """
+
+        return self._offer_dict["company_id"]
+
+    @property
     def company_name(self) -> str:
         """Name of the company offering the job"""
 
         return self._offer_dict["company_name"]
+
+    @property
+    def company_link(self) -> str:
+        """URL to the page with company details
+
+        empty string if URL not provided
+        """
+
+        return self._offer_dict["company_link"]
 
     @property
     def job_level(self) -> str:
