@@ -234,7 +234,10 @@ class Advertisement(BaseNavigation):
                 m = (months_pl | months_ua)[m_str.lower()]
                 self._offer_dict["publication_date"] = datetime(int(y), m, int(d))
             except Exception as e:
-                logging.error("failed to parse publication date, offer skipped. Explanaition %s", str(e))
+                logging.error(
+                    "failed to parse publication date, offer skipped. Explanaition %s",
+                    str(e),
+                )
                 return
 
         # find_all (using find_elements) does not raise any exceptions
