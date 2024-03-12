@@ -52,7 +52,7 @@ class Advertisement(BaseNavigation):
             "contract_type": "",
             "technology_tags": [],
             "publication_date": datetime(1, 1, 1),
-            "webscrap_timestamp": 0.0,
+            "webscrap_timestamp": datetime(1, 1, 1),
         }
         self.is_valid_offer = False
         self.is_multiple_location_offer = False
@@ -253,7 +253,7 @@ class Advertisement(BaseNavigation):
             logging.warning("offer does not provide technology tags")
         #
         # finally the timestamp
-        self._offer_dict["webscrap_timestamp"] = time.time()
+        self._offer_dict["webscrap_timestamp"] = datetime.utcnow()
         # if the code reaches this point it means this is a valid job offer
         self.is_valid_offer = True
 
@@ -365,10 +365,10 @@ class Advertisement(BaseNavigation):
         return self._offer_dict["technology_tags"]
 
     @property
-    def webscrap_timestamp(self) -> float:
-        """Time when the offer was scraped from the webpage
+    def webscrap_timestamp(self) -> datetime:
+        """Date and time when the offer was scraped from the webpage
 
-        timestamp in seconds since the Unix epoch
+        0001-01-01T00:00:00 denotes incorrect value
         """
         return self._offer_dict["webscrap_timestamp"]
 
