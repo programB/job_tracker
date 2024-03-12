@@ -248,7 +248,14 @@ class Advertisement(BaseNavigation):
             root_element=top_div,
         ):
             for tag in tech_tags_elements:
-                self._offer_dict["technology_tags"].append(tag.text)
+                # If an offer has many tags those that do not fit
+                # on a single line get hidden by JS. In those cases
+                # they are being found by the selector above but the
+                # tag.text property returns empty string !
+                # tag.get_attribute("innerText") works as expected.
+                self._offer_dict["technology_tags"].append(
+                    tag.get_attribute("innerText")
+                )
         else:
             logging.warning("offer does not provide technology tags")
         #
