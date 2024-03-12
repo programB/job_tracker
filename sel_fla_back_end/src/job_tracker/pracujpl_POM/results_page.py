@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import platform
-import time
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from selenium.common import exceptions as SE
@@ -51,6 +51,7 @@ class Advertisement(BaseNavigation):
             "job_level": "",
             "contract_type": "",
             "technology_tags": [],
+            "publication_date": datetime(1, 1, 1),
             "webscrap_timestamp": 0.0,
         }
         self.is_valid_offer = False
@@ -189,6 +190,53 @@ class Advertisement(BaseNavigation):
             # Unusual but acceptable
             logging.warning("offer does not provide contract type information")
 
+        try:
+            pub_date_str = top_div.find_element(
+                By.XPATH,
+                ".//descendant::p[@data-test='text-added']",
+            ).get_attribute("innerText")
+        except SE.NoSuchElementException:
+            logging.warning("offer does not provide publication date, offer skipped")
+            return
+        else:
+            try:
+                months_pl = {
+                    "stycznia": 1,
+                    "lutego": 2,
+                    "marca": 3,
+                    "kwietnia": 4,
+                    "maja": 5,
+                    "czerwca": 6,
+                    "lipca": 7,
+                    "sierpnia": 8,
+                    "września": 9,
+                    "października": 10,
+                    "listopada": 11,
+                    "grudnia": 12,
+                }
+                months_ua = {
+                    "січня": 1,
+                    "лютого": 2,
+                    "березня": 3,
+                    "квітня": 4,
+                    "травня": 5,
+                    "червня": 6,
+                    "липня": 7,
+                    "серпня": 8,
+                    "вересня": 9,
+                    "жовтня": 10,
+                    "листопада": 11,
+                    "грудня": 12,
+                }
+                # date_parts has different size depending on language (pl: 3, ua: 4)
+                date_parts = pub_date_str.strip().split(":")[1].strip().split(" ")
+                d, m_str, y = [date_parts[i] for i in (0, 1, 2)]
+                m = (months_pl | months_ua)[m_str.lower()]
+                self._offer_dict["publication_date"] = datetime(int(y), m, int(d))
+            except Exception as e:
+                logging.error("failed to parse publication date, offer skipped. Explanaition %s", str(e))
+                return
+
         # find_all (using find_elements) does not raise any exceptions
         # but returns empty list if no matching tags are found
         # hence if..else
@@ -323,6 +371,14 @@ class Advertisement(BaseNavigation):
         timestamp in seconds since the Unix epoch
         """
         return self._offer_dict["webscrap_timestamp"]
+
+    @property
+    def publication_date(self) -> datetime:
+        """Date and time when the offer was (re)published on the webpage
+
+        0001-01-01T00:00:00 denotes incorrect value
+        """
+        return self._offer_dict["publication_date"]
 
 
 class ResultsPage(BaseNavigation):
