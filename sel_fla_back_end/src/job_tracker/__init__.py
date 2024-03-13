@@ -47,7 +47,7 @@ def create_app(custom_config=config.RegularConfig):
     # Add any tasks to the scheduler here
     # (or import module(s) with functions decorated with @scheduler.task)
     # and start the scheduler.
-    import job_tracker.tasks
+    import job_tracker.tasks  # noqa: F401
 
     scheduler.start()
 

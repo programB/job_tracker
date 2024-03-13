@@ -12,9 +12,8 @@ from job_tracker.pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 
 @scheduler.task("interval", id="demo_task", seconds=4)
 def schedule_watchdog_task():
-    logging.error(
-        "This task runs every 4 seconds printing random number: %s", randint(1, 49)
-    )
+    anum = randint(1, 49)  # nosec B311
+    logging.error("This task runs every 4 seconds printing random number: %s", anum)
 
 
 @contextmanager
