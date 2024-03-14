@@ -12,6 +12,7 @@ dependencies = [
   "connexion[flask]",
   "connexion[uvicorn]",
   "flask-marshmallow[sqlalchemy]",
+  "PyMySQL",
   "flask-apscheduler"
 ]
 

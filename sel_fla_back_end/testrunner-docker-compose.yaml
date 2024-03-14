@@ -60,7 +60,7 @@ services:
     environment:
       SELENIUM_GRID_URL: http://chromeindocker
       SELENIUM_GRID_PORT: 4444
-      DATABASE_URI: mysql://db_regular_user:abc123@database:3306/job_tracker_db
+      DATABASE_URI: mysql+pymysql://db_regular_user:abc123@database:3306/job_tracker_db
     stdin_open: true # docker run -i
     tty: true # docker run -t
     networks:
