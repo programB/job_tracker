@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import contextmanager
 from random import randint
 
@@ -47,8 +48,12 @@ def selenium_driver(selenium_grid_url, selenium_grid_port="4444"):
     misfire_grace_time=30,  # seconds
 )
 def fetch_offers():
-
-    with selenium_driver(None) as driver:
+    # Use selenium grid service.
+    # If SELENIUM_GRID_URL env. is not set
+    # local selenium instalation will be used.
+    selenium_grid_url = os.getenv("SELENIUM_GRID_URL")
+    selenium_grid_port = os.getenv("SELENIUM_GRID_PORT", "4444")
+    with selenium_driver(selenium_grid_url, selenium_grid_port) as driver:
         main_page = PracujplMainPage(driver, reject_cookies=True)
 
         if main_page.search_mode == "default":
