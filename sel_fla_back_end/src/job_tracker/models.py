@@ -25,20 +25,20 @@ class Tag(db.Model):
 class Company(db.Model):
     # CREATE TABLE IF NOT EXISTS `company` (
     #   `company_id` INT(11) NOT NULL AUTO_INCREMENT,
-    #   `name` VARCHAR(45) NOT NULL,
-    #   `address` VARCHAR(45) NULL DEFAULT NULL,
-    #   `town` VARCHAR(45) NULL DEFAULT NULL,
-    #   `postalcode` VARCHAR(45) NULL DEFAULT NULL,
-    #   `website` VARCHAR(45) NULL DEFAULT NULL,
+    #   `name` VARCHAR(255) NOT NULL,
+    #   `address` VARCHAR(255) NULL DEFAULT NULL,
+    #   `town` VARCHAR(255) NULL DEFAULT NULL,
+    #   `postalcode` VARCHAR(255) NULL DEFAULT NULL,
+    #   `website` VARCHAR(255) NULL DEFAULT NULL,
     #   PRIMARY KEY (`company_id`)
     # )
     __tablename__ = "company"
     company_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(45), nullable=False)
-    address = db.Column(db.String(45), nullable=True)
-    town = db.Column(db.String(45), nullable=True)
-    postalcode = db.Column(db.String(45), nullable=True)
-    website = db.Column(db.String(45), nullable=True)
+    name = db.Column(db.String(255), nullable=False)
+    address = db.Column(db.String(255), nullable=True)
+    town = db.Column(db.String(255), nullable=True)
+    postalcode = db.Column(db.String(255), nullable=True)
+    website = db.Column(db.String(255), nullable=True)
     offers = db.relationship(
         "JobOffer",  # Use this class
         backref="company",
@@ -82,11 +82,11 @@ class JobOffer(db.Model):
     #   `company_id` INT(11) NOT NULL,
     #   `title` VARCHAR(255) NOT NULL,
     #   `posted` DATETIME NOT NULL,
-    #   `contracttype` VARCHAR(45) NULL,
-    #   `jobmode` VARCHAR(45) NULL,
-    #   `joblevel` VARCHAR(45) NULL,
+    #   `contracttype` VARCHAR(255) NULL,
+    #   `jobmode` VARCHAR(255) NULL,
+    #   `joblevel` VARCHAR(255) NULL,
     #   `salary` VARCHAR(255) NULL,
-    #   `detailsurl` VARCHAR(45) NULL,
+    #   `detailsurl` VARCHAR(255) NULL,
     #   `collected` DATETIME NOT NULL,
     #   PRIMARY KEY (`joboffer_id`),
     #   INDEX `joboffer_FK` (`company_id` ASC) VISIBLE,
@@ -99,11 +99,11 @@ class JobOffer(db.Model):
     title = db.Column(db.String(255), nullable=False)
     posted = db.Column(db.DateTime, nullable=False)
     collected = db.Column(db.DateTime, nullable=False)
-    contracttype = db.Column(db.String(45), nullable=True)
-    jobmode = db.Column(db.String(45), nullable=True)
-    joblevel = db.Column(db.String(45), nullable=True)
+    contracttype = db.Column(db.String(255), nullable=True)
+    jobmode = db.Column(db.String(255), nullable=True)
+    joblevel = db.Column(db.String(255), nullable=True)
     salary = db.Column(db.String(255), nullable=True)
-    detailsurl = db.Column(db.String(45), nullable=True)
+    detailsurl = db.Column(db.String(255), nullable=True)  # these tend to be very long
     tags = db.relationship(
         "Tag",  # Use this class
         secondary=joboffer_tag,  # indirect relationship - intermediary: joboffer_tag
