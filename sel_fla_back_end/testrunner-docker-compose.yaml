@@ -70,6 +70,7 @@ services:
         condition: service_healthy
       database:
         condition: service_healthy
+    command: 'python -m job_tracker'
 
   job-tracker-backend-tests:
     # This container will be spun up only if explicitly requested
