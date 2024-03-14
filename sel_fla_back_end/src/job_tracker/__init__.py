@@ -6,7 +6,7 @@ from job_tracker.database import db
 from job_tracker.extensions import ma, scheduler
 
 
-def create_app(custom_config=config.RegularConfig):
+def create_app(custom_config=config.DevelopmentConfig):
 
     containing_package_name = __package__
     application_name = containing_package_name

@@ -57,12 +57,16 @@ services:
 
   job-tracker-backend:
     build: .
+    environment:
+      DATABASE_URI: mysql://db_regular_user:abc123@database:3306/job_tracker_db
     stdin_open: true # docker run -i
     tty: true # docker run -t
     networks:
       - selenium-network
     depends_on:
       chromeindocker:
+        condition: service_healthy
+      database:
         condition: service_healthy
 
   job-tracker-backend-tests:
