@@ -65,6 +65,8 @@ services:
     tty: true # docker run -t
     networks:
       - selenium-network
+    ports:
+      - 5000:5000
     depends_on:
       chromeindocker:
         condition: service_healthy
