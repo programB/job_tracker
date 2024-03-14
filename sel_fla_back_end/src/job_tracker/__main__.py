@@ -1,3 +1,4 @@
+# pylint: skip-file
 import job_tracker
 
 print("Starting server...")
