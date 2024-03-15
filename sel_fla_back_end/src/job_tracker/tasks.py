@@ -4,11 +4,14 @@ from contextlib import contextmanager
 from random import randint
 
 from selenium import webdriver
+from sqlalchemy import exc
 
 from job_tracker.database import db
 from job_tracker.extensions import scheduler
 from job_tracker.models import Company, JobOffer, Tag
 from job_tracker.pracujpl_POM import Distance, PracujplMainPage, ResultsPage
+
+logger = logging.getLogger(__name__)
 
 
 @scheduler.task("interval", id="demo_task", seconds=4)
@@ -80,7 +83,19 @@ def fetch_offers():
                         postalcode="",
                         website=offer.company_link,
                     )
-                    db.session.add(new_company)
+                    try:
+                        db.session.add(new_company)
+                    except (exc.DataError, exc.IntegrityError) as e:
+                        db.session.rollback()
+                        logger.error(
+                            (
+                                "failed to add company while processing "
+                                "offer_id %s. Offer skipped.: %s"
+                            ),
+                            offer.id,
+                            str(e),
+                        )
+                        continue
                 else:
                     logging.warning("Company (id = %s) already in db", offer.company_id)
 
@@ -103,9 +118,30 @@ def fetch_offers():
                             new_offer.tags.append(existing_tag)
                         else:
                             new_tag = Tag(name=tag)
-                            db.session.add(new_tag)
+                            try:
+                                db.session.add(new_tag)
+                            except (exc.DataError, exc.IntegrityError) as e:
+                                db.session.rollback()
+                                logger.error(
+                                    (
+                                        "failed to add new tag while processing "
+                                        "offer_id %s. Offer skipped.: %s"
+                                    ),
+                                    offer.id,
+                                    str(e),
+                                )
+                                continue
                             new_offer.tags.append(new_tag)
-                db.session.add(new_offer)
-                db.session.commit()
+                try:
+                    db.session.add(new_offer)
+                    db.session.commit()
+                except (exc.DataError, exc.IntegrityError) as e:
+                    db.session.rollback()
+                    logger.error(
+                        "failed to add new offer (offer_id %s). Offer skipped.: %s",
+                        offer.id,
+                        str(e),
+                    )
+                    continue
             else:
                 logging.warning("Offer (id = %s) already in db", offer.id)
