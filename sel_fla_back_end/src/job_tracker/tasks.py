@@ -72,76 +72,90 @@ def fetch_offers():
         all_offers = results_page.all_offers
 
     with scheduler.app.app_context():
-        for offer in all_offers:
-            if not JobOffer.query.get(offer.id):  # new, not yet stored offer
-                if not Company.query.get(offer.company_id):  # not yet stored company
-                    new_company = Company(
+        try:
+            for offer in all_offers:
+                if not JobOffer.query.get(offer.id):  # new, not yet stored offer
+                    if not Company.query.get(
+                        offer.company_id
+                    ):  # not yet stored company
+                        new_company = Company(
+                            company_id=offer.company_id,
+                            name=offer.company_name,
+                            address="",
+                            town="",
+                            postalcode="",
+                            website=offer.company_link,
+                        )
+                        try:
+                            db.session.add(new_company)
+                        except (exc.DataError, exc.IntegrityError) as e:
+                            db.session.rollback()
+                            logger.error(
+                                (
+                                    "failed to add company while processing "
+                                    "offer_id %s. Offer skipped.: %s"
+                                ),
+                                offer.id,
+                                str(e),
+                            )
+                            continue
+                    else:
+                        logging.warning(
+                            "Company (id = %s) already in db", offer.company_id
+                        )
+
+                    new_offer = JobOffer(
+                        joboffer_id=offer.id,
                         company_id=offer.company_id,
-                        name=offer.company_name,
-                        address="",
-                        town="",
-                        postalcode="",
-                        website=offer.company_link,
+                        title=offer.title,
+                        posted=offer.publication_date,
+                        collected=offer.webscrap_timestamp,
+                        contracttype=offer.contract_type,
+                        jobmode="",  # TODO: Not collected at the moment
+                        joblevel=offer.job_level,
+                        salary=offer.salary,
+                        detailsurl=offer.link,
                     )
+                    if is_tag_list_available:
+                        for tag in offer.technology_tags:
+                            existing_tag = Tag.query.filter(
+                                Tag.name == tag
+                            ).one_or_none()
+                            if existing_tag:
+                                new_offer.tags.append(existing_tag)
+                            else:
+                                new_tag = Tag(name=tag)
+                                try:
+                                    db.session.add(new_tag)
+                                except (exc.DataError, exc.IntegrityError) as e:
+                                    db.session.rollback()
+                                    logger.error(
+                                        (
+                                            "failed to add new tag while processing "
+                                            "offer_id %s. Offer skipped.: %s"
+                                        ),
+                                        offer.id,
+                                        str(e),
+                                    )
+                                    continue
+                                new_offer.tags.append(new_tag)
                     try:
-                        db.session.add(new_company)
+                        db.session.add(new_offer)
+                        db.session.commit()
                     except (exc.DataError, exc.IntegrityError) as e:
                         db.session.rollback()
                         logger.error(
-                            (
-                                "failed to add company while processing "
-                                "offer_id %s. Offer skipped.: %s"
-                            ),
+                            "failed to add new offer (offer_id %s). Offer skipped.: %s",
                             offer.id,
                             str(e),
                         )
                         continue
                 else:
-                    logging.warning("Company (id = %s) already in db", offer.company_id)
-
-                new_offer = JobOffer(
-                    joboffer_id=offer.id,
-                    company_id=offer.company_id,
-                    title=offer.title,
-                    posted=offer.publication_date,
-                    collected=offer.webscrap_timestamp,
-                    contracttype=offer.contract_type,
-                    jobmode="",  # TODO: Not collected at the moment
-                    joblevel=offer.job_level,
-                    salary=offer.salary,
-                    detailsurl=offer.link,
+                    logging.warning("Offer (id = %s) already in db", offer.id)
+        except exc.OperationalError:
+            logger.exception(
+                (
+                    "Failed to connect to the database while trying to store "
+                    "new offers - none were stored."
                 )
-                if is_tag_list_available:
-                    for tag in offer.technology_tags:
-                        existing_tag = Tag.query.filter(Tag.name == tag).one_or_none()
-                        if existing_tag:
-                            new_offer.tags.append(existing_tag)
-                        else:
-                            new_tag = Tag(name=tag)
-                            try:
-                                db.session.add(new_tag)
-                            except (exc.DataError, exc.IntegrityError) as e:
-                                db.session.rollback()
-                                logger.error(
-                                    (
-                                        "failed to add new tag while processing "
-                                        "offer_id %s. Offer skipped.: %s"
-                                    ),
-                                    offer.id,
-                                    str(e),
-                                )
-                                continue
-                            new_offer.tags.append(new_tag)
-                try:
-                    db.session.add(new_offer)
-                    db.session.commit()
-                except (exc.DataError, exc.IntegrityError) as e:
-                    db.session.rollback()
-                    logger.error(
-                        "failed to add new offer (offer_id %s). Offer skipped.: %s",
-                        offer.id,
-                        str(e),
-                    )
-                    continue
-            else:
-                logging.warning("Offer (id = %s) already in db", offer.id)
+            )
