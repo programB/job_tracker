@@ -3,6 +3,7 @@ import os
 from contextlib import contextmanager
 from random import randint
 
+import urllib3.exceptions as UE
 from selenium import webdriver
 from sqlalchemy import exc
 
@@ -25,19 +26,28 @@ def selenium_driver(selenium_grid_url, selenium_grid_port="4444"):
 
     custom_options = webdriver.ChromeOptions()
 
-    if selenium_grid_url:
-        driver = webdriver.Remote(
-            command_executor=selenium_grid_url + ":" + selenium_grid_port,
-            options=custom_options,
+    try:
+        if selenium_grid_url:
+            driver = webdriver.Remote(
+                command_executor=selenium_grid_url + ":" + selenium_grid_port,
+                options=custom_options,
+            )
+        else:
+            # Use local driver (local browser)
+            # if no Selenium Grid server url was given
+            driver = webdriver.Chrome(options=custom_options)
+    except UE.MaxRetryError:
+        logger.exception(
+            (
+                "Failed to connect to the selenium service while trying to "
+                "scrap new offers - nothing was collected or stored."
+            )
         )
+        raise
     else:
-        # Use local driver (local browser)
-        # if no Selenium Grid server url was given
-        driver = webdriver.Chrome(options=custom_options)
+        yield driver
 
-    yield driver
-
-    driver.quit()
+        driver.quit()
 
 
 # Cron-like syntax
