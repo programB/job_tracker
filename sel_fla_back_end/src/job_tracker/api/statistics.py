@@ -1,9 +1,10 @@
+import logging
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 
 from connexion.problem import problem
 from flask import request
-from sqlalchemy import and_, delete, func, inspect, select, true
+from sqlalchemy import and_, delete, exc, func, inspect, select, true
 
 from job_tracker.database import db
 from job_tracker.models import JobOffer, datapoints_schema
@@ -18,6 +19,8 @@ from .date_helpers import (
 
 # Silence litner for lines using func (eg. func.extract or func.count)
 # pylint: disable=not-callable
+
+logger = logging.getLogger(__name__)
 
 
 class TmpContinuousDatesRange(db.Model):
@@ -242,7 +245,16 @@ def timedependant():
     job_mode = request.args.get("job_mode", type=str)
     job_level = request.args.get("job_level", type=str)
 
-    stats = calculate_stats(
-        start_date, end_date, binning, tags, contract_type, job_mode, job_level
-    )
-    return datapoints_schema.dump(stats)
+    try:
+        stats = calculate_stats(
+            start_date, end_date, binning, tags, contract_type, job_mode, job_level
+        )
+    except exc.OperationalError:
+        logger.exception(
+            ("Failed to connect to the database while trying query for statistics")
+        )
+        return problem(
+            status=500, title="database offline", detail="Check server health"
+        )
+    else:
+        return datapoints_schema.dump(stats)
