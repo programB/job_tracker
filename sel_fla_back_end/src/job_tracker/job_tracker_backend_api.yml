@@ -234,6 +234,16 @@ components:
           schema:
             type: object
             properties:
-              message:
+              type:
                 type: string
-                example: Check server health
+              title:
+                type: string
+              detail:
+                type: string
+              status:
+                type: integer
+            example:
+              type: about:blank
+              title: problem with backend services
+              datail: database offline
+              status: 500
