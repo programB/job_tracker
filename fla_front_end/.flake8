@@ -1,0 +1,6 @@
+[flake8]
+# make flake8 maximum line length
+# compatible with that set for black
+# https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#flake8
+max-line-length = 88
+extend-ignore = E203, E704
