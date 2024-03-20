@@ -5,6 +5,7 @@ import time
 from typing import TYPE_CHECKING
 
 from selenium.common import exceptions as SE
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -266,3 +267,38 @@ class BaseNavigation:
             element,
         )
         time.sleep(1)
+
+
+class AdsPopup(BaseNavigation):
+    """Represents pop up presenting recuring events (eg. fair)"""
+
+    @property
+    def _popup_container(self) -> WebElement | None:
+        popup_container = None
+        try:
+            popup_container = self.wait_with_timeout.until(
+                expected_conditions.visibility_of_element_located(
+                    (
+                        By.XPATH,
+                        "//div[@id='popupContainer']",
+                    ),
+                )
+            )
+        except (SE.NoSuchElementException, SE.TimeoutException):
+            logging.warning("Cookie consent modal was not found.")
+        return popup_container
+
+    def _is_visible(self) -> bool:
+        popup_container = self._popup_container
+        return (popup_container is not None) and popup_container.is_displayed()
+
+    def close(self):
+        """Closes the popup if it is visible (possibly not accepting any deals)"""
+        if self._is_visible():
+            try:
+                btn_close = self._popup_container.find_element(
+                    By.XPATH, ".//div[contains(@class, 'popup_')][2]"
+                )
+                btn_close.click()
+            except SE.NoSuchElementException:
+                logging.error("failed to close popup")

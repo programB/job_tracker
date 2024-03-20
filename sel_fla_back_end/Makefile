@@ -35,13 +35,16 @@ run_chrome_in_docker:
 	# It will be automatically removed.
 
 compose_up:
-	docker compose --file ${COMPOSE_YAML_FILE} up -d
+	docker compose --progress plain --file ${COMPOSE_YAML_FILE} up -d
 
 compose_down:
 	docker compose --file ${COMPOSE_YAML_FILE} down
 
 compose_app_shell:
 	docker compose --file ${COMPOSE_YAML_FILE} exec job-tracker-backend sh
+
+compose_show_logs:
+	docker compose --file ${COMPOSE_YAML_FILE} logs -f job-tracker-backend
 
 compose_test_up:
 	docker compose --progress plain --file ${COMPOSE_YAML_FILE} --profile testing up -d

@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 
-from .base_navigation import BaseNavigation
+from .base_navigation import AdsPopup, BaseNavigation
 
 if TYPE_CHECKING:
     from typing import Tuple
@@ -240,6 +240,7 @@ class PracujplMainPage(BaseNavigation):
         url=None,
         reject_cookies=False,
         visual_mode=False,
+        attempt_closing_popups=True,
     ) -> None:
         """
 
@@ -266,6 +267,8 @@ class PracujplMainPage(BaseNavigation):
             except Exception as e:
                 logging.fatal("Error connecting to pracuj.pl website at %s", url)
                 raise e
+        if attempt_closing_popups:
+            AdsPopup(driver, visual_mode).close()
         if reject_cookies:
             CookieChoice(driver, visual_mode).reject_non_essential_cookies()
         else:

@@ -1,0 +1,249 @@
+openapi: 3.0.0
+info:
+  title: Job Tracker API
+  version: 1.0.0
+  description: API for obtaining job offers statistics
+
+servers:
+  - url: /api
+
+paths:
+  /health:
+    get:
+      operationId: "status.health"
+      description: Get status of backend components
+      responses:
+        "200":
+          description: Successfully read status information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_selenium_grid_healthy:
+                    type: boolean
+                  is_database_online:
+                    type: boolean
+
+  /tags:
+    get:
+      operationId: "tags.get_all"
+      description: Get a full list of collected technology tags
+      responses:
+        "200":
+          description: Successfully read technology tags list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TagsArray"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+  /offers:
+    get:
+      operationId: "offers.get_all"
+      parameters:
+        - name: perpagelimit
+          in: query
+          required: true
+          description: limit the number of offers on a page
+          schema:
+            type: integer
+            multipleOf: 10
+            minimum: 10 # This doesn't imply that any offer has to be returned
+            maximum: 30
+        - name: subpage
+          in: query
+          description: specifies the starting subpage number
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      description: Get all collected offers
+      responses:
+        "200":
+          description: Successfully read offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Offer"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "404":
+          $ref: "#/components/responses/404Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+  /statistics:
+    get:
+      operationId: "statistics.timedependant"
+      description: Get offers statistics
+      parameters:
+        - name: start_date
+          description: starting date (inclusive)
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          description: end date (inclusive)
+          required: true
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: binning
+          description: binning period
+          required: true
+          in: query
+          schema:
+            type: string
+            enum: [ "day", "month", "year" ]
+        - name: tags
+          description: technology tags
+          in: query
+          schema:
+            $ref: "#/components/schemas/TagsArray"
+        - name: contract_type
+          description: contract type
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: job_mode
+          description: job mode
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+        - name: job_level
+          description: job level
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        "200":
+          description: Successfully read statistics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DataPoint"
+        "400":
+          $ref: "#/components/responses/400Error"
+        "500":
+          $ref: "#/components/responses/500Error"
+
+components:
+  schemas:
+    DataPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        count:
+          type: integer
+          minimum: 0
+      example:
+        date: 2024-01-01
+        count: 23
+
+    TagsArray:
+      type: array
+      items:
+        type: string
+      example: [ "java", "junit", "confluence" ]
+
+    Offer:
+      type: object
+      properties:
+        joboffer_id:
+          type: integer
+          minimum: 0
+        title:
+          type: string
+        tags:
+          $ref: "#/components/schemas/TagsArray"
+        posted:
+          type: string
+          format: date-time
+        collected:
+          type: string
+          format: date-time
+        contract_type:
+          type: string
+          enum: [ "full time", "part time", "temporary" ]
+        job_mode:
+          type: string
+        job_level:
+          type: string
+        salary:
+          type: string
+        detailsurl:
+          type: string
+          format: uri
+        company_id:
+          type: integer
+      example:
+        joboffer_id: 1
+        title: A great job offer
+        tags: [ "python", "pytest", "confluence" ]
+        posted: 2024-01-01T12:00:00.000Z
+        collected: 2024-01-02T14:14:00.000Z
+        contract_type: part time
+        job_mode: remote
+        job_level: junior
+        salary: 5 500 zł netto (+ VAT) / mies.
+        detailsurl: http://example_company.com/great_job_offer_1
+        company_id: 1
+
+  responses:
+    400Error:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Bad request
+    404Error:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Resource not found
+    500Error:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              type:
+                type: string
+              title:
+                type: string
+              detail:
+                type: string
+              status:
+                type: integer
+            example:
+              type: about:blank
+              title: problem with backend services
+              datail: database offline
+              status: 500

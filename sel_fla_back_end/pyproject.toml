@@ -3,11 +3,17 @@ requires = ["setuptools>=69.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "job-tracker-backend"
+name = "job-tracker"
 version = "0.0.1"
 dependencies = [
   "Flask",
   "selenium",
+  "connexion[swagger-ui]",
+  "connexion[flask]",
+  "connexion[uvicorn]",
+  "flask-marshmallow[sqlalchemy]",
+  "PyMySQL",
+  "flask-apscheduler"
 ]
 
 [project.optional-dependencies]
@@ -24,6 +30,10 @@ dev = [
     "bandit",
 ]
 
+[tool.setuptools.package-data]
+# include API sepcification file in the package
+job_tracker = ["*.yml"]
+
 [tool.black]
 line-length = 88
 
@@ -31,7 +41,9 @@ line-length = 88
 profile = "black"
 
 [tool.pytest.ini_options]
-addopts = "--strict-markers"
+addopts = [
+  "--strict-markers",
+]
 markers = [
   "slow: mark a test that takes a long time to run.",
 ]
@@ -56,5 +68,11 @@ max-line-length = 88  # value must be consistent with the setting for black
 disable = [
   "C0103", # (invalid-name) eg. Constant name <something> doesn't conform to UPPER_CASE naming style
   "C0114", # (missing-module-docstring)
+  "C0115", # (missing-class-docstring)
   "C0116", # (missing-function-docstring)
+  "R0901", # (too-many-ancestors)
+  "R0902", # (too-many-instance-attributes)
+  "R0903", # (too-few-public-methods)
+  "R0913", # (too-many-arguments)
+
 ]

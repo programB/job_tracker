@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import platform
-import time
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from selenium.common import exceptions as SE
@@ -11,7 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 
-from .base_navigation import BaseNavigation
+from .base_navigation import AdsPopup, BaseNavigation
 
 if TYPE_CHECKING:
     from selenium.webdriver.remote.webelement import WebElement
@@ -45,11 +45,14 @@ class Advertisement(BaseNavigation):
             "link": "",
             "title": "",
             "salary": "",
+            "company_id": 0,
             "company_name": "",
+            "company_link": "",
             "job_level": "",
             "contract_type": "",
             "technology_tags": [],
-            "webscrap_timestamp": 0.0,
+            "publication_date": datetime(1, 1, 1),
+            "webscrap_timestamp": datetime(1, 1, 1),
         }
         self.is_valid_offer = False
         self.is_multiple_location_offer = False
@@ -77,6 +80,25 @@ class Advertisement(BaseNavigation):
             logging.error("no valid offer found in div %s", self.root_element)
             self.is_valid_offer = False
             return
+
+        try:
+            company_link_element = top_div.find_element(
+                By.XPATH,
+                ".//descendant::div[@data-test='section-company']//descendant::a[@data-test='link-company-profile'][2]",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
+            )
+        except (SE.NoSuchElementException, ValueError, AttributeError):
+            logging.warning(
+                "offer doesn't seem to provide company information, offer skipped"
+            )
+            return
+        else:
+            if company_link_element is not None:
+                company_link = company_link_element.get_attribute("href")
+                self._offer_dict["company_link"] = company_link
+                self._offer_dict["company_id"] = int(company_link.split("/")[-1])
+                self._offer_dict["company_name"] = company_link_element.find_element(
+                    By.XPATH, "./h4"
+                ).text
 
         try:
             match top_div.get_attribute("data-test-location"):
@@ -127,7 +149,7 @@ class Advertisement(BaseNavigation):
             ).text
         except SE.NoSuchElementException:
             # Some genuine offers do not provide salary information, it's OK.
-            self._offer_dict["salary"] = "not specified"
+            self._offer_dict["salary"] = ""
             logging.warning("offer does not provide salary information")
 
         try:
@@ -168,6 +190,56 @@ class Advertisement(BaseNavigation):
             # Unusual but acceptable
             logging.warning("offer does not provide contract type information")
 
+        try:
+            pub_date_str = top_div.find_element(
+                By.XPATH,
+                ".//descendant::p[@data-test='text-added']",
+            ).get_attribute("innerText")
+        except SE.NoSuchElementException:
+            logging.warning("offer does not provide publication date, offer skipped")
+            return
+        else:
+            try:
+                months_pl = {
+                    "stycznia": 1,
+                    "lutego": 2,
+                    "marca": 3,
+                    "kwietnia": 4,
+                    "maja": 5,
+                    "czerwca": 6,
+                    "lipca": 7,
+                    "sierpnia": 8,
+                    "września": 9,
+                    "października": 10,
+                    "listopada": 11,
+                    "grudnia": 12,
+                }
+                months_ua = {
+                    "січня": 1,
+                    "лютого": 2,
+                    "березня": 3,
+                    "квітня": 4,
+                    "травня": 5,
+                    "червня": 6,
+                    "липня": 7,
+                    "серпня": 8,
+                    "вересня": 9,
+                    "жовтня": 10,
+                    "листопада": 11,
+                    "грудня": 12,
+                }
+                # date_parts has different size depending on language (pl: 3, ua: 4)
+                date_parts = pub_date_str.strip().split(":")[1].strip().split(" ")
+                d, m_str, y = [date_parts[i] for i in (0, 1, 2)]
+                m = (months_pl | months_ua)[m_str.lower()]
+                self._offer_dict["publication_date"] = datetime(int(y), m, int(d))
+            except Exception as e:
+                logging.error(
+                    "failed to parse publication date, offer skipped. Explanaition %s",
+                    str(e),
+                )
+                return
+
         # find_all (using find_elements) does not raise any exceptions
         # but returns empty list if no matching tags are found
         # hence if..else
@@ -179,12 +251,19 @@ class Advertisement(BaseNavigation):
             root_element=top_div,
         ):
             for tag in tech_tags_elements:
-                self._offer_dict["technology_tags"].append(tag.text)
+                # If an offer has many tags those that do not fit
+                # on a single line get hidden by JS. In those cases
+                # they are being found by the selector above but the
+                # tag.text property returns empty string !
+                # tag.get_attribute("innerText") works as expected.
+                self._offer_dict["technology_tags"].append(
+                    tag.get_attribute("innerText")
+                )
         else:
             logging.warning("offer does not provide technology tags")
         #
         # finally the timestamp
-        self._offer_dict["webscrap_timestamp"] = time.time()
+        self._offer_dict["webscrap_timestamp"] = datetime.utcnow()
         # if the code reaches this point it means this is a valid job offer
         self.is_valid_offer = True
 
@@ -198,7 +277,7 @@ class Advertisement(BaseNavigation):
 
     @property
     def link(self) -> str:
-        """URL to the offer details
+        """URL to the offer's details
 
         empty string if URL not provided
         """
@@ -218,10 +297,28 @@ class Advertisement(BaseNavigation):
         return self._offer_dict["salary"]
 
     @property
+    def company_id(self) -> int:
+        """Unique company id
+
+        0 means company id couldn't be found
+        """
+
+        return self._offer_dict["company_id"]
+
+    @property
     def company_name(self) -> str:
         """Name of the company offering the job"""
 
         return self._offer_dict["company_name"]
+
+    @property
+    def company_link(self) -> str:
+        """URL to the page with company details
+
+        empty string if URL not provided
+        """
+
+        return self._offer_dict["company_link"]
 
     @property
     def job_level(self) -> str:
@@ -278,16 +375,34 @@ class Advertisement(BaseNavigation):
         return self._offer_dict["technology_tags"]
 
     @property
-    def webscrap_timestamp(self) -> float:
-        """Time when the offer was scraped from the webpage
+    def webscrap_timestamp(self) -> datetime:
+        """Date and time when the offer was scraped from the webpage
 
-        timestamp in seconds since the Unix epoch
+        0001-01-01T00:00:00 denotes incorrect value
         """
         return self._offer_dict["webscrap_timestamp"]
+
+    @property
+    def publication_date(self) -> datetime:
+        """Date and time when the offer was (re)published on the webpage
+
+        0001-01-01T00:00:00 denotes incorrect value
+        """
+        return self._offer_dict["publication_date"]
 
 
 class ResultsPage(BaseNavigation):
     """Class modeling the page with the search results"""
+
+    def __init__(
+        self,
+        driver,
+        visual_mode=False,
+        attempt_closing_popups=True,
+    ) -> None:
+        super().__init__(driver, visual_mode)
+        if attempt_closing_popups:
+            AdsPopup(driver, visual_mode).close()
 
     @property
     def tot_no_of_subpages(self) -> int:
