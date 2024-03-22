@@ -140,3 +140,7 @@ main {
   padding: 20px;
   background: var(--master-bg-color);
 }
+
+.chart {
+  box-shadow: 0 5px 15px 0 var(--highlight-color);
+}
