@@ -2,21 +2,27 @@
 <html lang="en">
 
 <head>
-  <title>My Web Database Viewer- {% block title %}{% endblock title %}</title>
+  <title>Job Tracker - {% block title %}{% endblock title %}</title>
   <meta charset="UTF-8">
 </head>
 
 <body>
-  <h1>Job Offers Viewer</h1>
-  {% include("_navigation.html") %}
-  <section>
+  <aside>
     <header>
-      {% block header %}{% endblock header %}
+      <span>Job Tracker</span>
     </header>
-    <main>
-      {% block content %}<p>No data.</p>{% endblock content %}
-    </main>
-  </section>
-</body>
 
+    <nav>
+      {% include("_navitems.html") %}
+    </nav>
+  </aside>
+
+  <main>
+    {% block main %}{% endblock main %}
+  </main>
+
+  <footer>
+    {% block footer %}{% endblock footer %}
+  </footer>
+</body>
 </html>
