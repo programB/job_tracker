@@ -25,7 +25,33 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from dash import Dash, dcc, html
-from flask import Flask
+from flask import Flask, render_template
+
+
+class CustomDash(Dash):
+    """Dash object with base html build from main Flask app templates
+
+    See:
+    Customizing Dash's HTML Index Template - Option 2 - interpolate_index
+    at https://dash.plotly.com/external-resources
+    and
+    comments in the dash_statistics.html jinja2 template
+    to learn how this works
+    """
+
+    def interpolate_index(self, **kwargs):
+        rendered_jinja_template = render_template("pages/dash_statistics.html")
+
+        custom_index = rendered_jinja_template.format(
+            metas=kwargs["metas"],
+            favicon=kwargs["favicon"],
+            css=kwargs["css"],
+            app_entry=kwargs["app_entry"],
+            config=kwargs["config"],
+            scripts=kwargs["scripts"],
+            renderer=kwargs["renderer"],
+        )
+        return custom_index
 
 
 def init_dash_app(master_app: Flask) -> Flask:
@@ -47,7 +73,7 @@ def init_dash_app(master_app: Flask) -> Flask:
     if not isinstance(master_app, Flask):
         raise ValueError("master Flask app must be passed")
 
-    dash_app = Dash(
+    dash_app = CustomDash(
         server=master_app,
         routes_pathname_prefix="/dash_app/",
     )

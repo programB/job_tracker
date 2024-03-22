@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{# note: This template is really a template for a template.
+         It inserts special keywords that will get converted
+         in the Dash sub application to strings that have
+         to be present in the html for the Dash to be able to
+         embed its React components.
+
+         So eg. Dash expects a string:
+         {%app_entry%}
+         somewhere in the base html (it will use it to put graphs there).
+         In this jinja2 template a {app_entry} string is placed.
+         Later on the dash part of the app will render this template and then
+         replace the string {app_entry} with {%app_entry%} (and continue its magic).
+
+         This allows to define common html code in one place and have
+         both Flask and piggybacked Dash app use it.
+
+         Dash requires following strings the be present (others are optional):
+         - {%app_entry%}
+         - {%config%}
+         - {%scripts%}
+         - {%renderer%}
+        (See https://dash.plotly.com/external-resources for details)
+#}
+
+{% block title %}DASH Statistics{% endblock title %}
+
+{% block metas %}{metas}{% endblock metas %}
+{% block favicon %}{favicon}{% endblock favicon %}
+{% block css %}{css}{% endblock css %}
+
+{% block main %}
+  {app_entry}
+{% endblock main %}
+
+{% block footer %}
+  {config}
+  {scripts}
+  {renderer}
+{% endblock footer %}
