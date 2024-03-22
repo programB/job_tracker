@@ -4,12 +4,16 @@
 <head>
   <title>Job Tracker - {% block title %}{% endblock title %}</title>
   <meta charset="UTF-8">
+  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 </head>
 
 <body>
-  <aside>
-    <header>
-      <span>Job Tracker</span>
+  <aside id="navpanel">
+    <header id="logo">
+      <!-- <img src="my__logo_here"> -->
+      <span class="txt">Job Tracker</span>
     </header>
 
     <nav>

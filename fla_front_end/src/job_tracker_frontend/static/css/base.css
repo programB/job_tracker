@@ -1,0 +1,142 @@
+/* The MIT License */
+
+/* Copyright (c) 2024 programb */
+/* Copyright (c) 2024 Code Boxx */
+
+/* Permission is hereby granted, free of charge, to any person obtaining a copy */
+/* of this software and associated documentation files (the "Software"), to deal */
+/* in the Software without restriction, including without limitation the rights */
+/* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell */
+/* copies of the Software, and to permit persons to whom the Software is */
+/* furnished to do so, subject to the following conditions: */
+
+/* The above copyright notice and this permission notice shall be included in all */
+/* copies or substantial portions of the Software. */
+
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR */
+/* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, */
+/* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE */
+/* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER */
+/* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, */
+/* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE */
+/* SOFTWARE. */
+
+
+:root {
+  /* LIGHT */
+  --master-bg-color: #fafafa;
+  --highlight-color: #eeeeee;
+  --neutral-color: black;
+  /* nice blue */
+  /* --emph-color: #0399f7; */
+  /* nice orange */
+  --emph-color: #f75403;
+  /* okayish violet */
+  /* --emph-color: #7d03f7; */
+
+  /* DARK */
+  /* --master-bg-color: #2d2d2d; */
+  /* --highlight-color: #4a4a4a; */
+  /* --neutral-color: #c6c6c6; */
+  /* --emph-color: #0399f7; */
+}
+
+* {
+  font-family: Arial, Helvetica, sans-serif;
+  box-sizing: border-box;
+}
+
+
+body {
+  display: flex;
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+  color: var(--neutral-color);
+}
+
+/* Navigation panel */
+#navpanel {
+  width: 225px;
+  flex-shrink: 0;
+  background: var(--master-bg-color);
+  z-index: 2;
+  position: relative;
+  box-shadow: 2px 0px 5px 0px var(--highlight-color);
+}
+
+#logo {
+  display: flex;
+  /* center in both directions */
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px 20px 10px;
+}
+#logo img {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+}
+
+/* Navigation items "fields" */
+/* #navpanel, */
+#navpanel a {
+  color: var(--neutral-color);
+}
+
+#navpanel a {
+  display: block;
+  padding: 20px;
+  width: 100%;
+  text-decoration: none;
+  cursor: initial;
+}
+
+#navpanel a.current {
+  background: var(--highlight-color);
+  color: var(--emph-color);
+}
+#navpanel a:hover {
+  background: var(--highlight-color);
+  color: var(--emph-color);
+}
+
+/* Navigation items - text and icon styling */
+#navpanel span.ico,
+#navpanel span.txt {
+  font-style: normal;
+}
+#navpanel span.ico {
+  font-size: 1.1em;
+  margin-right: 10px;
+}
+
+/* Change navigation panel layout for mobile devices */
+@media screen and (max-width: 768px) {
+  #navpanel {
+    width: 70px;
+  }
+  #navpanel span.txt {
+    display: none;
+  }
+  #navpanel span.ico {
+    font-size: 1.5em;
+    margin-right: 0;
+  }
+  #logo {
+    justify-content: center;
+  }
+  #logo img {
+    margin-right: 0;
+  }
+  #navpanel a {
+    text-align: center;
+    padding: 20px 0;
+  }
+}
+
+main {
+  flex-grow: 1;
+  padding: 20px;
+  background: var(--master-bg-color);
+}
