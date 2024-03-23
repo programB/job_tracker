@@ -27,7 +27,7 @@
 from datetime import datetime
 
 from dash import Dash, Input, Output, dcc
-from dash.html import Div
+from dash.html import Button, Div
 from flask import Flask, render_template
 
 
@@ -143,6 +143,19 @@ def init_dash_app(master_app: Flask) -> Flask:
         className="dropdown",
     )
 
+    submit_btn = Button(
+        "Submit",
+        id="submit_btn",
+        style={
+            "height": "40px",
+            "width": "140px",
+            "font": "inherit",
+            "color": "#f75403",
+            "backgroundColor": "white",
+        },
+    )
+
+    # fmt: off
     dash_app.layout = Div(
         children=[
             Div(
@@ -154,11 +167,36 @@ def init_dash_app(master_app: Flask) -> Flask:
                 className="charts",
             ),
             Div(
-                children=[job_level_dd],
+                children=[
+                    Div(
+                        children=[
+                            Div(children=[Div(children=["Date span"], className="label"), Div(children=[date_span_sel], className="date-selector")]),
+                            Div(children=[Div(children=["Binning"], className="label"), Div(children=[binning_dd], className="dropdown")]),
+                        ],
+                        className="h-sub-box",
+                    ),
+                    Div(
+                        children=[
+                            Div(children=[Div(children=["Contract type"], className="label"), Div(children=[contract_type_dd], className="dropdown")]),
+                            Div(children=[Div(children=["Job mode"], className="label"), Div(children=[job_mode_dd], className="dropdown")]),
+                            Div(children=[Div(children=["Job level"], className="label"), Div(children=[job_level_dd], className="dropdown")]),
+                        ],
+                        className="h-sub-box",
+                    ),
+                    Div(
+                        children=[
+                            Div(children=[Div(children=["Tags"], className="label"), Div(children=[tags_dd], className="long-dropdown")]),
+                            Div(children=[Div(children=[submit_btn], className="button_sbm_box")]),
+                        ],
+                        className="h-sub-box",
+                    ),
+                ],
                 className="stats-criteria-menu",
             ),
-        ]
+        ],
+        className="dash-main-div",
     )
+    # fmt: on
 
     @dash_app.callback(
         Output("chart1", "figure"),
