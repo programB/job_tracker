@@ -24,6 +24,8 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+from datetime import datetime
+
 from dash import Dash, Input, Output, dcc, html
 from flask import Flask, render_template
 
@@ -78,7 +80,67 @@ def init_dash_app(master_app: Flask) -> Flask:
         routes_pathname_prefix="/dash_app/",
     )
 
-    choices = ["choice 1", "choice 2", "choice 3", "choice 4"]
+    chart1 = dcc.Graph(id="chart1", className="chart-tile")
+
+    date_span_sel = dcc.DatePickerRange(
+        id="date_span_sel",
+        min_date_allowed=datetime(2024, 1, 1),
+        max_date_allowed=datetime(2024, 12, 31),
+        start_date=datetime(2024, 1, 1),
+        end_date=datetime(2024, 1, 31),
+        display_format="YYYY-MM-DD",
+        clearable=False,
+        first_day_of_week=1,
+    )
+
+    bins = ["day", "month", "year"]
+    binning_dd = dcc.Dropdown(
+        id="binning_dd",
+        options=[{"label": bin, "value": bin} for bin in bins],
+        value="day",
+        clearable=False,
+        className="dropdown",
+    )
+
+    tags = []
+    tags_dd = dcc.Dropdown(
+        id="tags_dd",
+        options=[{"label": tag, "value": tag} for tag in tags],
+        value="",
+        clearable=True,
+        multi=True,
+        className="dropdown",
+    )
+
+    contract_types = ["full time", "part time", "temporary"]
+    contract_type_dd = dcc.Dropdown(
+        id="contract_type_dd",
+        options=[
+            {"label": contract_type, "value": contract_type}
+            for contract_type in contract_types
+        ],
+        value="",
+        clearable=True,
+        className="dropdown",
+    )
+
+    job_modes = ["in office", "remote"]
+    job_mode_dd = dcc.Dropdown(
+        id="job_mode_dd",
+        options=[{"label": job_mode, "value": job_mode} for job_mode in job_modes],
+        value="",
+        clearable=True,
+        className="dropdown",
+    )
+
+    job_levels = ["junior", "regular", "senior"]
+    job_level_dd = dcc.Dropdown(
+        id="job_level_dd",
+        options=[{"label": job_level, "value": job_level} for job_level in job_levels],
+        value="",
+        clearable=True,
+        className="dropdown",
+    )
 
     dash_app.layout = html.Div(
         children=[
@@ -87,27 +149,11 @@ def init_dash_app(master_app: Flask) -> Flask:
                 className="statistics-header",
             ),
             html.Div(
-                children=[
-                    dcc.Graph(
-                        id="chart1",
-                        className="chart-tile",
-                    ),
-                    # another graph or dcc component(s) can go here
-                ],
+                children=[chart1],
                 className="charts",
             ),
             html.Div(
-                children=[
-                    dcc.Dropdown(
-                        id="choice-dropdown",
-                        options=[
-                            {"label": choice, "value": choice} for choice in choices
-                        ],
-                        value="Mazowsze",
-                        clearable=False,
-                        className="dropdown",
-                    ),
-                ],
+                children=[job_level_dd],
                 className="stats-criteria-menu",
             ),
         ]
@@ -115,19 +161,19 @@ def init_dash_app(master_app: Flask) -> Flask:
 
     @dash_app.callback(
         Output("chart1", "figure"),
-        Input("choice-dropdown", "value"),
+        Input("job_level_dd", "value"),
     )
-    def update_chart(choice):
+    def update_chart(level):
         y = (7, 14, 21)
-        match choice:
-            case "choice 1":
+        match level:
+            case "junior":
                 y = (7, 14, 21)
-            case "choice 2":
+            case "regular":
                 y = (11, 3, 1)
-            case "choice 3":
+            case "senior":
                 y = (7, 16, 5)
-            case "choice 4":
-                y = (0, 21, 8)
+            case _:
+                y = (0, 0, 0)
 
         updated_figure = {
             # sample data
