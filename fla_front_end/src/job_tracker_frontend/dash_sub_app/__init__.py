@@ -26,7 +26,7 @@
 
 from datetime import datetime
 
-from dash import Dash, Input, Output, dcc
+from dash import Dash, Input, Output, State, dcc
 from dash.html import Button, Div
 from flask import Flask, render_template
 
@@ -146,6 +146,7 @@ def init_dash_app(master_app: Flask) -> Flask:
     submit_btn = Button(
         "Submit",
         id="submit_btn",
+        n_clicks=0,
         style={
             "height": "40px",
             "width": "140px",
@@ -200,11 +201,27 @@ def init_dash_app(master_app: Flask) -> Flask:
 
     @dash_app.callback(
         Output("chart1", "figure"),
-        Input("job_level_dd", "value"),
+        Input("submit_btn", "n_clicks"),
+        State("date_span_sel", "start_date"),
+        State("date_span_sel", "end_date"),
+        State("binning_dd", "value"),
+        State("tags_dd", "value"),
+        State("contract_type_dd", "value"),
+        State("job_mode_dd", "value"),
+        State("job_level_dd", "value"),
     )
-    def update_chart(level):
+    def update_chart(
+        n_clicks,
+        start_date,
+        end_date,
+        binning,
+        tags,
+        contract_type,
+        job_mode,
+        job_level,
+    ):
         y = (7, 14, 21)
-        match level:
+        match job_level:
             case "junior":
                 y = (7, 14, 21)
             case "regular":
