@@ -26,7 +26,8 @@
 
 from datetime import datetime
 
-from dash import Dash, Input, Output, dcc, html
+from dash import Dash, Input, Output, dcc
+from dash.html import Div
 from flask import Flask, render_template
 
 
@@ -142,17 +143,17 @@ def init_dash_app(master_app: Flask) -> Flask:
         className="dropdown",
     )
 
-    dash_app.layout = html.Div(
+    dash_app.layout = Div(
         children=[
-            html.Div(
+            Div(
                 children="This is a placeholder for a header with some general info",
                 className="statistics-header",
             ),
-            html.Div(
+            Div(
                 children=[chart1],
                 className="charts",
             ),
-            html.Div(
+            Div(
                 children=[job_level_dd],
                 className="stats-criteria-menu",
             ),
