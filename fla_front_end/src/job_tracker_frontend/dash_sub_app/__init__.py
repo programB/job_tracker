@@ -24,7 +24,7 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from dash import Dash, dcc, html
+from dash import Dash, Input, Output, dcc, html
 from flask import Flask, render_template
 
 
@@ -78,36 +78,71 @@ def init_dash_app(master_app: Flask) -> Flask:
         routes_pathname_prefix="/dash_app/",
     )
 
+    choices = ["choice 1", "choice 2", "choice 3", "choice 4"]
+
     dash_app.layout = html.Div(
         children=[
-            html.H1(
-                children="A test subpage with 1 chart",
-                style={"backgroundColor": "blue"},
+            html.Div(
+                children="This is a placeholder for a header with some general info",
+                className="statistics-header",
             ),
-            html.P(
+            html.Div(
                 children=[
                     dcc.Graph(
-                        figure={
-                            # sample data
-                            "data": [
-                                {
-                                    "x": (1, 2, 3),
-                                    "y": (7, 14, 21),
-                                    "type": "bar",
-                                },
-                            ],
-                            "layout": {
-                                "title": "A test title for bar chart no. 1",
-                                "colorway": ["#f75403"],
-                            },
-                        },
-                        className="chart",
+                        id="chart1",
+                        className="chart-tile",
                     ),
-                    # another graph or dcc component(s) will
-                    # go here
+                    # another graph or dcc component(s) can go here
                 ],
+                className="charts",
+            ),
+            html.Div(
+                children=[
+                    dcc.Dropdown(
+                        id="choice-dropdown",
+                        options=[
+                            {"label": choice, "value": choice} for choice in choices
+                        ],
+                        value="Mazowsze",
+                        clearable=False,
+                        className="dropdown",
+                    ),
+                ],
+                className="stats-criteria-menu",
             ),
         ]
     )
+
+    @dash_app.callback(
+        Output("chart1", "figure"),
+        Input("choice-dropdown", "value"),
+    )
+    def update_chart(choice):
+        y = (7, 14, 21)
+        match choice:
+            case "choice 1":
+                y = (7, 14, 21)
+            case "choice 2":
+                y = (11, 3, 1)
+            case "choice 3":
+                y = (7, 16, 5)
+            case "choice 4":
+                y = (0, 21, 8)
+
+        updated_figure = {
+            # sample data
+            "data": [
+                {
+                    "x": (1, 2, 3),
+                    "y": y,
+                    "type": "bar",
+                },
+            ],
+            "layout": {
+                "title": "A test title for bar chart no. 1",
+                "colorway": ["#f75403"],
+            },
+        }
+        return updated_figure
 
     return dash_app.server
