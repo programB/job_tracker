@@ -26,6 +26,8 @@
 
 from datetime import datetime
 
+import pandas as pd
+import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, dcc
 from dash.html import Button, Div
 from flask import Flask, render_template
@@ -231,20 +233,67 @@ def init_dash_app(master_app: Flask) -> Flask:
             case _:
                 y = (0, 0, 0)
 
-        updated_figure = {
-            # sample data
-            "data": [
-                {
-                    "x": (1, 2, 3),
-                    "y": y,
-                    "type": "bar",
-                },
-            ],
-            "layout": {
-                "title": "A test title for bar chart no. 1",
-                "colorway": ["#f75403"],
-            },
-        }
-        return updated_figure
+        dates = [
+            datetime(2024, 1, 1),
+            datetime(2024, 1, 2),
+            datetime(2024, 1, 3),
+        ]
+        offer_data = pd.DataFrame(
+            {
+                "dates": dates,
+                "counts": list(y),
+            }
+        )
+
+        # plotyly express can be used as well
+        # fig = px.bar(
+        #     offer_data,
+        #     x=offer_data.dates,
+        #     y=offer_data.counts,
+        #     color_discrete_sequence=["#f75403"] * len(dates),
+        # )
+
+        fig = go.Figure()
+        fig.add_trace(
+            go.Bar(
+                x=offer_data.dates,
+                y=offer_data.counts,
+                marker_color=["#f75403"] * len(dates),
+                name="trace 1",  # name will appear in plot's legend
+                # xperiod="M1",
+                # xperiodalignment="middle",
+            )
+        )
+        fig.update_layout(
+            # Warning. Setting plot's background color to white will
+            # cause axes and gird to become invisible because their default
+            # color is white. Set their color in update_x(y)axes functions.
+            plot_bgcolor="white",
+            xaxis_title="publishing date",
+            yaxis_title="offers count",
+            # Legend is shown only when go.Figure contains more then 1 trace
+            legend_title="Legend Title",
+        )
+        fig.update_xaxes(
+            linecolor="black",  # X axis color
+            ticks="outside",
+            tickson="boundaries",
+            # ticklen=20,
+            # dtick="M1",
+            # type='date',
+            # tickmode set to 'linear' causes time to not be displayed
+            tickmode="linear",
+            # year (%Y) prepended with \n causes year to be shown below
+            # day and month but only "once per year" (it will not be
+            # repeated under each tick if it's unambiguous)
+            tickformat="%d.%m\n%Y",
+            # ticklabelmode="period",
+        )
+        fig.update_yaxes(
+            linecolor="black",  # Y axis color
+            gridcolor="#eeeeee",  # Horizontal grid (parallel to X axis !) color
+        )
+        # print(fig)  # to see resulting JSON structure describing the figure
+        return fig
 
     return dash_app.server
