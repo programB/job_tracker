@@ -44,7 +44,7 @@ class CustomDash(Dash):
     to learn how this works
     """
 
-    def interpolate_index(self, **kwargs):
+    def interpolate_index(self, **kwargs):  # type: ignore
         rendered_jinja_template = render_template("pages/dash_statistics.html")
 
         custom_index = rendered_jinja_template.format(
@@ -79,7 +79,7 @@ def init_dash_app(master_app: Flask) -> Flask:
         raise ValueError("master Flask app must be passed")
 
     dash_app = CustomDash(
-        server=master_app,
+        server=master_app,  # type: ignore
         routes_pathname_prefix="/dash_app/",
     )
 
@@ -296,4 +296,4 @@ def init_dash_app(master_app: Flask) -> Flask:
         # print(fig)  # to see resulting JSON structure describing the figure
         return fig
 
-    return dash_app.server
+    return dash_app.server  # type: ignore
