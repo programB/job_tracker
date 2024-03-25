@@ -28,9 +28,11 @@ from datetime import datetime
 
 import pandas as pd
 import plotly.graph_objects as go
-from dash import Dash, Input, Output, State, dcc
-from dash.html import Button, Div
+from dash import Dash, Input, Output, State
+from dash.html import Div
 from flask import Flask, render_template
+
+from .components import chart1, stats_criteria_menu
 
 
 class CustomDash(Dash):
@@ -83,82 +85,6 @@ def init_dash_app(master_app: Flask) -> Flask:
         routes_pathname_prefix="/dash_app/",
     )
 
-    chart1 = dcc.Graph(id="chart1", className="chart-tile")
-
-    date_span_sel = dcc.DatePickerRange(
-        id="date_span_sel",
-        min_date_allowed=datetime(2024, 1, 1),
-        max_date_allowed=datetime(2024, 12, 31),
-        start_date=datetime(2024, 1, 1),
-        end_date=datetime(2024, 1, 31),
-        display_format="YYYY-MM-DD",
-        clearable=False,
-        first_day_of_week=1,
-    )
-
-    bins = ["day", "month", "year"]
-    binning_dd = dcc.Dropdown(
-        id="binning_dd",
-        options=[{"label": bin, "value": bin} for bin in bins],
-        value="day",
-        clearable=False,
-        className="dropdown",
-    )
-
-    tags = []
-    tags_dd = dcc.Dropdown(
-        id="tags_dd",
-        options=[{"label": tag, "value": tag} for tag in tags],
-        value="",
-        clearable=True,
-        multi=True,
-        className="dropdown",
-    )
-
-    contract_types = ["full time", "part time", "temporary"]
-    contract_type_dd = dcc.Dropdown(
-        id="contract_type_dd",
-        options=[
-            {"label": contract_type, "value": contract_type}
-            for contract_type in contract_types
-        ],
-        value="",
-        clearable=True,
-        className="dropdown",
-    )
-
-    job_modes = ["in office", "remote"]
-    job_mode_dd = dcc.Dropdown(
-        id="job_mode_dd",
-        options=[{"label": job_mode, "value": job_mode} for job_mode in job_modes],
-        value="",
-        clearable=True,
-        className="dropdown",
-    )
-
-    job_levels = ["junior", "regular", "senior"]
-    job_level_dd = dcc.Dropdown(
-        id="job_level_dd",
-        options=[{"label": job_level, "value": job_level} for job_level in job_levels],
-        value="",
-        clearable=True,
-        className="dropdown",
-    )
-
-    submit_btn = Button(
-        "Submit",
-        id="submit_btn",
-        n_clicks=0,
-        style={
-            "height": "40px",
-            "width": "140px",
-            "font": "inherit",
-            "color": "#f75403",
-            "backgroundColor": "white",
-        },
-    )
-
-    # fmt: off
     dash_app.layout = Div(
         children=[
             Div(
@@ -170,36 +96,12 @@ def init_dash_app(master_app: Flask) -> Flask:
                 className="charts",
             ),
             Div(
-                children=[
-                    Div(
-                        children=[
-                            Div(children=[Div(children=["Date span"], className="label"), Div(children=[date_span_sel], className="date-selector")]),
-                            Div(children=[Div(children=["Binning"], className="label"), Div(children=[binning_dd], className="dropdown")]),
-                        ],
-                        className="h-sub-box",
-                    ),
-                    Div(
-                        children=[
-                            Div(children=[Div(children=["Contract type"], className="label"), Div(children=[contract_type_dd], className="dropdown")]),
-                            Div(children=[Div(children=["Job mode"], className="label"), Div(children=[job_mode_dd], className="dropdown")]),
-                            Div(children=[Div(children=["Job level"], className="label"), Div(children=[job_level_dd], className="dropdown")]),
-                        ],
-                        className="h-sub-box",
-                    ),
-                    Div(
-                        children=[
-                            Div(children=[Div(children=["Tags"], className="label"), Div(children=[tags_dd], className="long-dropdown")]),
-                            Div(children=[Div(children=[submit_btn], className="button_sbm_box")]),
-                        ],
-                        className="h-sub-box",
-                    ),
-                ],
+                children=stats_criteria_menu,
                 className="stats-criteria-menu",
             ),
         ],
         className="dash-main-div",
     )
-    # fmt: on
 
     @dash_app.callback(
         Output("chart1", "figure"),
