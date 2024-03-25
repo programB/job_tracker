@@ -9,6 +9,7 @@ dependencies = [
   "Flask",
   "python-dotenv",
   "dash",
+  "pandas",
 ]
 
 [project.optional-dependencies]
