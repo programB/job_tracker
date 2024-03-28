@@ -3,7 +3,7 @@ from dash.html import Button
 
 from .backend import allowed_choices
 
-from .input_validator import (
+from .defaults import (
     default_bin,
     default_contract_type,
     default_end_date,
