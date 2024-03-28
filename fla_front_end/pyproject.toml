@@ -8,4 +8,55 @@ version = "0.0.1"
 dependencies = [
   "Flask",
   "python-dotenv",
+  "dash",
+  "pandas",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-datadir",
+    "pyclean",
+    "flake8",
+    "flake8-type-checking",
+    "isort",
+    "black",
+    "pylint",
+    "pylint-pytest",
+    "bandit",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = [
+  "--strict-markers",
+]
+markers = [
+  "slow: mark a test that takes a long time to run.",
+]
+
+[tool.pylint.main]
+load-plugins = ["pylint_pytest"]
+fail-under = 9.5
+fail-on = ["F", "E"]
+recursive = true
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.pylint.messages_control]
+disable = [
+  "C0103", # (invalid-name) eg. Constant name <something> doesn't conform to UPPER_CASE naming style
+  "C0114", # (missing-module-docstring)
+  "C0115", # (missing-class-docstring)
+  "C0116", # (missing-function-docstring)
+  "R0901", # (too-many-ancestors)
+  "R0902", # (too-many-instance-attributes)
+  "R0903", # (too-few-public-methods)
+  "R0913", # (too-many-arguments)
 ]
