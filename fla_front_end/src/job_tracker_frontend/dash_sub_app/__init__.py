@@ -28,9 +28,8 @@ import logging
 from datetime import datetime
 
 import plotly.graph_objects as go
-from dash import Dash, Input, Output, State
-from dash.exceptions import PreventUpdate
-from dash.html import Div
+from dash import Dash, Input, Output, State, no_update
+from dash.html import Div, P
 from flask import Flask, render_template
 
 from .backend.exceptions import APIException, BackendNotAvailableException
@@ -101,6 +100,10 @@ def init_dash_app(master_app: Flask) -> Flask:
                 className="charts",
             ),
             Div(
+                children=[P(id="warnig_msg")],
+                className="warning",
+            ),
+            Div(
                 children=stats_criteria_menu,
                 className="stats-criteria-menu",
             ),
@@ -110,6 +113,7 @@ def init_dash_app(master_app: Flask) -> Flask:
 
     @dash_app.callback(
         Output("chart1", "figure"),
+        Output("warnig_msg", "children"),
         Input("submit_btn", "n_clicks"),
         State("date_span_sel", "start_date"),
         State("date_span_sel", "end_date"),
@@ -149,14 +153,14 @@ def init_dash_app(master_app: Flask) -> Flask:
         except AttributeError:
             # show pop-up -- invalid parameters
             # Ideally this should never happen
-            raise PreventUpdate
+            return no_update, "invalid parameters"
         except BackendNotAvailableException:
             # show pop-up -- connection issue
-            raise PreventUpdate
+            return no_update, "connection issue"
         except APIException:
             # show pop-up -- unexpected API error
             # This should never happen
-            raise PreventUpdate
+            return no_update, "unexpected API error"
 
         fig = go.Figure()
 
@@ -225,6 +229,7 @@ def init_dash_app(master_app: Flask) -> Flask:
             gridcolor="#eeeeee",  # Horizontal grid (parallel to X axis !) color
         )
         # print(fig)  # to see resulting JSON structure describing the figure
-        return fig
+        # return fig for the first output and empty string for the warnig_msg output
+        return fig, ""
 
     return dash_app.server  # type: ignore
