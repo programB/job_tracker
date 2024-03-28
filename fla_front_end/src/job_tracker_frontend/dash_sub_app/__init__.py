@@ -24,15 +24,20 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import logging
 from datetime import datetime
 
-import pandas as pd
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, State
+from dash.exceptions import PreventUpdate
 from dash.html import Div
 from flask import Flask, render_template
 
+from .backend.exceptions import APIException, BackendNotAvailableException
+from .backend.statistics import get_stats
 from .components import chart1, stats_criteria_menu
+
+logger = logging.getLogger(__name__)
 
 
 class CustomDash(Dash):
@@ -124,43 +129,41 @@ def init_dash_app(master_app: Flask) -> Flask:
         job_mode,
         job_level,
     ):
-        y = (7, 14, 21)
-        match job_level:
-            case "junior":
-                y = (7, 14, 21)
-            case "regular":
-                y = (11, 3, 1)
-            case "senior":
-                y = (7, 16, 5)
-            case _:
-                y = (0, 0, 0)
 
-        dates = [
-            datetime(2024, 1, 1),
-            datetime(2024, 1, 2),
-            datetime(2024, 1, 3),
-        ]
-        offer_data = pd.DataFrame(
-            {
-                "dates": dates,
-                "counts": list(y),
-            }
-        )
+        date_format = "%Y-%m-%d"
+        start_date = datetime.strptime(start_date, date_format)
+        end_date = datetime.strptime(end_date, date_format)
 
-        # plotyly express can be used as well
-        # fig = px.bar(
-        #     offer_data,
-        #     x=offer_data.dates,
-        #     y=offer_data.counts,
-        #     color_discrete_sequence=["#f75403"] * len(dates),
-        # )
+        try:
+            if n_clicks is None:
+                raise AttributeError
+            stats = get_stats(
+                start_date,
+                end_date,
+                binning,
+                tags,
+                contract_type,
+                job_mode,
+                job_level,
+            )
+        except AttributeError:
+            # show pop-up -- invalid parameters
+            # Ideally this should never happen
+            raise PreventUpdate
+        except BackendNotAvailableException:
+            # show pop-up -- connection issue
+            raise PreventUpdate
+        except APIException:
+            # show pop-up -- unexpected API error
+            # This should never happen
+            raise PreventUpdate
 
         fig = go.Figure()
         fig.add_trace(
             go.Bar(
-                x=offer_data.dates,
-                y=offer_data.counts,
-                marker_color=["#f75403"] * len(dates),
+                x=stats.date,
+                y=stats.counts,
+                marker_color=["#f75403"] * len(stats),
                 name="trace 1",  # name will appear in plot's legend
                 # xperiod="M1",
                 # xperiodalignment="middle",
