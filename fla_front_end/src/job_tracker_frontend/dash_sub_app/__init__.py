@@ -35,7 +35,7 @@ from flask import Flask, render_template
 
 from .backend.exceptions import APIException, BackendNotAvailableException
 from .backend.statistics import get_stats
-from .components import chart1, stats_criteria_menu
+from .ui import chart1, stats_criteria_menu
 
 logger = logging.getLogger(__name__)
 

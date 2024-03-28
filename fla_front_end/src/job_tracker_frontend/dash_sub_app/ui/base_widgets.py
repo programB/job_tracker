@@ -1,7 +1,7 @@
 from dash import dcc
 from dash.html import Button
 
-from .backend import allowed_choices
+from job_tracker_frontend.dash_sub_app.backend import allowed_choices
 
 from .defaults import (
     default_bin,
