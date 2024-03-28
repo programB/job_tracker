@@ -135,6 +135,8 @@ def init_dash_app(master_app: Flask) -> Flask:
         end_date = datetime.strptime(end_date, date_format)
 
         try:
+            if n_clicks is None:
+                raise AttributeError
             stats = get_stats(
                 start_date,
                 end_date,
@@ -144,6 +146,10 @@ def init_dash_app(master_app: Flask) -> Flask:
                 job_mode,
                 job_level,
             )
+        except AttributeError:
+            # show pop-up -- invalid parameters
+            # Ideally this should never happen
+            raise PreventUpdate
         except BackendNotAvailableException:
             # show pop-up -- connection issue
             raise PreventUpdate

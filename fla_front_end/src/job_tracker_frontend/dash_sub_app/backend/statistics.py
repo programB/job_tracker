@@ -6,6 +6,7 @@ import requests
 from requests.exceptions import ConnectionError, Timeout
 
 from .exceptions import APIException, BackendNotAvailableException
+from .validation import check_inputs
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,14 @@ def get_stats(
     job_mode,
     job_level,
 ):
+
+    try:
+        check_inputs(
+            start_date, end_date, binning, tags, contract_type, job_mode, job_level
+        )
+    except AttributeError as e:
+        logger.error("Invalid input data: %s", e)
+        raise AttributeError from e
 
     mandatory_params = {
         "start_date": start_date.date().isoformat(),

@@ -1,0 +1,5 @@
+bins = ["day", "month", "year"]
+tags = []
+contract_types = ["full time", "part time", "temporary"]
+job_modes = ["in office", "remote"]
+job_levels = ["junior", "regular", "senior"]
