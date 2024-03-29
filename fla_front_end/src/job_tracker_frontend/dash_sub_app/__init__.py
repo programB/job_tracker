@@ -32,8 +32,12 @@ from dash import Dash, Input, Output, State, no_update
 from dash.html import Div, P
 from flask import Flask, render_template
 
-from .backend.exceptions import APIException, BackendNotAvailableException
-from .backend.statistics import get_stats
+from job_tracker_frontend.backend_comm.exceptions import (
+    APIException,
+    BackendNotAvailableException,
+)
+from job_tracker_frontend.backend_comm.statistics import get_stats
+
 from .ui import chart1, stats_criteria_menu
 
 logger = logging.getLogger(__name__)
