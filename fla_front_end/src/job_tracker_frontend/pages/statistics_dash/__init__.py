@@ -55,7 +55,7 @@ class CustomDash(Dash):
     """
 
     def interpolate_index(self, **kwargs):  # type: ignore
-        rendered_jinja_template = render_template("pages/dash_statistics.html")
+        rendered_jinja_template = render_template("pages/statistics_dash.html")
 
         custom_index = rendered_jinja_template.format(
             metas=kwargs["metas"],
