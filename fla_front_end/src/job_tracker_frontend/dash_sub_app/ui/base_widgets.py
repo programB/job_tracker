@@ -1,9 +1,9 @@
 from dash import dcc
 from dash.html import Button
 
-from .input_validator import (
-    bins,
-    contract_types,
+from job_tracker_frontend.dash_sub_app.backend import allowed_choices
+
+from .defaults import (
     default_bin,
     default_contract_type,
     default_end_date,
@@ -12,10 +12,7 @@ from .input_validator import (
     default_start_date,
     default_tag,
     earliest_date,
-    job_levels,
-    job_modes,
     latatest_date,
-    tags,
 )
 
 date_span_sel = dcc.DatePickerRange(
@@ -31,7 +28,7 @@ date_span_sel = dcc.DatePickerRange(
 
 binning_dd = dcc.Dropdown(
     id="binning_dd",
-    options=[{"label": bin, "value": bin} for bin in bins],
+    options=[{"label": bin, "value": bin} for bin in allowed_choices.bins],
     value=default_bin,
     clearable=False,
     className="dropdown",
@@ -39,7 +36,7 @@ binning_dd = dcc.Dropdown(
 
 tags_dd = dcc.Dropdown(
     id="tags_dd",
-    options=[{"label": tag, "value": tag} for tag in tags],
+    options=[{"label": tag, "value": tag} for tag in allowed_choices.tags],
     value=default_tag,
     clearable=True,
     multi=True,
@@ -50,7 +47,7 @@ contract_type_dd = dcc.Dropdown(
     id="contract_type_dd",
     options=[
         {"label": contract_type, "value": contract_type}
-        for contract_type in contract_types
+        for contract_type in allowed_choices.contract_types
     ],
     value=default_contract_type,
     clearable=True,
@@ -59,7 +56,9 @@ contract_type_dd = dcc.Dropdown(
 
 job_mode_dd = dcc.Dropdown(
     id="job_mode_dd",
-    options=[{"label": job_mode, "value": job_mode} for job_mode in job_modes],
+    options=[
+        {"label": job_mode, "value": job_mode} for job_mode in allowed_choices.job_modes
+    ],
     value=default_job_mode,
     clearable=True,
     className="dropdown",
@@ -67,7 +66,10 @@ job_mode_dd = dcc.Dropdown(
 
 job_level_dd = dcc.Dropdown(
     id="job_level_dd",
-    options=[{"label": job_level, "value": job_level} for job_level in job_levels],
+    options=[
+        {"label": job_level, "value": job_level}
+        for job_level in allowed_choices.job_levels
+    ],
     value=default_job_level,
     clearable=True,
     className="dropdown",

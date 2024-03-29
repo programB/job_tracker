@@ -28,14 +28,13 @@ import logging
 from datetime import datetime
 
 import plotly.graph_objects as go
-from dash import Dash, Input, Output, State
-from dash.exceptions import PreventUpdate
-from dash.html import Div
+from dash import Dash, Input, Output, State, no_update
+from dash.html import Div, P
 from flask import Flask, render_template
 
 from .backend.exceptions import APIException, BackendNotAvailableException
 from .backend.statistics import get_stats
-from .components import chart1, stats_criteria_menu
+from .ui import chart1, stats_criteria_menu
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +100,10 @@ def init_dash_app(master_app: Flask) -> Flask:
                 className="charts",
             ),
             Div(
+                children=[P(id="warnig_msg")],
+                className="warning",
+            ),
+            Div(
                 children=stats_criteria_menu,
                 className="stats-criteria-menu",
             ),
@@ -110,6 +113,7 @@ def init_dash_app(master_app: Flask) -> Flask:
 
     @dash_app.callback(
         Output("chart1", "figure"),
+        Output("warnig_msg", "children"),
         Input("submit_btn", "n_clicks"),
         State("date_span_sel", "start_date"),
         State("date_span_sel", "end_date"),
@@ -149,16 +153,17 @@ def init_dash_app(master_app: Flask) -> Flask:
         except AttributeError:
             # show pop-up -- invalid parameters
             # Ideally this should never happen
-            raise PreventUpdate
+            return no_update, "invalid parameters"
         except BackendNotAvailableException:
             # show pop-up -- connection issue
-            raise PreventUpdate
+            return no_update, "connection issue"
         except APIException:
             # show pop-up -- unexpected API error
             # This should never happen
-            raise PreventUpdate
+            return no_update, "unexpected API error"
 
         fig = go.Figure()
+
         fig.add_trace(
             go.Bar(
                 x=stats.date,
@@ -169,36 +174,62 @@ def init_dash_app(master_app: Flask) -> Flask:
                 # xperiodalignment="middle",
             )
         )
+
         fig.update_layout(
             # Warning. Setting plot's background color to white will
             # cause axes and gird to become invisible because their default
             # color is white. Set their color in update_x(y)axes functions.
             plot_bgcolor="white",
-            xaxis_title="publishing date",
-            yaxis_title="offers count",
+            xaxis_title="offer publishing date",
+            yaxis_title="count",
             # Legend is shown only when go.Figure contains more then 1 trace
-            legend_title="Legend Title",
+            legend_title="Legend",
         )
+
+        match binning:
+            case "day":
+                # year (%Y) prepended with \n causes year to be shown below
+                # day and month but only "once per year" (it will not be
+                # repeated under each tick if it's unambiguous)
+                xaxis_tick_format = "%d.%m\n%Y"
+                # If the axis `type` is "date", then you must convert the
+                # time to milliseconds.
+                # To set the interval between ticks to one day,
+                # set `dtick` to 86400000.0
+                # https://plotly.com/python/reference/layout/xaxis/#layout-xaxis-dtick
+                xaxis_minor_d_tick = 86400000.0
+                # Put a mark with description only every 7 days and only
+                # minor tick for others
+                # (this greatly improves speed when displaying many days).
+                xaxis_d_tick = 7 * xaxis_minor_d_tick
+            case "month":
+                xaxis_tick_format = "%m\n%Y"
+                xaxis_minor_d_tick = None
+                xaxis_d_tick = "M1"
+            case "year":
+                xaxis_tick_format = "%Y"
+                xaxis_minor_d_tick = None
+                xaxis_d_tick = "M12"
+
         fig.update_xaxes(
             linecolor="black",  # X axis color
             ticks="outside",
             tickson="boundaries",
-            # ticklen=20,
-            # dtick="M1",
-            # type='date',
+            type="date",
+            dtick=xaxis_d_tick,
             # tickmode set to 'linear' causes time to not be displayed
-            tickmode="linear",
-            # year (%Y) prepended with \n causes year to be shown below
-            # day and month but only "once per year" (it will not be
-            # repeated under each tick if it's unambiguous)
-            tickformat="%d.%m\n%Y",
+            # tickmode="linear",
+            tickformat=xaxis_tick_format,
             # ticklabelmode="period",
+            minor_dtick=xaxis_minor_d_tick,
         )
+
         fig.update_yaxes(
             linecolor="black",  # Y axis color
             gridcolor="#eeeeee",  # Horizontal grid (parallel to X axis !) color
         )
         # print(fig)  # to see resulting JSON structure describing the figure
-        return fig
+        # return fig for the first output and empty string for the warnig_msg output
+        return fig, ""
 
     return dash_app.server  # type: ignore
