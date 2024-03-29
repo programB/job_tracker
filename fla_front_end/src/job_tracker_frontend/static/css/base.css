@@ -258,3 +258,68 @@ main {
   background-color: var(--emph-color-translus);
   color: var(--neutral-color);
 }
+
+article {
+  text-align: left;
+  min-width: 200px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0px 0px 10px #ccc;
+  vertical-align: top;
+}
+
+.joboffer {
+  font-size: 1.5em;
+  font-family: serif;
+  color: var(--emph-color);
+  margin: 0;
+  padding: 0;
+}
+
+.joboffer > div > a:link,
+.joboffer > div > a:visited {
+  color: var(--emph-dim-color);
+  text-decoration: none;
+}
+
+.details-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.details-container > div {
+  font-size: 0.9em;
+  color: var(--neutral-color);
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 5px;
+}
+
+.details-container > div > a:link,
+.details-container > div > a:visited {
+  color: var(--highlight-color);
+  text-decoration: none;
+}
+
+.tags-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.tags-container > div {
+  background-color: var(--emph-color-translus);
+  color: var(--emph-color);
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 5px;
+  font-size: 0.7em;
+  border-radius: 25px;
+}
+
+aside.timestamp {
+  font-size: 0.9em;
+  color: var(--neutral-color);
+  text-align: right;
+}

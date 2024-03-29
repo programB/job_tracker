@@ -3,5 +3,28 @@
 {% block title %}Offers{% endblock title %}
 
 {% block main %}
-  <p>Here you should be able to scroll through the list of collected offers</p>
+  <p>List of collected offers:</p>
+{% for offr in offs %}
+<article>
+  <div class="joboffer">
+    <div>
+      {{ offr["title"] }}
+      <a href={{ offr["detailsurl"] }}> &#8618;</a>
+    </div>
+  </div>
+  <div class="details-container">
+    <div> job level: {{ offr["joblevel"] }}</div>
+    <div> salary: {{ offr["monthlysalary"] }}</div>
+    <div> job mode: {{ offr["jobmode"] }}</div>
+    <div> contract type: {{ offr["contracttype"] }}</div>
+
+  </div>
+  <div class="tags-container">
+    {% for tag in offr['tags'] %}
+    <div>{{ tag }}</div>
+    {% endfor %}
+  </div>
+  <aside class="timestamp">Posted on {{ offr["posted"] }}</aside>
+</article>
+{% endfor %}
 {% endblock main %}
