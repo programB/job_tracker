@@ -27,7 +27,6 @@
 from dotenv import load_dotenv
 from flask import Flask
 
-from . import pages
 from .dash_sub_app import init_dash_app
 
 answer = load_dotenv()
@@ -40,7 +39,10 @@ def create_app():
 
     with app.app_context():
 
-        app.register_blueprint(pages.bp)
+        from job_tracker_frontend.pages import bp as pages_bp
+
+        app.register_blueprint(pages_bp)
+
         app = init_dash_app(app)
 
         return app
