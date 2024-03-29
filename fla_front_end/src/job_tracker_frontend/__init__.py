@@ -27,9 +27,6 @@
 from dotenv import load_dotenv
 from flask import Flask
 
-from . import pages
-from .dash_sub_app import init_dash_app
-
 answer = load_dotenv()
 print(f"loaded env?: {answer}")
 
@@ -40,7 +37,14 @@ def create_app():
 
     with app.app_context():
 
-        app.register_blueprint(pages.bp)
+        # Register Flask app pages
+        from job_tracker_frontend.pages import bp as pages_bp
+
+        app.register_blueprint(pages_bp)
+
+        # Initialize Dash sub app together with whatever it provides
+        from job_tracker_frontend.pages import init_dash_app
+
         app = init_dash_app(app)
 
         return app
