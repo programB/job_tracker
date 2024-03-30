@@ -323,3 +323,32 @@ aside.timestamp {
   color: var(--neutral-color);
   text-align: right;
 }
+
+.pagination-nav {
+  margin: 0 auto;
+}
+
+.pagination-nav span {
+  font-size: 0.9em;
+  margin-right: 10px;
+}
+
+.pagination-nav span {
+  font-size: 0.9em;
+  margin-right: 10px;
+}
+
+.pagination-nav a {
+  color: var(--emph-color);
+  padding: 5px;
+  text-decoration: none;
+}
+
+.pagination-nav a:hover {
+  color: var(--emph-dark-color);
+}
+
+.pagination-nav a.curr-subpage {
+  background-color: var(--emph-color-translus);
+  border-radius: 50%;
+}

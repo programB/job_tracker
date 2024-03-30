@@ -27,4 +27,35 @@
   <aside class="timestamp">Posted on {{ offr["posted"] }}</aside>
 </article>
 {% endfor %}
+<div class="pagination-nav">
+  {% if curr_subpage > 1 %}
+    <span>
+      <a href="{{ url_for('pages.offers', subpage=curr_subpage-1) }}">&#x2b9c</a>
+    </span>
+  {% else %}
+    <span>
+      <a href="#">&#x2b9c</a>
+    </span>
+  {% endif %}
+  {% for pagenumber in range(1, tot_subpages+1) %}
+    {% if pagenumber == curr_subpage %}
+      <span>
+        <a class="curr-subpage" href="{{ url_for('pages.offers', subpage=pagenumber) }}">{{ pagenumber }}</a>
+      </span>
+    {% else %}
+      <span>
+        <a href="{{ url_for('pages.offers', subpage=pagenumber) }}">{{ pagenumber }}</a>
+      </span>
+    {% endif %}
+  {% endfor %}
+  {% if curr_subpage < tot_subpages %}
+    <span>
+      <a href="{{ url_for('pages.offers', subpage=curr_subpage+1) }}">&#x2b9e</a>
+    </span>
+  {% else %}
+    <span>
+      <a href="#">&#x2b9e</a>
+    </span>
+  {% endif %}
+</div>
 {% endblock main %}
