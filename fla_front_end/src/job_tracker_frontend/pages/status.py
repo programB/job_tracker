@@ -1,4 +1,4 @@
-from flask import render_template
+from flask import render_template, flash
 
 from job_tracker_frontend.backend_comm.exceptions import (
     APIException,
@@ -13,8 +13,17 @@ def status():
     try:
         ans = get_status()
     except (AttributeError, APIException, BackendNotAvailableException):
-        print("Could not access backend service")
-        return "<p> error while trying to communicate with backend service</p>"
+        flash(
+            (
+                "Failed to retrive backend service status."
+            ),
+            "error",
+        )
+        return render_template(
+            "pages/status.html",
+            selenium_status="Unknown",
+            db_status="Unknown",
+        )
 
     selenium_status = "healthy" if ans["is_selenium_grid_healthy"] else "error"
     db_status = "healthy" if ans["is_database_online"] else "error"
