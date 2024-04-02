@@ -29,7 +29,7 @@ from datetime import datetime
 
 import plotly.graph_objects as go
 from dash import Dash, Input, Output, State, no_update
-from dash.html import Div, P
+from dash.html import Div, Li, Ul
 from flask import Flask, render_template
 
 from job_tracker_frontend.backend_comm.exceptions import (
@@ -96,16 +96,20 @@ def init_dash_app(master_app: Flask) -> Flask:
     dash_app.layout = Div(
         children=[
             Div(
+                children=[
+                    Ul(
+                        id="warnig_msg",
+                        className="flashes",
+                    )
+                ],
+            ),
+            Div(
                 children="This is a placeholder for a header with some general info",
                 className="statistics-header",
             ),
             Div(
                 children=[chart1],
                 className="charts",
-            ),
-            Div(
-                children=[P(id="warnig_msg")],
-                className="warning",
             ),
             Div(
                 children=stats_criteria_menu,
@@ -157,14 +161,48 @@ def init_dash_app(master_app: Flask) -> Flask:
         except AttributeError:
             # show pop-up -- invalid parameters
             # Ideally this should never happen
-            return no_update, "invalid parameters"
+            return (
+                no_update,
+                Li(
+                    children=[
+                        (
+                            "There was a problem when accessing backend service. "
+                            "Failed to retrive statistics."
+                        ),
+                    ],
+                    className="error",
+                ),
+            )
         except BackendNotAvailableException:
             # show pop-up -- connection issue
-            return no_update, "connection issue"
+            return (
+                no_update,
+                Li(
+                    children=[
+                        (
+                            "There was a problem when accessing backend service. "
+                            "Failed to retrive statistics."
+                        ),
+                    ],
+                    className="error",
+                ),
+            )
+
         except APIException:
             # show pop-up -- unexpected API error
             # This should never happen
-            return no_update, "unexpected API error"
+            return (
+                no_update,
+                Li(
+                    children=[
+                        (
+                            "There was a problem when accessing backend service. "
+                            "Failed to retrive statistics."
+                        ),
+                    ],
+                    className="error",
+                ),
+            )
 
         fig = go.Figure()
 
