@@ -3,5 +3,59 @@
 {% block title %}Offers{% endblock title %}
 
 {% block main %}
-  <p>Here you should be able to scroll through the list of collected offers</p>
+  <p>List of collected offers:</p>
+{% for offr in offs %}
+<article>
+  <div class="joboffer">
+    <div>
+      {{ offr["title"] }}
+      <a href={{ offr["detailsurl"] }}> &#8618;</a>
+    </div>
+  </div>
+  <div class="details-container">
+    <div> job level: {{ offr["joblevel"] }}</div>
+    <div> salary: {{ offr["monthlysalary"] }}</div>
+    <div> job mode: {{ offr["jobmode"] }}</div>
+    <div> contract type: {{ offr["contracttype"] }}</div>
+
+  </div>
+  <div class="tags-container">
+    {% for tag in offr['tags'] %}
+    <div>{{ tag }}</div>
+    {% endfor %}
+  </div>
+  <aside class="timestamp">Posted on {{ offr["posted"] }}</aside>
+</article>
+{% endfor %}
+<div class="pagination-nav">
+  {% if curr_subpage > 1 %}
+    <span>
+      <a href="{{ url_for('pages.offers', subpage=curr_subpage-1) }}">&#x2b9c</a>
+    </span>
+  {% else %}
+    <span>
+      <a href="#">&#x2b9c</a>
+    </span>
+  {% endif %}
+  {% for pagenumber in range(1, tot_subpages+1) %}
+    {% if pagenumber == curr_subpage %}
+      <span>
+        <a class="curr-subpage" href="{{ url_for('pages.offers', subpage=pagenumber) }}">{{ pagenumber }}</a>
+      </span>
+    {% else %}
+      <span>
+        <a href="{{ url_for('pages.offers', subpage=pagenumber) }}">{{ pagenumber }}</a>
+      </span>
+    {% endif %}
+  {% endfor %}
+  {% if curr_subpage < tot_subpages %}
+    <span>
+      <a href="{{ url_for('pages.offers', subpage=curr_subpage+1) }}">&#x2b9e</a>
+    </span>
+  {% else %}
+    <span>
+      <a href="#">&#x2b9e</a>
+    </span>
+  {% endif %}
+</div>
 {% endblock main %}

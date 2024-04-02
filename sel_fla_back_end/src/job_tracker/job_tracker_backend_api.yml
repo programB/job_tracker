@@ -66,9 +66,19 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Offer"
+                type: object
+                properties:
+                  info:
+                    type: object
+                    properties:
+                      tot_subpages:
+                        type: integer
+                      curr_subpage:
+                        type: integer
+                  offer:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Offer"
         "400":
           $ref: "#/components/responses/400Error"
         "404":

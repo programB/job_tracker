@@ -22,4 +22,10 @@ def get_all():
             status=500, title="database offline", detail="Check server health"
         )
     else:
-        return joboffers_schema.dump(paginated_offers)
+        info = {
+            "tot_subpages": paginated_offers.pages,
+            "curr_subpage": paginated_offers.page,
+        }
+        offers = joboffers_schema.dump(paginated_offers)
+        ans = {"info": info, "offers": offers}
+        return ans  # Flask "jsonifies" ans object
