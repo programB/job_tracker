@@ -3,5 +3,11 @@
 {% block title %}Status{% endblock title %}
 
 {% block main %}
-  <p>Here you should be able to check the status of the backend service</p>
+<p>Backend Status</p>
+<article>
+  <table class="services">
+    <tr><td class="service-name">Selenium</td> <td class="{{ selenium_status }}">{{ selenium_status }}</td></tr>
+    <tr><td class="service-name">Database</td> <td class="{{ db_status }}">{{ db_status }}</td></tr>
+  </table>
+</article>
 {% endblock main %}
