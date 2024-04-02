@@ -374,3 +374,13 @@ td.error {
   color: red;
   font-size: 1.2em;
 }
+
+.error {
+  font-size: 1.2rem;
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 20px;
+  color: var(--neutral-color);
+  background-color: var(--emph-color);
+  list-style-type: none;
+}
