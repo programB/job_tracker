@@ -1,5 +1,4 @@
-from flask import render_template
-from flask import  request
+from flask import flash, render_template, request
 
 from job_tracker_frontend.backend_comm.exceptions import (
     APIException,
@@ -12,14 +11,25 @@ from job_tracker_frontend.pages import bp
 @bp.route("/offers")
 def offers():
     # hard-coded for now
-    # See backend api for other accpeted values
+    # See backend api for other accepted values
     offers_per_subpage = 10
     try:
         subpage = request.args.get("subpage", default=1, type=int)
         ans = get_offers(offers_per_subpage, subpage)
     except (AttributeError, APIException, BackendNotAvailableException):
-        print("Could not access backend service")
-        return "<p> error while trying to communicate with backend service</p>"
+        flash(
+            (
+                "There was a problem when accessing backend service. "
+                "Failed to retrive the list of offers."
+            ),
+            "error",
+        )
+        return render_template(
+            "pages/offers.html",
+            tot_subpages=0,
+            curr_subpage=1,
+            offs=[],
+        )
 
     for off in ans["offers"]:
         # Return just the date (without time)
