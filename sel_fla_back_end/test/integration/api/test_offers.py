@@ -10,7 +10,11 @@ class TestHappyPaths:
             "/api/offers", params={"perpagelimit": pplimit, "subpage": "1"}
         )
         assert response.status_code == 200
-        received_offers = response.json()
+        ans = response.json()
+        ans_info = ans["info"]
+        assert ans_info["curr_subpage"] == 1
+        assert ans_info["tot_subpages"] >= 1
+        received_offers = ans["offers"]
         assert len(received_offers) == pplimit
         ISO8601_format = "%Y-%m-%dT%H:%M:%S"
         for i, offer in enumerate(received_offers):
