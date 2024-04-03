@@ -24,6 +24,8 @@
         (See https://dash.plotly.com/external-resources for details)
 #}
 
+{% block extrastylesheet %}{{ url_for('static', filename='css/statistics_dash.css') }}{% endblock extrastylesheet %}
+
 {% block title %}DASH Statistics{% endblock title %}
 
 {% block metas %}{metas}{% endblock metas %}

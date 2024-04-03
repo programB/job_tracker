@@ -1,0 +1,21 @@
+table.services {
+  width: auto;
+  border-collapse: collapse;
+}
+
+table.services td {
+  padding: 10px;
+}
+
+.service-name {
+  background-color: var(--highlight-color);
+}
+
+td.healthy {
+  color: var(--emph-color);
+}
+
+td.error {
+  color: red;
+  font-size: 1.2em;
+}

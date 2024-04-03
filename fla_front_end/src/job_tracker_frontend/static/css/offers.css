@@ -1,0 +1,79 @@
+.offer-info {
+  font-size: 1.5em;
+  font-family: serif;
+  color: var(--emph-color);
+  margin: 0;
+  padding: 0;
+}
+
+.offer-info > div > a:link,
+.offer-info > div > a:visited {
+  color: var(--emph-dim-color);
+  text-decoration: none;
+}
+
+.offer-details {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.offer-details > div {
+  font-size: 0.9em;
+  color: var(--neutral-color);
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 5px;
+}
+
+.offer-details > div > a:link,
+.offer-details > div > a:visited {
+  color: var(--highlight-color);
+  text-decoration: none;
+}
+
+.offer-tags {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.offer-tags > div {
+  background-color: var(--emph-color-translus);
+  color: var(--emph-color);
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 5px;
+  font-size: 0.7em;
+  border-radius: 25px;
+}
+
+aside.timestamp {
+  font-size: 0.9em;
+  color: var(--neutral-color);
+  text-align: right;
+}
+
+.pagination-nav {
+  margin: 0 auto;
+}
+
+.pagination-nav span {
+  font-size: 0.9em;
+  margin-right: 10px;
+}
+
+.pagination-nav a {
+  color: var(--emph-color);
+  padding: 5px;
+  text-decoration: none;
+}
+
+.pagination-nav a:hover {
+  color: var(--emph-dark-color);
+}
+
+.pagination-nav a.curr-subpage {
+  background-color: var(--emph-color-translus);
+  border-radius: 50%;
+}

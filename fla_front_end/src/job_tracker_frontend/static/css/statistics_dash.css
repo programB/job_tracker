@@ -1,0 +1,97 @@
+.dash-main-div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.charts {
+  width: 90%;
+  box-shadow: 0 5px 15px 0 var(--highlight-color);
+}
+
+.stats-criteria-menu {
+  display: flex;
+  flex-direction: column;
+  min-height: 250px;
+  width: 80%;
+  max-width: 600px;
+  min-width: 500px;
+  justify-content: space-evenly;
+  background-color: white;
+  box-shadow: 0 5px 15px 0 var(--highlight-color);
+  padding: 0;
+  margin: 0;
+  margin-top: 20px;
+}
+
+.h-sub-box {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  justify-content: space-evenly;
+}
+
+.label {
+  color: var(--emph-color);
+  min-width: 8rem;
+}
+
+/* Colored underline under the date */
+.DateInput_input__focused {
+  border-bottom-color: var(--emph-color);
+}
+
+/* Help popup menu (accessed through ""?" symbol) inside date picker */
+.DayPickerKeyboardShortcuts_show__bottomRight::before {
+  border-right-color: var(--emph-dim-color);
+}
+
+.DayPickerKeyboardShortcuts_show__bottomRight:hover::before {
+  border-right-color: var(--emph-color);
+}
+
+/* Day tile */
+.CalendarDay__selected,
+.CalendarDay__selected:hover,
+.CalendarDay__selected_span,
+.CalendarDay__selected_span:hover,
+.CalendarDay__selected_span:active {
+  border-color: white;
+}
+
+.CalendarDay__selected {
+  background-color: var(--emph-color);
+}
+.CalendarDay__selected:hover {
+  background-color: var(--emph-color);
+}
+
+.CalendarDay__selected_span {
+  background-color: var(--emph-dim-color);
+}
+
+.CalendarDay__selected_span:hover {
+  background-color: var(--emph-color);
+}
+.CalendarDay__selected_span:active {
+  background-color: var(--emph-color);
+}
+
+.h-sub-box {
+  padding: 0px 15px 0px 15px;
+}
+
+.button_sbm_box {
+  padding-left: 50px;
+}
+
+.Select--multi .Select-value {
+  background-color: transparent;
+  border: 1px solid var(--emph-dim-color);
+}
+
+.long-dropdown .Select-value-label,
+.long-dropdown .Select-value-icon {
+  background-color: var(--emph-color-translus);
+  color: var(--neutral-color);
+}
