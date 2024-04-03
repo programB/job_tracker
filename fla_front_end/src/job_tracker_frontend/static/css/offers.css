@@ -1,0 +1,84 @@
+.joboffer {
+  font-size: 1.5em;
+  font-family: serif;
+  color: var(--emph-color);
+  margin: 0;
+  padding: 0;
+}
+
+.joboffer > div > a:link,
+.joboffer > div > a:visited {
+  color: var(--emph-dim-color);
+  text-decoration: none;
+}
+
+.details-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.details-container > div {
+  font-size: 0.9em;
+  color: var(--neutral-color);
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 5px;
+}
+
+.details-container > div > a:link,
+.details-container > div > a:visited {
+  color: var(--highlight-color);
+  text-decoration: none;
+}
+
+.tags-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.tags-container > div {
+  background-color: var(--emph-color-translus);
+  color: var(--emph-color);
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 5px;
+  font-size: 0.7em;
+  border-radius: 25px;
+}
+
+aside.timestamp {
+  font-size: 0.9em;
+  color: var(--neutral-color);
+  text-align: right;
+}
+
+.pagination-nav {
+  margin: 0 auto;
+}
+
+.pagination-nav span {
+  font-size: 0.9em;
+  margin-right: 10px;
+}
+
+.pagination-nav span {
+  font-size: 0.9em;
+  margin-right: 10px;
+}
+
+.pagination-nav a {
+  color: var(--emph-color);
+  padding: 5px;
+  text-decoration: none;
+}
+
+.pagination-nav a:hover {
+  color: var(--emph-dark-color);
+}
+
+.pagination-nav a.curr-subpage {
+  background-color: var(--emph-color-translus);
+  border-radius: 50%;
+}

@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% block extrastylesheet %}{{ url_for('static', filename='css/status.css') }}{% endblock extrastylesheet %}
+
 {% block title %}Status{% endblock title %}
 
 {% block main %}
