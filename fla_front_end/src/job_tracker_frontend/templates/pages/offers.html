@@ -8,20 +8,20 @@
   <p>List of collected offers:</p>
 {% for offr in offs %}
 <article>
-  <div class="joboffer">
+  <div class="offer-info">
     <div>
       {{ offr["title"] }}
       <a href={{ offr["detailsurl"] }}> &#8618;</a>
     </div>
   </div>
-  <div class="details-container">
+  <div class="offer-details">
     <div> job level: {{ offr["joblevel"] }}</div>
     <div> salary: {{ offr["monthlysalary"] }}</div>
     <div> job mode: {{ offr["jobmode"] }}</div>
     <div> contract type: {{ offr["contracttype"] }}</div>
 
   </div>
-  <div class="tags-container">
+  <div class="offer-tags">
     {% for tag in offr['tags'] %}
     <div>{{ tag }}</div>
     {% endfor %}

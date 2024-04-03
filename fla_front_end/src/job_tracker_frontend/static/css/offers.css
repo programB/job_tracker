@@ -1,4 +1,4 @@
-.joboffer {
+.offer-info {
   font-size: 1.5em;
   font-family: serif;
   color: var(--emph-color);
@@ -6,19 +6,19 @@
   padding: 0;
 }
 
-.joboffer > div > a:link,
-.joboffer > div > a:visited {
+.offer-info > div > a:link,
+.offer-info > div > a:visited {
   color: var(--emph-dim-color);
   text-decoration: none;
 }
 
-.details-container {
+.offer-details {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
-.details-container > div {
+.offer-details > div {
   font-size: 0.9em;
   color: var(--neutral-color);
   margin-right: 10px;
@@ -26,19 +26,19 @@
   padding: 5px;
 }
 
-.details-container > div > a:link,
-.details-container > div > a:visited {
+.offer-details > div > a:link,
+.offer-details > div > a:visited {
   color: var(--highlight-color);
   text-decoration: none;
 }
 
-.tags-container {
+.offer-tags {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
 }
 
-.tags-container > div {
+.offer-tags > div {
   background-color: var(--emph-color-translus);
   color: var(--emph-color);
   margin-right: 10px;
@@ -56,11 +56,6 @@ aside.timestamp {
 
 .pagination-nav {
   margin: 0 auto;
-}
-
-.pagination-nav span {
-  font-size: 0.9em;
-  margin-right: 10px;
 }
 
 .pagination-nav span {
