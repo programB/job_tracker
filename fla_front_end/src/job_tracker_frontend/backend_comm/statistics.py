@@ -2,10 +2,9 @@ import logging
 from datetime import datetime
 
 import pandas as pd
-import requests
-from requests.exceptions import ConnectionError, Timeout
 
-from .exceptions import APIException, BackendNotAvailableException
+from job_tracker_frontend.backend_comm import make_backend_call
+
 from .validation import check_inputs
 
 logger = logging.getLogger(__name__)
@@ -44,36 +43,12 @@ def get_stats(
     if job_level:
         optional_params["job_level"] = job_level
 
-    try:
-        response = requests.get(
-            "http://job-tracker-backend:5000/api/statistics",
-            params=mandatory_params | optional_params,
-            timeout=2,
-        )
-    except Timeout as e:
-        msg = "Backend service unavailable - connection timeout"
-        logger.warning(msg + ": %s", e)
-        raise BackendNotAvailableException(msg) from e
-    except ConnectionError as e:
-        msg = "Backend service unavailable - connection error"
-        logger.warning(msg + ": %s", e)
-        raise BackendNotAvailableException(msg) from e
-
-    if response.status_code == 404:
-        msg = "Backend service unavailable - 404"
-        logger.warning(msg)
-        raise BackendNotAvailableException(msg)
-
-    if response.status_code == 200:
-        return transform_data(response.json())
-
-    msg = "Unknown API error."
-    logger.error(
-        msg + " Send request was: %s. Response was: %s",
-        response.request.url,
-        response.json(),
+    return make_backend_call(
+        "statistics",
+        mandatory_params,
+        optional_params,
+        data_conditioning=transform_data,
     )
-    raise APIException(msg)
 
 
 def transform_data(json_data):
