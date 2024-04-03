@@ -26,21 +26,11 @@
   --master-bg-color: #fafafa;
   --highlight-color: #eeeeee;
   --neutral-color: black;
-  /* nice blue */
-  /* --emph-color: #0399f7; */
-  /* nice orange */
   --emph-color: #f75403;
   --emph-color-translus: #f7540314;
   --emph-dark-color: #cb4202;
   --emph-dim-color: #f79466;
-  /* okayish violet */
-  /* --emph-color: #7d03f7; */
-
   /* DARK */
-  /* --master-bg-color: #2d2d2d; */
-  /* --highlight-color: #4a4a4a; */
-  /* --neutral-color: #c6c6c6; */
-  /* --emph-color: #0399f7; */
 }
 
 * {
@@ -80,17 +70,14 @@ body {
 }
 
 /* Navigation items "fields" */
-/* #navpanel, */
-#navpanel a {
-  color: var(--neutral-color);
-}
 
 #navpanel a {
   display: block;
   padding: 20px;
   width: 100%;
-  text-decoration: none;
   cursor: initial;
+  text-decoration: none;
+  color: var(--neutral-color);
 }
 
 #navpanel a.current {
