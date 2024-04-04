@@ -165,7 +165,25 @@ def calculate_stats(
         if job_mode is not None:
             selection_criteria.append(JobOffer.jobmode == job_mode)
         if job_level is not None:
-            selection_criteria.append(JobOffer.joblevel == job_level)
+            # WARNING Job offers have job level description in rather
+            #         descriptive form (in Polish or Ukrainian) with
+            #         general job level term in English in parentheses but
+            #         only for junior/regular/senior positions - there
+            #         are some non-standard ones as well. The way this is
+            #         handled can be improved once enough offers are
+            #         collected, hopefully representing all possible levels.
+            #         Additionally some offers advertise job opening at
+            #         more then one level (probably subject to evaluation during
+            #         an interview). This shows that a table for all job levels
+            #         should be added (together with a junction table).
+            #         This would allow to add multiple level per offer
+            #         (similarly to implementation of 'tag' and
+            #          'joboffer_tag' tables).
+            #         The 'contains' filter below relaxes the search criteria
+            #         and allows to select a level even if multiple are present
+            #         and the specific wording is not yet fully known.
+            # selection_criteria.append(JobOffer.joblevel == job_level)
+            selection_criteria.append(JobOffer.joblevel.contains(job_level))
         # if tags is not None:
         #     TODO: This doesn't work
         #     selection_criteria.append("Python" == any_(JobOffer.tags))
