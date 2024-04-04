@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 
 from connexion.problem import problem
 from flask import request
-from sqlalchemy import and_, delete, exc, func, inspect, select, true
+from sqlalchemy import and_, delete, exc, func, inspect, or_, select, true
 
 from job_tracker.database import db
-from job_tracker.models import JobOffer, datapoints_schema
+from job_tracker.models import JobOffer, Tag, datapoints_schema
 
 from .date_helpers import (
     Interval,
@@ -200,9 +200,28 @@ def calculate_stats(
             #         and the specific wording is not yet fully known.
             # selection_criteria.append(JobOffer.joblevel == job_level)
             selection_criteria.append(JobOffer.joblevel.contains(job_level))
-        # if tags is not None:
-        #     TODO: This doesn't work
-        #     selection_criteria.append("Python" == any_(JobOffer.tags))
+        if tags is not None:
+            for tag in tags:
+                # Find all offers with a given tag
+                offers_with_matching_tag = (
+                    JobOffer.query.join(JobOffer.tags).filter(Tag.name == tag).all()
+                )
+                # Since in selection_criteria conditions will be joined with AND
+                # create a list of all criteria in such a way that ANY one of them
+                # will be satisfying the final condition (for a current tag).
+                # (that is the final condition will not evaluate to a nonsensical
+                # thing like
+                # select offer_id where offer=offer1 AND offer=offer2)
+                cond = or_(
+                    *[
+                        JobOffer.joboffer_id == offer.joboffer_id
+                        for offer in offers_with_matching_tag
+                    ]
+                )
+                selection_criteria.append(cond)
+                # Iterating over requested tags in the for loop will result
+                # in AND condition assuring that only the offers that have
+                # ALL requested tags (not just any one of them) will be counted.
 
         gen_timestamps = select(TmpContinuousDatesRange.timestamp)
         gen_timestamps_subq = gen_timestamps.subquery()
