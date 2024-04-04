@@ -1,6 +1,7 @@
 bins = ["day", "month", "year"]
 tags = []
-contract_types = ["full time", "part time", "temporary"]
+contract_types = ["Pełny etat", " Część etatu", " Dodatkowa / tymczasowa"]
+# contract_types = ["full time", "part time", "temporary"]
 job_modes = ["in office", "remote"]
 
 # WARNING: These are just some key words that are used

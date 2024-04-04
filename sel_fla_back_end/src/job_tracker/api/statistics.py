@@ -161,7 +161,23 @@ def calculate_stats(
         ]
 
         if contract_type is not None:
-            selection_criteria.append(JobOffer.contracttype == contract_type)
+            # WARNING: Contract type description is in Polish or Ukrainian only.
+            #          It is unknown, at this time, whether all possible choices
+            #          where seen and accounted for. Also some job offers
+            #          are tagged with multiple contract types. This makes
+            #          this criterion similar to the one for job level below
+            #          and implementation should be improved in similar manner
+            #          once enough offers are collected and analysed.
+            #          Selection filtering is added to relax the condition
+            #          and allow the user to make a choice using current implementation.
+            # selection_criteria.append(JobOffer.contracttype == contract_type)
+
+            # NOTE: Currently only offers marked as full_time are being collected
+            #       (this is achieved by parsing of CSS class names not strings
+            #        in the offer description itself)
+            #       Criteria for the offers that are being collected
+            #       are hard coded in the fetch_offers task.
+            selection_criteria.append(JobOffer.contracttype.contains(contract_type))
         if job_mode is not None:
             selection_criteria.append(JobOffer.jobmode == job_mode)
         if job_level is not None:
