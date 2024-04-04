@@ -37,6 +37,7 @@ from job_tracker_frontend.backend_comm.exceptions import (
     BackendNotAvailableException,
 )
 from job_tracker_frontend.backend_comm.statistics import get_stats
+from job_tracker_frontend.backend_comm.tags import get_tags
 
 from .ui import chart1, stats_criteria_menu
 
@@ -122,6 +123,7 @@ def init_dash_app(master_app: Flask) -> Flask:
     @dash_app.callback(
         Output("chart1", "figure"),
         Output("warnig_msg", "children"),
+        Output("tags_dd", "options"),
         Input("submit_btn", "n_clicks"),
         State("date_span_sel", "start_date"),
         State("date_span_sel", "end_date"),
@@ -166,6 +168,7 @@ def init_dash_app(master_app: Flask) -> Flask:
                 job_mode,
                 job_level,
             )
+            retreived_tags = get_tags()
         except AttributeError:
             # show pop-up -- invalid parameters
             # Ideally this should never happen
@@ -180,6 +183,7 @@ def init_dash_app(master_app: Flask) -> Flask:
                     ],
                     className="error",
                 ),
+                no_update,
             )
         except BackendNotAvailableException:
             # show pop-up -- connection issue
@@ -194,6 +198,7 @@ def init_dash_app(master_app: Flask) -> Flask:
                     ],
                     className="error",
                 ),
+                no_update,
             )
 
         except APIException:
@@ -210,6 +215,7 @@ def init_dash_app(master_app: Flask) -> Flask:
                     ],
                     className="error",
                 ),
+                no_update,
             )
 
         fig = go.Figure()
@@ -280,6 +286,6 @@ def init_dash_app(master_app: Flask) -> Flask:
         )
         # print(fig)  # to see resulting JSON structure describing the figure
         # return fig for the first output and empty string for the warnig_msg output
-        return fig, ""
+        return fig, "", [{"label": tag, "value": tag} for tag in retreived_tags]
 
     return dash_app.server  # type: ignore
