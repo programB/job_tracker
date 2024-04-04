@@ -13,7 +13,9 @@ def get_all():
     subpage = request.args.get("subpage", default=1, type=int)
     perpagelimit = request.args.get("perpagelimit", type=int)
     try:
-        paginated_offers = JobOffer.query.paginate(page=subpage, per_page=perpagelimit)
+        paginated_offers = JobOffer.query.order_by(JobOffer.posted).paginate(
+            page=subpage, per_page=perpagelimit
+        )
     except exc.OperationalError:
         logger.exception(
             ("Failed to connect to the database while trying query for offers")
