@@ -93,8 +93,8 @@ def calculate_stats(
     job_mode : only include offers WITH given job mode
     job_level : only include offers WITH given job level
 
-    start_date : earliest date an offer was collected on
-    end_date : latest date an offer was collected on
+    start_date : earliest date an offer was posted on
+    end_date : latest date an offer was posted on
     binning : bin matching offers by either day, month or year
 
     Returns
@@ -115,7 +115,7 @@ def calculate_stats(
                 )
 
                 grouping_criteria = [
-                    func.extract("year", JobOffer.collected),
+                    func.extract("year", JobOffer.posted),
                 ]
 
                 years = [y for y in range(mod_sd.year, mod_ed.year + 1, 1)]
@@ -132,8 +132,8 @@ def calculate_stats(
                 )
 
                 grouping_criteria = [
-                    func.extract("year", JobOffer.collected),
-                    func.extract("month", JobOffer.collected),
+                    func.extract("year", JobOffer.posted),
+                    func.extract("month", JobOffer.posted),
                 ]
 
                 for first_day in iterate_months(mod_sd, mod_ed):
@@ -143,9 +143,9 @@ def calculate_stats(
                 mod_ed = end_date.replace(hour=23, minute=59, second=59)
 
                 grouping_criteria = [
-                    func.extract("year", JobOffer.collected),
-                    func.extract("month", JobOffer.collected),
-                    func.extract("day", JobOffer.collected),
+                    func.extract("year", JobOffer.posted),
+                    func.extract("month", JobOffer.posted),
+                    func.extract("day", JobOffer.posted),
                 ]
 
                 dates_range = [
@@ -156,8 +156,8 @@ def calculate_stats(
                     db.session.add(TmpContinuousDatesRange(timestamp=date))
 
         selection_criteria = [
-            JobOffer.collected >= mod_sd,
-            JobOffer.collected <= mod_ed,
+            JobOffer.posted >= mod_sd,
+            JobOffer.posted <= mod_ed,
         ]
 
         if contract_type is not None:
@@ -174,7 +174,7 @@ def calculate_stats(
         gen_timestamps_subq = gen_timestamps.subquery()
         not_empty_bins = (
             select(
-                JobOffer.collected,
+                JobOffer.posted,
                 func.count(JobOffer.joboffer_id).label("count"),
             )
             .where(and_(true(), *selection_criteria))
@@ -185,17 +185,17 @@ def calculate_stats(
         not_empty_bins_subq = not_empty_bins.subquery()
 
         comparison_criteria = [
-            func.extract("year", not_empty_bins_subq.c.collected)
+            func.extract("year", not_empty_bins_subq.c.posted)
             == func.extract("year", gen_timestamps_subq.c.timestamp)
         ]
         if not binning == Interval.YEAR:
             comparison_criteria.append(
-                func.extract("month", not_empty_bins_subq.c.collected)
+                func.extract("month", not_empty_bins_subq.c.posted)
                 == func.extract("month", gen_timestamps_subq.c.timestamp)
             )
             if not binning == Interval.MONTH:
                 comparison_criteria.append(
-                    func.extract("day", not_empty_bins_subq.c.collected)
+                    func.extract("day", not_empty_bins_subq.c.posted)
                     == func.extract("day", gen_timestamps_subq.c.timestamp)
                 )
 
