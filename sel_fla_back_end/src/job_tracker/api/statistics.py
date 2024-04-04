@@ -242,7 +242,10 @@ def timedependant():
         )
     tags = request.args.getlist("tags", type=str)
     contract_type = request.args.get("contract_type", type=str)
-    job_mode = request.args.get("job_mode", type=str)
+    # TODO: job_mode is not yet collected when webpage offers are analysed
+    #       see: Advertisement class in results_page module
+    # job_mode = request.args.get("job_mode", type=str)
+    job_mode = None
     job_level = request.args.get("job_level", type=str)
 
     try:

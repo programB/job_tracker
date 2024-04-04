@@ -128,7 +128,9 @@ def init_dash_app(master_app: Flask) -> Flask:
         State("binning_dd", "value"),
         State("tags_dd", "value"),
         State("contract_type_dd", "value"),
-        State("job_mode_dd", "value"),
+        # TODO: job_mode is not yet collected when webpage offers are analysed
+        #       see: Advertisement class in results_page module
+        # State("job_mode_dd", "value"),
         State("job_level_dd", "value"),
     )
     def update_chart(
@@ -138,7 +140,9 @@ def init_dash_app(master_app: Flask) -> Flask:
         binning,
         tags,
         contract_type,
-        job_mode,
+        # TODO: job_mode is not yet collected when webpage offers are analysed
+        #       see: Advertisement class in results_page module
+        # job_mode,
         job_level,
     ):
 
@@ -149,6 +153,10 @@ def init_dash_app(master_app: Flask) -> Flask:
         try:
             if n_clicks is None:
                 raise AttributeError
+
+            # TODO: job_mode is not yet collected when webpage offers are analysed
+            #       see: Advertisement class in results_page module
+            job_mode = None
             stats = get_stats(
                 start_date,
                 end_date,
