@@ -110,6 +110,7 @@ class Advertisement(BaseNavigation):
                     raise RuntimeError
         except RuntimeError:
             logging.warning("unknown offer type (neither single nor multiple)")
+            return
 
         try:
             link = top_div.find_element(By.XPATH, "./div/a").get_attribute(
