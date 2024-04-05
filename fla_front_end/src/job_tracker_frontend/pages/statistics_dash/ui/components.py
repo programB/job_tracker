@@ -38,12 +38,14 @@ stats_criteria_menu = [
                     Div(children=[contract_type_dd], className="dropdown"),
                 ]
             ),
-            Div(
-                children=[
-                    Div(children=["Job mode"], className="label"),
-                    Div(children=[job_mode_dd], className="dropdown"),
-                ]
-            ),
+            # TODO: job_mode is not yet collected when webpage offers are analysed
+            #       see: Advertisement class in results_page module
+            # Div(
+            #     children=[
+            #         Div(children=["Job mode"], className="label"),
+            #         Div(children=[job_mode_dd], className="dropdown"),
+            #     ]
+            # ),
             Div(
                 children=[
                     Div(children=["Job level"], className="label"),

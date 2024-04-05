@@ -44,7 +44,11 @@ class Company(db.Model):
         backref="company",
         cascade="all, delete, delete-orphan",  # Del all offers if Company removed
         single_parent=True,  # must be set because: delete-orphan
-        order_by="desc(JobOffer.collected)",  # When returning offers sort them
+        # When returning offers sort them
+        # (this doesn't seem to affect ordering for the query
+        #  performed in the offers endpoint - exclicit ordering
+        #  has to be done there).
+        order_by="desc(JobOffer.collected)",
     )
 
     def __init__(self, **kwargs) -> None:

@@ -37,6 +37,7 @@ from job_tracker_frontend.backend_comm.exceptions import (
     BackendNotAvailableException,
 )
 from job_tracker_frontend.backend_comm.statistics import get_stats
+from job_tracker_frontend.backend_comm.tags import get_tags
 
 from .ui import chart1, stats_criteria_menu
 
@@ -122,13 +123,16 @@ def init_dash_app(master_app: Flask) -> Flask:
     @dash_app.callback(
         Output("chart1", "figure"),
         Output("warnig_msg", "children"),
+        Output("tags_dd", "options"),
         Input("submit_btn", "n_clicks"),
         State("date_span_sel", "start_date"),
         State("date_span_sel", "end_date"),
         State("binning_dd", "value"),
         State("tags_dd", "value"),
         State("contract_type_dd", "value"),
-        State("job_mode_dd", "value"),
+        # TODO: job_mode is not yet collected when webpage offers are analysed
+        #       see: Advertisement class in results_page module
+        # State("job_mode_dd", "value"),
         State("job_level_dd", "value"),
     )
     def update_chart(
@@ -138,7 +142,9 @@ def init_dash_app(master_app: Flask) -> Flask:
         binning,
         tags,
         contract_type,
-        job_mode,
+        # TODO: job_mode is not yet collected when webpage offers are analysed
+        #       see: Advertisement class in results_page module
+        # job_mode,
         job_level,
     ):
 
@@ -149,6 +155,10 @@ def init_dash_app(master_app: Flask) -> Flask:
         try:
             if n_clicks is None:
                 raise AttributeError
+
+            # TODO: job_mode is not yet collected when webpage offers are analysed
+            #       see: Advertisement class in results_page module
+            job_mode = None
             stats = get_stats(
                 start_date,
                 end_date,
@@ -158,6 +168,7 @@ def init_dash_app(master_app: Flask) -> Flask:
                 job_mode,
                 job_level,
             )
+            retreived_tags = get_tags()
         except AttributeError:
             # show pop-up -- invalid parameters
             # Ideally this should never happen
@@ -172,6 +183,7 @@ def init_dash_app(master_app: Flask) -> Flask:
                     ],
                     className="error",
                 ),
+                no_update,
             )
         except BackendNotAvailableException:
             # show pop-up -- connection issue
@@ -186,6 +198,7 @@ def init_dash_app(master_app: Flask) -> Flask:
                     ],
                     className="error",
                 ),
+                no_update,
             )
 
         except APIException:
@@ -202,6 +215,7 @@ def init_dash_app(master_app: Flask) -> Flask:
                     ],
                     className="error",
                 ),
+                no_update,
             )
 
         fig = go.Figure()
@@ -272,6 +286,6 @@ def init_dash_app(master_app: Flask) -> Flask:
         )
         # print(fig)  # to see resulting JSON structure describing the figure
         # return fig for the first output and empty string for the warnig_msg output
-        return fig, ""
+        return fig, "", [{"label": tag, "value": tag} for tag in retreived_tags]
 
     return dash_app.server  # type: ignore

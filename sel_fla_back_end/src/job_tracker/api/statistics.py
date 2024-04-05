@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 
 from connexion.problem import problem
 from flask import request
-from sqlalchemy import and_, delete, exc, func, inspect, select, true
+from sqlalchemy import and_, delete, exc, func, inspect, or_, select, true
 
 from job_tracker.database import db
-from job_tracker.models import JobOffer, datapoints_schema
+from job_tracker.models import JobOffer, Tag, datapoints_schema
 
 from .date_helpers import (
     Interval,
@@ -93,8 +93,8 @@ def calculate_stats(
     job_mode : only include offers WITH given job mode
     job_level : only include offers WITH given job level
 
-    start_date : earliest date an offer was collected on
-    end_date : latest date an offer was collected on
+    start_date : earliest date an offer was posted on
+    end_date : latest date an offer was posted on
     binning : bin matching offers by either day, month or year
 
     Returns
@@ -115,7 +115,7 @@ def calculate_stats(
                 )
 
                 grouping_criteria = [
-                    func.extract("year", JobOffer.collected),
+                    func.extract("year", JobOffer.posted),
                 ]
 
                 years = [y for y in range(mod_sd.year, mod_ed.year + 1, 1)]
@@ -132,8 +132,8 @@ def calculate_stats(
                 )
 
                 grouping_criteria = [
-                    func.extract("year", JobOffer.collected),
-                    func.extract("month", JobOffer.collected),
+                    func.extract("year", JobOffer.posted),
+                    func.extract("month", JobOffer.posted),
                 ]
 
                 for first_day in iterate_months(mod_sd, mod_ed):
@@ -143,9 +143,9 @@ def calculate_stats(
                 mod_ed = end_date.replace(hour=23, minute=59, second=59)
 
                 grouping_criteria = [
-                    func.extract("year", JobOffer.collected),
-                    func.extract("month", JobOffer.collected),
-                    func.extract("day", JobOffer.collected),
+                    func.extract("year", JobOffer.posted),
+                    func.extract("month", JobOffer.posted),
+                    func.extract("day", JobOffer.posted),
                 ]
 
                 dates_range = [
@@ -156,25 +156,78 @@ def calculate_stats(
                     db.session.add(TmpContinuousDatesRange(timestamp=date))
 
         selection_criteria = [
-            JobOffer.collected >= mod_sd,
-            JobOffer.collected <= mod_ed,
+            JobOffer.posted >= mod_sd,
+            JobOffer.posted <= mod_ed,
         ]
 
         if contract_type is not None:
-            selection_criteria.append(JobOffer.contracttype == contract_type)
+            # WARNING: Contract type description is in Polish or Ukrainian only.
+            #          It is unknown, at this time, whether all possible choices
+            #          where seen and accounted for. Also some job offers
+            #          are tagged with multiple contract types. This makes
+            #          this criterion similar to the one for job level below
+            #          and implementation should be improved in similar manner
+            #          once enough offers are collected and analysed.
+            #          Selection filtering is added to relax the condition
+            #          and allow the user to make a choice using current implementation.
+            # selection_criteria.append(JobOffer.contracttype == contract_type)
+
+            # NOTE: Currently only offers marked as full_time are being collected
+            #       (this is achieved by parsing of CSS class names not strings
+            #        in the offer description itself)
+            #       Criteria for the offers that are being collected
+            #       are hard coded in the fetch_offers task.
+            selection_criteria.append(JobOffer.contracttype.contains(contract_type))
         if job_mode is not None:
             selection_criteria.append(JobOffer.jobmode == job_mode)
         if job_level is not None:
-            selection_criteria.append(JobOffer.joblevel == job_level)
-        # if tags is not None:
-        #     TODO: This doesn't work
-        #     selection_criteria.append("Python" == any_(JobOffer.tags))
+            # WARNING Job offers have job level description in rather
+            #         descriptive form (in Polish or Ukrainian) with
+            #         general job level term in English in parentheses but
+            #         only for junior/regular/senior positions - there
+            #         are some non-standard ones as well. The way this is
+            #         handled can be improved once enough offers are
+            #         collected, hopefully representing all possible levels.
+            #         Additionally some offers advertise job opening at
+            #         more then one level (probably subject to evaluation during
+            #         an interview). This shows that a table for all job levels
+            #         should be added (together with a junction table).
+            #         This would allow to add multiple level per offer
+            #         (similarly to implementation of 'tag' and
+            #          'joboffer_tag' tables).
+            #         The 'contains' filter below relaxes the search criteria
+            #         and allows to select a level even if multiple are present
+            #         and the specific wording is not yet fully known.
+            # selection_criteria.append(JobOffer.joblevel == job_level)
+            selection_criteria.append(JobOffer.joblevel.contains(job_level))
+        if tags is not None:
+            for tag in tags:
+                # Find all offers with a given tag
+                offers_with_matching_tag = (
+                    JobOffer.query.join(JobOffer.tags).filter(Tag.name == tag).all()
+                )
+                # Since in selection_criteria conditions will be joined with AND
+                # create a list of all criteria in such a way that ANY one of them
+                # will be satisfying the final condition (for a current tag).
+                # (that is the final condition will not evaluate to a nonsensical
+                # thing like
+                # select offer_id where offer=offer1 AND offer=offer2)
+                cond = or_(
+                    *[
+                        JobOffer.joboffer_id == offer.joboffer_id
+                        for offer in offers_with_matching_tag
+                    ]
+                )
+                selection_criteria.append(cond)
+                # Iterating over requested tags in the for loop will result
+                # in AND condition assuring that only the offers that have
+                # ALL requested tags (not just any one of them) will be counted.
 
         gen_timestamps = select(TmpContinuousDatesRange.timestamp)
         gen_timestamps_subq = gen_timestamps.subquery()
         not_empty_bins = (
             select(
-                JobOffer.collected,
+                JobOffer.posted,
                 func.count(JobOffer.joboffer_id).label("count"),
             )
             .where(and_(true(), *selection_criteria))
@@ -185,17 +238,17 @@ def calculate_stats(
         not_empty_bins_subq = not_empty_bins.subquery()
 
         comparison_criteria = [
-            func.extract("year", not_empty_bins_subq.c.collected)
+            func.extract("year", not_empty_bins_subq.c.posted)
             == func.extract("year", gen_timestamps_subq.c.timestamp)
         ]
         if not binning == Interval.YEAR:
             comparison_criteria.append(
-                func.extract("month", not_empty_bins_subq.c.collected)
+                func.extract("month", not_empty_bins_subq.c.posted)
                 == func.extract("month", gen_timestamps_subq.c.timestamp)
             )
             if not binning == Interval.MONTH:
                 comparison_criteria.append(
-                    func.extract("day", not_empty_bins_subq.c.collected)
+                    func.extract("day", not_empty_bins_subq.c.posted)
                     == func.extract("day", gen_timestamps_subq.c.timestamp)
                 )
 
@@ -242,7 +295,10 @@ def timedependant():
         )
     tags = request.args.getlist("tags", type=str)
     contract_type = request.args.get("contract_type", type=str)
-    job_mode = request.args.get("job_mode", type=str)
+    # TODO: job_mode is not yet collected when webpage offers are analysed
+    #       see: Advertisement class in results_page module
+    # job_mode = request.args.get("job_mode", type=str)
+    job_mode = None
     job_level = request.args.get("job_level", type=str)
 
     try:
