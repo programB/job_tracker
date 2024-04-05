@@ -91,6 +91,7 @@ class BaseNavigation:
         except Exception as e:
             logging.warning("problem visiting the page at: %s", url)
             if "ERR_NAME_NOT_RESOLVED" in str(e):
+                logging.warning("target website name (%s) couldn't be resolved", url)
                 raise ConnectionError from e
             raise e
 

@@ -67,21 +67,28 @@ def fetch_offers():
     selenium_grid_url = os.getenv("SELENIUM_GRID_URL")
     selenium_grid_port = os.getenv("SELENIUM_GRID_PORT", "4444")
     with selenium_driver(selenium_grid_url, selenium_grid_port) as driver:
-        main_page = PracujplMainPage(driver, reject_cookies=True)
+        logger.info("Job offers scraping started")
+        try:
+            main_page = PracujplMainPage(driver, reject_cookies=True)
 
-        if main_page.search_mode == "default":
-            main_page.search_mode = "it"
-        is_tag_list_available = main_page.search_mode == "it"
-        main_page.employment_type = ["full_time"]
-        main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
-        main_page.search_term = "Tester"
+            if main_page.search_mode == "default":
+                main_page.search_mode = "it"
+            is_tag_list_available = main_page.search_mode == "it"
+            main_page.employment_type = ["full_time"]
+            main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
+            main_page.search_term = "Tester"
 
-        main_page.start_searching()
+            main_page.start_searching()
 
-        results_page = ResultsPage(driver)
-        all_offers = results_page.all_offers
+            results_page = ResultsPage(driver)
+            all_offers = results_page.all_offers
+        except ConnectionError:
+            logger.error("Pracuj.pl website unreachable. No offers were collected.")
+            return
+        logger.info("Job offers scraping completed")
 
     with scheduler.app.app_context():
+        logger.info("Adding collected job offers to database")
         try:
             for offer in all_offers:
                 if not JobOffer.query.get(offer.id):  # new, not yet stored offer
