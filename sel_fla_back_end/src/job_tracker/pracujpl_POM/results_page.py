@@ -135,12 +135,12 @@ class Advertisement(BaseNavigation):
                 By.XPATH,
                 search_xpath,
             ).text
-        except SE.NoSuchElementException as webelement_not_found:
+        except SE.NoSuchElementException:
             # Everything should have a title!
             # We should give up here
             logging.warning("_offer_dict: %s", self._offer_dict)
             logging.warning("offer does not have a title")
-            raise webelement_not_found
+            return
 
         try:
             self._offer_dict["salary"] = top_div.find_element(
