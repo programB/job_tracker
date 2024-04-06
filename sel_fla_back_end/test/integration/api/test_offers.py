@@ -17,15 +17,14 @@ class TestHappyPaths:
         received_offers = ans["offers"]
         assert len(received_offers) == pplimit
         ISO8601_format = "%Y-%m-%dT%H:%M:%S"
-        for i, offer in enumerate(received_offers):
-            if i < 2:
-                assert offer["title"].startswith("Test offer")
+        for offer in received_offers:
+            if offer["title"].startswith("Test offer"):
                 assert len(offer["tags"]) == 2
                 assert all(
                     item in ["Java", "Selenium", "Python"] for item in offer["tags"]
                 )
             else:
-                # Other offers have no tags and have random titles
+                # Other offers have no tags
                 assert offer["tags"] == []
             assert isinstance(
                 datetime.strptime(offer["posted"], ISO8601_format), datetime

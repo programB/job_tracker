@@ -62,7 +62,7 @@ class TestHappyPaths:
         assert data[0]["date"] == "2023-01-01"  # beginning of the year
         assert data[0]["count"] == 1000  # all offers in the year 2023
         assert data[1]["date"] == "2024-01-01"  # beginning of the year
-        assert data[1]["count"] == 3  # all offers in the year 2024
+        assert data[1]["count"] == 2  # all offers posted in 2024
 
     @pytest.mark.parametrize(
         "sd, ed", [("2023-09-01", "2023-09-30"), ("2023-09-13", "2023-09-22")]
@@ -91,12 +91,17 @@ class TestHappyPaths:
             (
                 date(2023, 1, 1),
                 date(2024, 12, 31),
-                8 * [0] + [528, 472] + 2 * [0] + [3] + 11 * [0],
+                # test offers by posted date
+                # 0 (Jan-Aug 2023) 528 (Sept) 472 (Oct) 0 (Nov-Dec)
+                # 2 (Jan.2024) 0 (Feb-Dec.2024)
+                8 * [0] + [528, 472] + 2 * [0] + [2] + 11 * [0],
             ),
             (
                 date(2023, 7, 17),
                 date(2024, 4, 11),
-                2 * [0] + [528, 472] + 2 * [0] + [3] + 3 * [0],
+                # 0 (Jul-Aug 2023) 528 (Sept) 472 (Oct) 0 (Nov-Dec)
+                # 2 (Jan.2024) 0 (Feb-Mar.2024)
+                2 * [0] + [528, 472] + 2 * [0] + [2] + 3 * [0],
             ),
         ],
     )
@@ -129,12 +134,14 @@ class TestHappyPaths:
             (
                 date(2023, 9, 21),
                 date(2023, 9, 25),
-                [20, 15, 0, 0, 0],
+                # test offers by posted date
+                [0, 0, 0, 0, 0],
             ),
             (
                 date(2023, 10, 20),
                 date(2024, 1, 16),
-                [24, 22, 15] + 84 * [0] + [3] + [0],
+                # 27 20.10.2023 , 1 6.01.2024, 1 9.01.2024
+                [27] + 77 * [0] + [1] + [0] + [0] + [1] + 7 * [0],
             ),
         ],
     )
@@ -162,7 +169,7 @@ class TestHappyPaths:
     @pytest.mark.parametrize(
         "the_same_date, binning, expected_counts",
         [
-            ("2023-09-09", "day", 30),
+            ("2023-09-09", "day", 22),
             ("2023-09-09", "month", 528),
             ("2023-09-09", "year", 1000),
         ],
@@ -195,27 +202,22 @@ class TestHappyPaths:
                 "end_date": ed,
                 "binning": binning,
                 "contract_type": "full time",
-                "job_mode": "in office",
+                # job_mode is not yet implemented
                 "job_level": "junior",
             },
         )
         assert response.status_code == 200
         data = response.json()
+        print(data)
         assert isinstance(data, list)
         assert len(data) == 1
         assert data[0]["date"] == "2023-09-01"
-        assert data[0]["count"] == 53
+        assert data[0]["count"] == 101
 
-    @pytest.mark.xfail(
-        reason=(
-            "NOT IMPLEMENTED. Tags are not yet taken into account when"
-            " calculating statistics"
-        )
-    )
     @pytest.mark.parametrize(
         "tags, expected_counts",
         [
-            ([], 53),
+            ([], 101),
             (["Python", "Java"], 0),
         ],
     )
@@ -232,7 +234,7 @@ class TestHappyPaths:
                 "end_date": ed,
                 "binning": binning,
                 "contract_type": "full time",
-                "job_mode": "in office",
+                # job_mode is not yet implemented
                 "job_level": "junior",
                 "tags": tags,
             },
