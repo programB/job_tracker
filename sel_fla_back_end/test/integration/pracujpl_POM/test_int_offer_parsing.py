@@ -52,7 +52,7 @@ def results_webpage(shared_datadir, http_test_server_url, http_test_server_port)
 
     locsrv = LocalServer()
     locsrv.start()
-    if locsrv.is_alive():  # technicaly the thread not the server itself
+    if locsrv.is_alive():  # technically the thread not the server itself
         logging.info("Local webserver running at: %s:%s", bind_address, server_port)
     else:
         logging.error("Local webserver failed to start !")
@@ -117,7 +117,7 @@ def test_should_create_ResultPage_object(std_results):
     """
     GIVEN a selenium driver object
     WHEN ResultsPage object is created
-    THEN check the the object was created
+    THEN check the object was created
     """
     assert std_results is not None
 
@@ -133,23 +133,10 @@ def test_should_check_only_valid_offers_are_collected(std_results):
         assert offer.is_valid_offer
 
 
-def test_should_check_offers_have_not_empty_essential_params(std_results):
+def test_should_check_essential_params_of_all_offers_are_not_empty(std_results):
     for offer in std_results.subpage_offers:
         assert offer.id != 0
         assert offer.title != ""
         assert offer.company_name != ""
         assert offer.job_level != ""
         assert offer.contract_type != ""
-
-
-# def test_should_check_navigation_to_desired_subpage(standard_search):
-#     results_page = ResultsPage(standard_search.driver)
-
-#     # The search criteria in standard_search fixture are general enough
-#     # for the returned number of offers to fill more then 1 subpage,
-#     # hence assuming the subpage 2 always exists should be safe.
-#     desired_subpage = 2
-#     results_page.goto_subpage(desired_subpage)
-#     _, cur_subpage_number = results_page.get_current_subpage()
-
-#     assert cur_subpage_number == desired_subpage
