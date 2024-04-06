@@ -77,12 +77,22 @@ def std_main_page(selenium_driver, results_webpage):
         url=results_webpage.url,
         reject_cookies=True,
         visual_mode=False,
+        # Test website doesn't have any advertisement popups to close.
+        # Setting this to False saves time waiting for those popups
+        # to appear on the website.
+        attempt_closing_popups=False,
     )
 
 
 @pytest.fixture
 def std_results(std_main_page):
-    yield ResultsPage(std_main_page.driver)
+    yield ResultsPage(
+        std_main_page.driver,
+        # Test website doesn't have any advertisement popups to close.
+        # Setting this to False saves time waiting for those popups
+        # to appear on the website.
+        attempt_closing_popups=False,
+    )
 
 
 def test_should_create_ResultPage_object(std_results):

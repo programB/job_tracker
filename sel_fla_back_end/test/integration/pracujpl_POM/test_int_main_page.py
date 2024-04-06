@@ -74,6 +74,10 @@ def std_main_page(selenium_driver, sample_website):
         url=sample_website.url,
         reject_cookies=True,
         visual_mode=False,
+        # Test website doesn't have any advertisement popups to close.
+        # Setting this to False saves time waiting for those popups
+        # to appear on the website.
+        attempt_closing_popups=False,
     )
 
 
@@ -111,6 +115,7 @@ def test_should_enter_text_into_search_field(
         url=sample_website.url,
         reject_cookies=reject_param,
         visual_mode=True,
+        attempt_closing_popups=False,
     )
     text_to_enter = "Tester"
     non_std_main_page.search_term = text_to_enter

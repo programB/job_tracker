@@ -286,7 +286,7 @@ class AdsPopup(BaseNavigation):
                 )
             )
         except (SE.NoSuchElementException, SE.TimeoutException):
-            logging.warning("Cookie consent modal was not found.")
+            logging.warning("Ads modal was not found.")
         return popup_container
 
     def _is_visible(self) -> bool:
