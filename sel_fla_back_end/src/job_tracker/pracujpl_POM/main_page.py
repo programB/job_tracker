@@ -151,7 +151,11 @@ class OptionsMenu(BaseNavigation):
                 # FIRST check selection condition THEN close menu.
                 # Shortening this to self.menu.click(); return "selected" in...
                 # leads to StaleElementReferenceException
-                is_sel: bool = "selected" in element.get_attribute("class")
+                is_sel = (
+                    False
+                    if element.get_attribute("class") is None
+                    else "selected" in element.get_attribute("class")
+                )
                 self.menu.click()
                 return is_sel
             except SE.NoSuchElementException:
