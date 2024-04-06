@@ -17,6 +17,11 @@ def results_webpage(shared_datadir, http_test_server_url, http_test_server_port)
     removed after test. This way a test can't, even accidently, change
     these files which would affect other tests.
     This fixture starts a local httpserver running in a separate thread.
+
+    Data in this webpage are the result of a search with the following criteria:
+    search_term = "Tester"
+    employment_type = ["full_time"]
+    location_and_distance = ("Warszawa", Distance.TEN_KM)
     """
 
     # server_address = "localhost"
@@ -66,12 +71,6 @@ def results_webpage(shared_datadir, http_test_server_url, http_test_server_port)
 
 @pytest.fixture
 def std_main_page(selenium_driver, results_webpage):
-    # logging.info("Running standard_search fixture")
-    # main_page = PracujplMainPage(selenium_driver, reject_cookies=True)
-    # main_page.search_term = "Tester"
-    # main_page.employment_type = ["full_time"]
-    # main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
-    # main_page.start_searching()
 
     yield PracujplMainPage(
         selenium_driver,
