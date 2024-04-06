@@ -57,7 +57,7 @@ def http_test_server_port(request):
 # function scope is the default
 # but stating it here explicitly for clarity
 @pytest.fixture(scope="function")
-def selenium_driver(selenium_grid_url, selenium_grid_port):
+def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
     # Setup browser driver
     # (with the scope='function' this step is performed
     #  BEFORE EACH test...)
@@ -66,8 +66,6 @@ def selenium_driver(selenium_grid_url, selenium_grid_port):
     # custom_options.add_argument('--headless')
 
     if selenium_grid_url:
-        port = selenium_grid_port if selenium_grid_port else "4444"
-
         # WARNING: /wd/hub path is deprecated
         # driver = webdriver.Remote("http://chromeindocker:4444/wd/hub")
 
@@ -83,7 +81,7 @@ def selenium_driver(selenium_grid_url, selenium_grid_port):
         # )
 
         driver = webdriver.Remote(
-            command_executor=selenium_grid_url + ":" + port,
+            command_executor=selenium_grid_url + ":" + selenium_grid_port,
             options=custom_options,
         )
     else:

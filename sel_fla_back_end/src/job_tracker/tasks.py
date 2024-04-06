@@ -22,7 +22,7 @@ def schedule_watchdog_task():
 
 
 @contextmanager
-def selenium_driver(selenium_grid_url, selenium_grid_port="4444"):
+def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
 
     custom_options = webdriver.ChromeOptions()
 
