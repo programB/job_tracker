@@ -79,7 +79,6 @@ class Advertisement(BaseNavigation):
             # There are commercial ads among genuine offers
             # that should be ignored
             logging.error("no valid offer found in div %s", self.root_element)
-            self.is_valid_offer = False
             return
 
         try:
@@ -163,7 +162,6 @@ class Advertisement(BaseNavigation):
             # If there is no company name that is probably an ad
             # that should be skipped
             logging.warning("offer does not provide company name")
-            self.is_valid_offer = False
             return
 
         try:
