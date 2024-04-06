@@ -25,6 +25,7 @@ class Advertisement(BaseNavigation):
         driver,
         root_element: WebElement | None = None,
         visual_mode=False,
+        timeout=5.0,
     ):
         """
 
@@ -38,7 +39,7 @@ class Advertisement(BaseNavigation):
             decides whether all newly found elements will get highlighted
             for human inspection
         """
-        super().__init__(driver, visual_mode)
+        super().__init__(driver, visual_mode, timeout)
         self.root_element = root_element
         self._offer_dict = {
             "id": 0,
@@ -400,10 +401,13 @@ class ResultsPage(BaseNavigation):
         driver,
         visual_mode=False,
         attempt_closing_popups=True,
+        timeout=5.0,
     ) -> None:
-        super().__init__(driver, visual_mode)
+        super().__init__(driver, visual_mode, timeout)
+        self.visual_mode = visual_mode
+        self.timeout = timeout
         if attempt_closing_popups:
-            AdsPopup(driver, visual_mode).close()
+            AdsPopup(driver, visual_mode, timeout).close()
 
     @property
     def tot_no_of_subpages(self) -> int:
@@ -449,7 +453,7 @@ class ResultsPage(BaseNavigation):
         )
         logging.warning("len(all_child_divs): %s", len(all_child_divs))
         for child_div in all_child_divs:
-            ad = Advertisement(self.driver, child_div)
+            ad = Advertisement(self.driver, child_div, self.visual_mode, self.timeout)
             if ad.is_valid_offer:
                 sp_offers.append(ad)
         return sp_offers

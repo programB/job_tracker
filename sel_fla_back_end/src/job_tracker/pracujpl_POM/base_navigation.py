@@ -29,7 +29,7 @@ class BaseNavigation:
         cls._color_index += 1
         return color
 
-    def __init__(self, driver, visual_mode=False) -> None:
+    def __init__(self, driver, visual_mode=False, timeout=5.0) -> None:
         """
         Parameters
         ----------
@@ -41,7 +41,7 @@ class BaseNavigation:
         """
         self.driver: WebDriver = driver
         self._visual_mode = visual_mode
-        self._timeout_sec = 5.0
+        self._timeout_sec = timeout
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
 
     @property
