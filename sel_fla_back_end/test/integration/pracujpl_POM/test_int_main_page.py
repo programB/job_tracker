@@ -78,6 +78,15 @@ def std_main_page(selenium_driver, sample_website):
         # Setting this to False saves time waiting for those popups
         # to appear on the website.
         attempt_closing_popups=False,
+        # By default BaseNavigation derived objects use 5 second wait time
+        # when looking for specific tags.
+        # PracujplMainPage uses this wait strategy to look for cookie consent
+        # overlay to appear on the screen. This is OK for real application but
+        # since the test website doesn't have this overlay
+        # tests can be sped up by setting the timeout to smaller value
+        # (set to 1 second as further decrease doesn't seem to reduce
+        # execution time).
+        timeout=1.0,
     )
 
 
