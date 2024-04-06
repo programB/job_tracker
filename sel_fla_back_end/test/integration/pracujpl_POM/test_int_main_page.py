@@ -63,102 +63,74 @@ def sample_website(shared_datadir, http_test_server_url, http_test_server_port):
         logging.error("Local webserver couldn't be stopped !")
 
 
-def test_should_create_PracujplMainPage_object(selenium_driver, sample_website):
-    # assert PracujplMainPage(selenium_driver) is not None
-    assert (
-        PracujplMainPage(
-            selenium_driver,
-            url=sample_website.url,
-            reject_cookies=True,
-            visual_mode=False,
-        )
-        is not None
-    )
-
-
-def test_should_visit_pracujpl_home_on_object_creation(selenium_driver, sample_website):
-    _ = PracujplMainPage(
+@pytest.fixture
+def std_main_page(selenium_driver, sample_website):
+    """Fixture opens test website on the test server.
+    It is used by almost all tests except those requiring different
+    initial settings in which case the test creates page object itself.
+    """
+    yield PracujplMainPage(
         selenium_driver,
         url=sample_website.url,
         reject_cookies=True,
         visual_mode=False,
     )
+
+
+def test_should_create_PracujplMainPage_object(std_main_page):
+    assert std_main_page is not None
+
+
+def test_should_visit_pracujpl_home_on_object_creation(selenium_driver, std_main_page):
+    _ = std_main_page
     assert "Praca - Pracuj.pl" in selenium_driver.title
 
 
-def test_should_check_essential_search_options_are_available(
-    selenium_driver, sample_website
-):
-    main_page = PracujplMainPage(
-        selenium_driver,
-        url=sample_website.url,
-        reject_cookies=True,
-        visual_mode=True,
-    )
-    search_field = main_page.search_field
-    category_field = main_page.category_field
-    location_field = main_page.location_field
+def test_should_check_essential_search_options_are_available(std_main_page):
+    search_field = std_main_page.search_field
+    category_field = std_main_page.category_field
+    location_field = std_main_page.location_field
     assert search_field.is_displayed() and search_field.is_enabled()
     assert category_field.is_displayed() and category_field.is_enabled()
     assert location_field.is_displayed() and location_field.is_enabled()
 
 
-def test_should_check_distance_field_is_shown_when_requested(
-    selenium_driver, sample_website
-):
+def test_should_check_distance_field_is_shown_when_requested(std_main_page):
     # _distance_dropdown only gets shown if browser window is maximized.
     # Test should succeed only if the window gets maximized when
     # the property is called and afterwards the dropdown gets found on the page
-    main_page = PracujplMainPage(
-        selenium_driver,
-        url=sample_website.url,
-        reject_cookies=True,
-        visual_mode=False,
-    )
-    assert main_page._distance_dropdown.is_displayed()
+    assert std_main_page._distance_dropdown.is_displayed()
 
 
 @pytest.mark.parametrize("reject_param", [True, False])
 def test_should_enter_text_into_search_field(
     selenium_driver, sample_website, reject_param
 ):
-    main_page = PracujplMainPage(
+    non_std_main_page = PracujplMainPage(
         selenium_driver,
         url=sample_website.url,
         reject_cookies=reject_param,
         visual_mode=True,
     )
     text_to_enter = "Tester"
-    main_page.search_term = text_to_enter
-    assert main_page.search_term.casefold() == text_to_enter.casefold()
+    non_std_main_page.search_term = text_to_enter
+    assert non_std_main_page.search_term.casefold() == text_to_enter.casefold()
 
 
 def test_should_check_extended_search_options_are_available(
-    selenium_driver, sample_website
+    selenium_driver, std_main_page
 ):
-    main_page = PracujplMainPage(
-        selenium_driver,
-        url=sample_website.url,
-        reject_cookies=True,
-        visual_mode=False,
-    )
     # extended controls are only visible if window is maximized
     selenium_driver.maximize_window()
     assert (
-        main_page.job_level.menu.is_displayed()
-        and main_page.contract_type.menu.is_displayed()
-        and main_page.employment_type_menu.menu.is_displayed()
-        and main_page.job_mode.menu.is_displayed()
+        std_main_page.job_level.menu.is_displayed()
+        and std_main_page.contract_type.menu.is_displayed()
+        and std_main_page.employment_type_menu.menu.is_displayed()
+        and std_main_page.job_mode.menu.is_displayed()
     )
 
 
-def test_should_check_job_levels_can_be_selected(selenium_driver, sample_website):
-    main_page = PracujplMainPage(
-        selenium_driver,
-        url=sample_website.url,
-        reject_cookies=True,
-        visual_mode=False,
-    )
+def test_should_check_job_levels_can_be_selected(selenium_driver, std_main_page):
     # extended controls are only visible if window is maximized
     selenium_driver.maximize_window()
     #
@@ -175,18 +147,12 @@ def test_should_check_job_levels_can_be_selected(selenium_driver, sample_website
         "laborer",
     ]
     choice = levels[3]
-    main_page.job_level.select([choice])
+    std_main_page.job_level.select([choice])
 
-    assert main_page.job_level.is_selected(choice)
+    assert std_main_page.job_level.is_selected(choice)
 
 
-def test_should_check_contract_types_can_be_selected(selenium_driver, sample_website):
-    main_page = PracujplMainPage(
-        selenium_driver,
-        url=sample_website.url,
-        reject_cookies=True,
-        visual_mode=False,
-    )
+def test_should_check_contract_types_can_be_selected(selenium_driver, std_main_page):
     # extended controls are only visible if window is maximized
     selenium_driver.maximize_window()
     #
@@ -201,18 +167,12 @@ def test_should_check_contract_types_can_be_selected(selenium_driver, sample_web
         "praktyki",
     ]
     choice = types[4]
-    main_page.contract_type.select([choice])
+    std_main_page.contract_type.select([choice])
 
-    assert main_page.contract_type.is_selected(choice)
+    assert std_main_page.contract_type.is_selected(choice)
 
 
-def test_should_check_employment_types_can_be_selected(selenium_driver, sample_website):
-    main_page = PracujplMainPage(
-        selenium_driver,
-        url=sample_website.url,
-        reject_cookies=True,
-        visual_mode=False,
-    )
+def test_should_check_employment_types_can_be_selected(selenium_driver, std_main_page):
     # extended controls are only visible if window is maximized
     selenium_driver.maximize_window()
     #
@@ -222,18 +182,12 @@ def test_should_check_employment_types_can_be_selected(selenium_driver, sample_w
         "full_time",
     ]
     choice = types[2]
-    main_page.employment_type = [choice]
+    std_main_page.employment_type = [choice]
 
-    assert main_page.employment_type == [choice]
+    assert std_main_page.employment_type == [choice]
 
 
-def test_should_check_job_locations_can_be_selected(selenium_driver, sample_website):
-    main_page = PracujplMainPage(
-        selenium_driver,
-        url=sample_website.url,
-        reject_cookies=True,
-        visual_mode=False,
-    )
+def test_should_check_job_locations_can_be_selected(selenium_driver, std_main_page):
     # extended controls are only visible if window is maximized
     selenium_driver.maximize_window()
     #
@@ -244,6 +198,6 @@ def test_should_check_job_locations_can_be_selected(selenium_driver, sample_webs
         "mobile",
     ]
     choice = locations[1]
-    main_page.job_mode.select([choice])
+    std_main_page.job_mode.select([choice])
 
-    assert main_page.job_mode.is_selected(choice)
+    assert std_main_page.job_mode.is_selected(choice)
