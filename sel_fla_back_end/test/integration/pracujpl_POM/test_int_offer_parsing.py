@@ -126,11 +126,9 @@ def test_should_check_tot_number_of_subpages(std_results):
     assert std_results.tot_no_of_subpages >= 2
 
 
-def test_should_check_offers_list_is_not_empty(std_results):
-    assert len(std_results.subpage_offers) != 0
-
-
 def test_should_check_only_valid_offers_are_collected(std_results):
+    offers = std_results.subpage_offers
+    assert len(offers) != 0
     for offer in std_results.subpage_offers:
         assert offer.is_valid_offer
 
