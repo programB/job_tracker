@@ -6,9 +6,23 @@ import pytest
 
 from job_tracker.pracujpl_POM import PracujplMainPage, ResultsPage
 
+file_to_serve = "resultspage.html"
+special_properties = {"tot_no_of_subpages": 3}
+
+
+# @pytest.mark.file_to_serve("resultspage.html")
+# @pytest.mark.special_properties("{'tot_no_of_subpages': 3}")
+@pytest.fixture
+def new_stored_results_page(local_server_fixture):
+    # file_to_serve = "resultspage.html"
+    # special_properties = {"tot_no_of_subpages": 3}
+    yield local_server_fixture
+
 
 @pytest.fixture
-def stored_results_page(shared_datadir, http_test_server_url, http_test_server_port):
+def old_stored_results_page(
+    shared_datadir, http_test_server_url, http_test_server_port
+):
     """Fixture starts local http server with saved copy of pracuj.pl main page.
 
     This fixture uses pytest-datadir plugin (its shared_datadir fixture)
