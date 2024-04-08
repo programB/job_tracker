@@ -94,9 +94,8 @@ def test_should_create_PracujplMainPage_object(std_main_page):
     assert std_main_page is not None
 
 
-def test_should_visit_pracujpl_home_on_object_creation(selenium_driver, std_main_page):
-    _ = std_main_page
-    assert "Praca - Pracuj.pl" in selenium_driver.title
+def test_should_visit_pracujpl_home_on_object_creation(std_main_page):
+    assert "Praca - Pracuj.pl" in std_main_page.driver.title
 
 
 def test_should_check_essential_search_options_are_available(std_main_page):
@@ -131,11 +130,9 @@ def test_should_enter_text_into_search_field(
     assert non_std_main_page.search_term.casefold() == text_to_enter.casefold()
 
 
-def test_should_check_extended_search_options_are_available(
-    selenium_driver, std_main_page
-):
+def test_should_check_extended_search_options_are_available(std_main_page):
     # extended controls are only visible if window is maximized
-    selenium_driver.maximize_window()
+    std_main_page.driver.maximize_window()
     assert (
         std_main_page.job_level.menu.is_displayed()
         and std_main_page.contract_type.menu.is_displayed()
@@ -144,9 +141,9 @@ def test_should_check_extended_search_options_are_available(
     )
 
 
-def test_should_check_job_levels_can_be_selected(selenium_driver, std_main_page):
+def test_should_check_job_levels_can_be_selected(std_main_page):
     # extended controls are only visible if window is maximized
-    selenium_driver.maximize_window()
+    std_main_page.driver.maximize_window()
     #
     levels = [
         "trainee",
@@ -166,9 +163,9 @@ def test_should_check_job_levels_can_be_selected(selenium_driver, std_main_page)
     assert std_main_page.job_level.is_selected(choice)
 
 
-def test_should_check_contract_types_can_be_selected(selenium_driver, std_main_page):
+def test_should_check_contract_types_can_be_selected(std_main_page):
     # extended controls are only visible if window is maximized
-    selenium_driver.maximize_window()
+    std_main_page.driver.maximize_window()
     #
     types = [
         "o_prace",
@@ -186,9 +183,9 @@ def test_should_check_contract_types_can_be_selected(selenium_driver, std_main_p
     assert std_main_page.contract_type.is_selected(choice)
 
 
-def test_should_check_employment_types_can_be_selected(selenium_driver, std_main_page):
+def test_should_check_employment_types_can_be_selected(std_main_page):
     # extended controls are only visible if window is maximized
-    selenium_driver.maximize_window()
+    std_main_page.driver.maximize_window()
     #
     types = [
         "part_time",
@@ -201,9 +198,9 @@ def test_should_check_employment_types_can_be_selected(selenium_driver, std_main
     assert std_main_page.employment_type == [choice]
 
 
-def test_should_check_job_locations_can_be_selected(selenium_driver, std_main_page):
+def test_should_check_job_locations_can_be_selected(std_main_page):
     # extended controls are only visible if window is maximized
-    selenium_driver.maximize_window()
+    std_main_page.driver.maximize_window()
     #
     locations = [
         "full_office",
