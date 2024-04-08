@@ -10,7 +10,7 @@ from job_tracker.pracujpl_POM import PracujplMainPage
 
 
 @pytest.fixture
-def sample_website(shared_datadir, http_test_server_url, http_test_server_port):
+def stored_main_page(shared_datadir, http_test_server_url, http_test_server_port):
     """Fixture starts local http server with saved copy of pracuj.pl main page.
 
     This fixture uses pytest-datadir plugin (its shared_datadir fixture)
@@ -64,14 +64,14 @@ def sample_website(shared_datadir, http_test_server_url, http_test_server_port):
 
 
 @pytest.fixture
-def std_main_page(selenium_driver, sample_website):
+def std_main_page(selenium_driver, stored_main_page):
     """Fixture opens test website on the test server.
     It is used by almost all tests except those requiring different
     initial settings in which case the test creates page object itself.
     """
     yield PracujplMainPage(
         selenium_driver,
-        url=sample_website.url,
+        url=stored_main_page.url,
         reject_cookies=True,
         visual_mode=False,
         # Test website doesn't have any advertisement popups to close.
@@ -117,11 +117,11 @@ def test_should_check_distance_field_is_shown_when_requested(std_main_page):
 
 @pytest.mark.parametrize("reject_param", [True, False])
 def test_should_enter_text_into_search_field(
-    selenium_driver, sample_website, reject_param
+    selenium_driver, stored_main_page, reject_param
 ):
     non_std_main_page = PracujplMainPage(
         selenium_driver,
-        url=sample_website.url,
+        url=stored_main_page.url,
         reject_cookies=reject_param,
         visual_mode=True,
         attempt_closing_popups=False,
