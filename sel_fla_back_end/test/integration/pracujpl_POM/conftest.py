@@ -7,12 +7,9 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import pytest
 
 
-# @pytest.fixture(scope="function")
-# def local_server_fixture(
-# @pytest.fixture
-# def stored_results_page(
+# function context is required by the shared_datadir plugin
 @pytest.fixture(scope="function")
-def stored_results_page(
+def local_http_server(
     request, shared_datadir, http_test_server_url, http_test_server_port
 ):
     """Fixture starts local http server serving a html file from data directory.
@@ -37,31 +34,15 @@ def stored_results_page(
     # binding to 0.0.0.0 makes this server visible inside docker network
     # and reachable by the name given to the container running the test.
     bind_address = "0.0.0.0"
-    # server_port = 8000 if not http_test_server_port else int(http_test_server_port)
     server_port = http_test_server_port or "8000"
 
     # Introspect requesting test module to get the html file name to serve
     # (This file must be present in the 'data' subdirectory.
     file_to_serve = getattr(request.module, "file_to_serve")
-    logging.warning("file_to_serve is: %s (%s)", file_to_serve, type(file_to_serve))
-
-    # file_marker = request.node.get_closest_marker("file_to_serve")
-    # if file_marker is None:
-    #     raise UnboundLocalError(
-    #         "missing file_to_serve marker. What html did you intend to serve?"
-    #     )
-    # file_to_serve = file_marker.args[0]
 
     # Introspect requesting test module to get the dictionary of the
     # special properties the resulting server object should end up having.
     special_properties = getattr(request.module, "special_properties")
-    logging.warning("special_properties is: %s (%s)", special_properties, type(special_properties))
-    # properties_marker = request.node.get_closest_marker("special_properties")
-    # if properties_marker is None:
-    #     raise UnboundLocalError(
-    #         "missing special_properties marker."
-    #     )
-    # special_properties = properties_marker.args[0]
 
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
@@ -82,6 +63,7 @@ def stored_results_page(
         url = base_url + "/" + file_to_serve
 
         def run(self):
+            # ThreadingHTTPServer reqiures port numner to be passed as int not str
             self.server = ThreadingHTTPServer((bind_address, int(server_port)), Handler)
             self.server.serve_forever()
 
