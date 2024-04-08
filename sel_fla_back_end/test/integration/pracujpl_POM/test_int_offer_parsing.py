@@ -1,6 +1,6 @@
 import pytest
 
-from job_tracker.pracujpl_POM import PracujplMainPage, ResultsPage
+from job_tracker.pracujpl_POM import ResultsPage
 
 # Stored copy of the results page in the 'data' subdirectory
 # to be serverd by http server spun up by the local_http_server fixture
@@ -11,33 +11,10 @@ special_properties = {"tot_no_of_subpages": 3}
 
 
 @pytest.fixture
-def web_page(selenium_driver, local_http_server):
-
-    yield PracujplMainPage(
-        selenium_driver,
-        url=local_http_server.url,
-        reject_cookies=True,
-        visual_mode=False,
-        # Test website doesn't have any advertisement popups to close.
-        # Setting this to False saves time waiting for those popups
-        # to appear on the website.
-        attempt_closing_popups=False,
-        # By default BaseNavigation derived objects use 5 second wait time
-        # when looking for specific tags.
-        # PracujplMainPage uses this wait strategy to look for cookie consent
-        # overlay to appear on the screen. This is OK for real application but
-        # since the test website doesn't have this overlay
-        # tests can be sped up by setting the timeout to smaller value
-        # (set to 1 second as further decrease doesn't seem to reduce
-        # execution time).
-        timeout=1.0,
-    )
-
-
-@pytest.fixture
-def std_results_page(web_page):
+def std_results_page(selenium_driver, local_http_server):
+    selenium_driver.get(local_http_server.url)
     yield ResultsPage(
-        web_page.driver,
+        selenium_driver,
         # Test website doesn't have any advertisement popups to close.
         # Setting this to False saves time waiting for those popups
         # to appear on the website.
