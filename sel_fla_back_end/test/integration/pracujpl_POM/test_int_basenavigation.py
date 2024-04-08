@@ -54,7 +54,9 @@ def test_should_find_and_highlight_an_existing_tag_on_a_webpage(
         local_http_server.locator_of_existing_h2_tag, highlight_color=emph_color
     )
     assert isinstance(result, WebElement)
-    assert f"background-color: {emph_color}" in result.get_attribute("style")
+    assert f"background-color: {emph_color}" in (
+        result.get_attribute("style") or "style attribute note found"
+    )
 
 
 def test_should_fail_to_find_not_existing_tag_on_a_webpage(browser, local_http_server):
