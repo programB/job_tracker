@@ -5,7 +5,7 @@ import pytest
 from job_tracker.pracujpl_POM import PracujplMainPage
 
 # Stored copy of the main page in the 'data' subdirectory
-# to be serverd by http server spun up by the local_http_server fixture
+# to be served by http server spun up by the local_http_server fixture
 file_to_serve = "mainpage.html"
 # special properties of the server object needed in tests
 # and known to be valid for the stored copy of the main page.

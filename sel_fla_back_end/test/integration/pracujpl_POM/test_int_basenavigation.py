@@ -11,7 +11,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from job_tracker.pracujpl_POM import BaseNavigation
 
 # A simple single page html page in the 'data' subdirectory
-# to be serverd by http server spun up by the local_http_server fixture
+# to be served by http server spun up by the local_http_server fixture
 file_to_serve = "simple_test_page.html"
 # special properties of the server object needed in tests
 # and known to be valid for this html file.
