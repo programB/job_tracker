@@ -56,9 +56,10 @@ def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
 @scheduler.task(
     trigger="cron",
     id="fetch_offers_task",
-    minute="*/5",
+    minute="0",
+    hour="12",
     max_instances=1,
-    misfire_grace_time=30,  # seconds
+    misfire_grace_time=3600,  # seconds
 )
 def fetch_offers():
     # Use selenium grid service.
