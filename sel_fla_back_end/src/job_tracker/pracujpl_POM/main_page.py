@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import logging
 import re
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from flask import current_app
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -114,12 +114,14 @@ class OptionsMenu(BaseNavigation):
                         self._scroll_into_view(element)
                         element.click()
                 except SE.NoSuchElementException:
-                    logging.warning("%s not found in the menu", option)
+                    current_app.logger.warning("%s not found in the menu", option)
                 finally:
                     # fold menu
                     self.menu.click()
             else:
-                logging.warning("unable to select unknown option: %s", option)
+                current_app.logger.warning(
+                    "unable to select unknown option: %s", option
+                )
 
     def is_selected(self, option: str) -> bool:
         """Check the webpage if given option is indeed selected
@@ -159,7 +161,7 @@ class OptionsMenu(BaseNavigation):
                 self.menu.click()
                 return is_sel
             except SE.NoSuchElementException:
-                logging.warning("%s not found in the menu", option)
+                current_app.logger.warning("%s not found in the menu", option)
                 return False
         return False
 
@@ -192,7 +194,7 @@ class CookieChoice(BaseNavigation):
             )
 
         except (SE.NoSuchElementException, SE.TimeoutException):
-            logging.warning("Cookie consent modal was not found.")
+            current_app.logger.warning("Cookie consent modal was not found.")
         return cookie_overlay
 
     def _is_visible(self) -> bool:
@@ -272,7 +274,9 @@ class PracujplMainPage(BaseNavigation):
             try:
                 self.visit(url)
             except Exception as e:
-                logging.fatal("Error connecting to pracuj.pl website at %s", url)
+                current_app.logger.fatal(
+                    "Error connecting to pracuj.pl website at %s", url
+                )
                 raise e
         if attempt_closing_popups:
             AdsPopup(driver, visual_mode, timeout).close()
@@ -382,7 +386,7 @@ class PracujplMainPage(BaseNavigation):
                 )
             )
         except SE.NoSuchElementException as e:
-            logging.error("couldn't find search mode selector")
+            current_app.logger.error("couldn't find search mode selector")
             raise e
 
     @property
@@ -420,7 +424,7 @@ class PracujplMainPage(BaseNavigation):
             case "it":
                 xpath = ".//descendant::span[@data-test='tab-item-it']"
             case _:
-                logging.error(
+                current_app.logger.error(
                     "unknown search mode %s, valid: 'default', 'it'",
                     mode,
                 )
@@ -470,7 +474,7 @@ class PracujplMainPage(BaseNavigation):
                 )
             )
         except SE.NoSuchElementException as e:
-            logging.error("couldn't find distance dropdown")
+            current_app.logger.error("couldn't find distance dropdown")
             raise e
         return dist_dropdown
 
@@ -486,7 +490,7 @@ class PracujplMainPage(BaseNavigation):
             )
             str_d_value = d_filed.get_attribute("value")
         except SE.NoSuchElementException as e:
-            logging.error("couldn't find distance dropdown")
+            current_app.logger.error("couldn't find distance dropdown")
             raise e
         # example str_d_value looks like this: "+30 km"
         m = re.match(r"^\+(?P<dist>[0-9]*)\skm$", str_d_value)
@@ -555,7 +559,7 @@ class PracujplMainPage(BaseNavigation):
                 self._search_bar_box[1],
             )
         except SE.NoSuchElementException as e:
-            logging.critical("search box was not found")
+            current_app.logger.critical("search box was not found")
             raise e
         return self._search_bar_box[0]
 
@@ -586,12 +590,12 @@ class PracujplMainPage(BaseNavigation):
 
     def _get_search_bar_control(self, control):
         try:
-            logging.warning("Looking for %s", control)
+            current_app.logger.warning("Looking for %s", control)
             control[0] = self.find(
                 control[1],
                 root_element=self.search_bar_box,
             )
         except SE.NoSuchElementException as e:
-            logging.critical("%s was not found", control[0])
+            current_app.logger.critical("%s was not found", control[0])
             raise e
         return control[0]
