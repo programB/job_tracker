@@ -1,7 +1,6 @@
 import logging
 import os
 from contextlib import contextmanager
-from random import randint
 
 import urllib3.exceptions as UE
 from selenium import webdriver
@@ -15,10 +14,11 @@ from job_tracker.pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 logger = logging.getLogger(__name__)
 
 
-@scheduler.task("interval", id="demo_task", seconds=4)
-def schedule_watchdog_task():
-    anum = randint(1, 49)  # nosec B311
-    logging.error("This task runs every 4 seconds printing random number: %s", anum)
+@scheduler.task("interval", id="i_am_still_alive_task", seconds=15)
+def i_am_still_alive_task():
+    logging.error(
+        "This task runs every 15 seconds to demonstrate scheduler is doing it's job"
+    )
 
 
 @contextmanager
