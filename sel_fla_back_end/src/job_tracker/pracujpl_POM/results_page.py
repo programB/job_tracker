@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import logging
 import platform
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from flask import current_app
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
@@ -78,7 +78,9 @@ class Advertisement(BaseNavigation):
         except SE.NoSuchElementException:
             # There are commercial ads among genuine offers
             # that should be ignored
-            logging.error("no valid offer found in div %s", self.root_element)
+            current_app.logger.error(
+                "no valid offer found in div %s", self.root_element
+            )
             return
 
         try:
@@ -87,7 +89,7 @@ class Advertisement(BaseNavigation):
                 ".//descendant::div[@data-test='section-company']//descendant::a[@data-test='link-company-profile'][2]",  # noqa: E501 pylint: disable=locally-disabled, line-too-long
             )
         except (SE.NoSuchElementException, ValueError, AttributeError):
-            logging.warning(
+            current_app.logger.warning(
                 "offer doesn't seem to provide company information, offer skipped"
             )
             return
@@ -109,7 +111,9 @@ class Advertisement(BaseNavigation):
                 case _:
                     raise RuntimeError
         except RuntimeError:
-            logging.warning("unknown offer type (neither single nor multiple)")
+            current_app.logger.warning(
+                "unknown offer type (neither single nor multiple)"
+            )
             return
 
         try:
@@ -124,7 +128,7 @@ class Advertisement(BaseNavigation):
             # new tag on user click event.
             # In such a case it's OK not to store the link at all
             # as its a non essential piece of information (offer id is)
-            logging.warning("offer does not provide a link")
+            current_app.logger.warning("offer does not provide a link")
 
         try:
             if self.is_multiple_location_offer:
@@ -139,8 +143,8 @@ class Advertisement(BaseNavigation):
         except SE.NoSuchElementException:
             # Everything should have a title!
             # We should give up here
-            logging.warning("_offer_dict: %s", self._offer_dict)
-            logging.warning("offer does not have a title")
+            current_app.logger.warning("_offer_dict: %s", self._offer_dict)
+            current_app.logger.warning("offer does not have a title")
             return
 
         try:
@@ -151,7 +155,7 @@ class Advertisement(BaseNavigation):
         except SE.NoSuchElementException:
             # Some genuine offers do not provide salary information, it's OK.
             self._offer_dict["salary"] = ""
-            logging.warning("offer does not provide salary information")
+            current_app.logger.warning("offer does not provide salary information")
 
         try:
             self._offer_dict["company_name"] = top_div.find_element(
@@ -161,7 +165,7 @@ class Advertisement(BaseNavigation):
         except SE.NoSuchElementException:
             # If there is no company name that is probably an ad
             # that should be skipped
-            logging.warning("offer does not provide company name")
+            current_app.logger.warning("offer does not provide company name")
             return
 
         try:
@@ -179,7 +183,7 @@ class Advertisement(BaseNavigation):
             # </li>
         except SE.NoSuchElementException:
             # Unusual but acceptable
-            logging.warning("offer does not provide job level information")
+            current_app.logger.warning("offer does not provide job level information")
 
         try:
             self._offer_dict["contract_type"] = top_div.find_element(
@@ -188,7 +192,9 @@ class Advertisement(BaseNavigation):
             ).get_attribute("innerText")
         except SE.NoSuchElementException:
             # Unusual but acceptable
-            logging.warning("offer does not provide contract type information")
+            current_app.logger.warning(
+                "offer does not provide contract type information"
+            )
 
         try:
             pub_date_str = top_div.find_element(
@@ -196,7 +202,9 @@ class Advertisement(BaseNavigation):
                 ".//descendant::p[@data-test='text-added']",
             ).get_attribute("innerText")
         except SE.NoSuchElementException:
-            logging.warning("offer does not provide publication date, offer skipped")
+            current_app.logger.warning(
+                "offer does not provide publication date, offer skipped"
+            )
             return
         else:
             try:
@@ -234,7 +242,7 @@ class Advertisement(BaseNavigation):
                 m = (months_pl | months_ua)[m_str.lower()]
                 self._offer_dict["publication_date"] = datetime(int(y), m, int(d))
             except Exception as e:
-                logging.error(
+                current_app.logger.error(
                     "failed to parse publication date, offer skipped. Explanaition %s",
                     str(e),
                 )
@@ -260,7 +268,7 @@ class Advertisement(BaseNavigation):
                     tag.get_attribute("innerText")
                 )
         else:
-            logging.warning("offer does not provide technology tags")
+            current_app.logger.warning("offer does not provide technology tags")
         #
         # finally the timestamp
         self._offer_dict["webscrap_timestamp"] = datetime.utcnow()
@@ -424,7 +432,9 @@ class ResultsPage(BaseNavigation):
                 expected_conditions.visibility_of_element_located(tot_locator),
             )
         except (SE.NoSuchElementException, SE.TimeoutException):
-            logging.warning("Total number of subpages couldn't be established")
+            current_app.logger.warning(
+                "Total number of subpages couldn't be established"
+            )
             return 0
         return int(tot_no_element.text)
 
@@ -449,7 +459,7 @@ class ResultsPage(BaseNavigation):
             (By.XPATH, "./div"),
             root_element=offers_section,
         )
-        logging.warning("len(all_child_divs): %s", len(all_child_divs))
+        current_app.logger.warning("len(all_child_divs): %s", len(all_child_divs))
         for child_div in all_child_divs:
             ad = Advertisement(self.driver, child_div, self.visual_mode, self.timeout)
             if ad.is_valid_offer:
@@ -497,7 +507,7 @@ class ResultsPage(BaseNavigation):
                 (By.XPATH, "//input[@name='top-pagination']"),
             )
         except SE.NoSuchElementException:
-            logging.warning("Current subpage number couldn't be established")
+            current_app.logger.warning("Current subpage number couldn't be established")
             return (None, 0)
         return (csb_element, int(csb_element.get_attribute("value")))
 

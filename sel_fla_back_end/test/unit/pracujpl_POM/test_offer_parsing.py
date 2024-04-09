@@ -38,7 +38,7 @@ def standard_search(mock_driver):
     yield main_page
 
 
-def test_should_create_ResultPage_object(mock_driver):
+def test_should_create_ResultPage_object(app_context, mock_driver):
     """
     GIVEN a selenium driver object
     WHEN ResultsPage object is created
