@@ -4,6 +4,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from job_tracker.pracujpl_POM import PracujplMainPage
 
+# Substitute mock for real module to bypass default
+# wait strategy altogether and make calls using the until
+# method return immediately.
+# This speeds up tests and has the effect of pretending
+# that all elements selenium is looking for are present and visible.
 WebDriverWait.until = create_autospec(WebDriverWait.until)
 
 

@@ -1,3 +1,5 @@
+"""Fixtures implicitly auto-imported by unit POM tests."""
+
 import unittest.mock
 
 import pytest
