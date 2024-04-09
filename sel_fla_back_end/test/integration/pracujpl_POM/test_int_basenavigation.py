@@ -25,28 +25,30 @@ special_properties = {
 
 
 @pytest.fixture
-def browser(selenium_driver):
+def browser(app_context, selenium_driver):
     return BaseNavigation(selenium_driver)
 
 
-def test_should_visit_an_existing_webpage(browser, local_http_server):
+def test_should_visit_an_existing_webpage(app_context, browser, local_http_server):
     browser.visit(local_http_server.url)
     assert browser.driver.title == local_http_server.title
 
 
-def test_should_fail_to_visit_a_not_existing_webpage(browser):
+def test_should_fail_to_visit_a_not_existing_webpage(app_context, browser):
     with pytest.raises(ConnectionError):
         browser.visit("https://localhost1")
 
 
-def test_should_find_an_existing_tag_on_a_webpage(browser, local_http_server):
+def test_should_find_an_existing_tag_on_a_webpage(
+    app_context, browser, local_http_server
+):
     browser.visit(local_http_server.url)
     search_result = browser.find(local_http_server.locator_of_existing_body_tag)
     assert isinstance(search_result, WebElement)
 
 
 def test_should_find_and_highlight_an_existing_tag_on_a_webpage(
-    browser, local_http_server
+    app_context, browser, local_http_server
 ):
     browser.visit(local_http_server.url)
     emph_color = "red"
@@ -59,23 +61,29 @@ def test_should_find_and_highlight_an_existing_tag_on_a_webpage(
     )
 
 
-def test_should_fail_to_find_not_existing_tag_on_a_webpage(browser, local_http_server):
+def test_should_fail_to_find_not_existing_tag_on_a_webpage(
+    app_context, browser, local_http_server
+):
     browser.visit(local_http_server.url)
     with pytest.raises(SE.NoSuchElementException):
         browser.find(local_http_server.locator_of_not_existing_tag)
 
 
-def test_should_confirm_visibility_of_displayed_element(browser, local_http_server):
+def test_should_confirm_visibility_of_displayed_element(
+    app_context, browser, local_http_server
+):
     browser.visit(local_http_server.url)
     assert browser.is_displayed(local_http_server.locator_of_existing_p_tag) is True
 
 
-def test_should_fail_to_see_a_non_existing_element(browser, local_http_server):
+def test_should_fail_to_see_a_non_existing_element(
+    app_context, browser, local_http_server
+):
     browser.visit(local_http_server.url)
     assert browser.is_displayed(local_http_server.locator_of_not_existing_tag) is False
 
 
-def test_should_modify_default_timeout(browser, local_http_server):
+def test_should_modify_default_timeout(app_context, browser, local_http_server):
     new_timeout = 6
 
     browser.timeout_sec = new_timeout
@@ -87,7 +95,9 @@ def test_should_modify_default_timeout(browser, local_http_server):
     assert (after - before).seconds >= new_timeout
 
 
-def test_should_force_highlighting_of_found_elements(browser, local_http_server):
+def test_should_force_highlighting_of_found_elements(
+    app_context, browser, local_http_server
+):
     browser.set_visual_mode(True)
     browser.visit(local_http_server.url)
     element = browser.find(local_http_server.locator_of_existing_p_tag)
@@ -96,7 +106,7 @@ def test_should_force_highlighting_of_found_elements(browser, local_http_server)
 
 
 def test_should_highlight_single_elements_if_visual_mode_is_off(
-    browser, local_http_server
+    app_context, browser, local_http_server
 ):
     browser.set_visual_mode(False)
     browser.visit(local_http_server.url)

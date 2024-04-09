@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import logging
 import time
 from typing import TYPE_CHECKING
 
+from flask import current_app
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
@@ -89,9 +89,11 @@ class BaseNavigation:
         try:
             self.driver.get(url)
         except Exception as e:
-            logging.warning("problem visiting the page at: %s", url)
+            current_app.logger.warning("problem visiting the page at: %s", url)
             if "ERR_NAME_NOT_RESOLVED" in str(e):
-                logging.warning("target website name (%s) couldn't be resolved", url)
+                current_app.logger.warning(
+                    "target website name (%s) couldn't be resolved", url
+                )
                 raise ConnectionError from e
             raise e
 
@@ -228,7 +230,7 @@ class BaseNavigation:
             )
             return True
         except SE.TimeoutException:
-            logging.warning("timeout: %s not visible", locator)
+            current_app.logger.warning("timeout: %s not visible", locator)
             return False
 
     def set_visual_mode(self, state: bool):
@@ -286,7 +288,7 @@ class AdsPopup(BaseNavigation):
                 )
             )
         except (SE.NoSuchElementException, SE.TimeoutException):
-            logging.warning("Ads modal was not found.")
+            current_app.logger.warning("Ads modal was not found.")
         return popup_container
 
     def _is_visible(self) -> bool:
@@ -302,4 +304,4 @@ class AdsPopup(BaseNavigation):
                 )
                 btn_close.click()
             except SE.NoSuchElementException:
-                logging.error("failed to close popup")
+                current_app.logger.error("failed to close popup")
