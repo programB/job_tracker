@@ -25,6 +25,7 @@ class Advertisement(BaseNavigation):
         driver,
         root_element: WebElement | None = None,
         visual_mode=False,
+        timeout=5.0,
     ):
         """
 
@@ -38,7 +39,7 @@ class Advertisement(BaseNavigation):
             decides whether all newly found elements will get highlighted
             for human inspection
         """
-        super().__init__(driver, visual_mode)
+        super().__init__(driver, visual_mode, timeout)
         self.root_element = root_element
         self._offer_dict = {
             "id": 0,
@@ -78,7 +79,6 @@ class Advertisement(BaseNavigation):
             # There are commercial ads among genuine offers
             # that should be ignored
             logging.error("no valid offer found in div %s", self.root_element)
-            self.is_valid_offer = False
             return
 
         try:
@@ -110,6 +110,7 @@ class Advertisement(BaseNavigation):
                     raise RuntimeError
         except RuntimeError:
             logging.warning("unknown offer type (neither single nor multiple)")
+            return
 
         try:
             link = top_div.find_element(By.XPATH, "./div/a").get_attribute(
@@ -135,12 +136,12 @@ class Advertisement(BaseNavigation):
                 By.XPATH,
                 search_xpath,
             ).text
-        except SE.NoSuchElementException as webelement_not_found:
+        except SE.NoSuchElementException:
             # Everything should have a title!
             # We should give up here
             logging.warning("_offer_dict: %s", self._offer_dict)
             logging.warning("offer does not have a title")
-            raise webelement_not_found
+            return
 
         try:
             self._offer_dict["salary"] = top_div.find_element(
@@ -161,7 +162,6 @@ class Advertisement(BaseNavigation):
             # If there is no company name that is probably an ad
             # that should be skipped
             logging.warning("offer does not provide company name")
-            self.is_valid_offer = False
             return
 
         try:
@@ -399,10 +399,13 @@ class ResultsPage(BaseNavigation):
         driver,
         visual_mode=False,
         attempt_closing_popups=True,
+        timeout=5.0,
     ) -> None:
-        super().__init__(driver, visual_mode)
+        super().__init__(driver, visual_mode, timeout)
+        self.visual_mode = visual_mode
+        self.timeout = timeout
         if attempt_closing_popups:
-            AdsPopup(driver, visual_mode).close()
+            AdsPopup(driver, visual_mode, timeout).close()
 
     @property
     def tot_no_of_subpages(self) -> int:
@@ -448,7 +451,7 @@ class ResultsPage(BaseNavigation):
         )
         logging.warning("len(all_child_divs): %s", len(all_child_divs))
         for child_div in all_child_divs:
-            ad = Advertisement(self.driver, child_div)
+            ad = Advertisement(self.driver, child_div, self.visual_mode, self.timeout)
             if ad.is_valid_offer:
                 sp_offers.append(ad)
         return sp_offers

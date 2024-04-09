@@ -151,7 +151,11 @@ class OptionsMenu(BaseNavigation):
                 # FIRST check selection condition THEN close menu.
                 # Shortening this to self.menu.click(); return "selected" in...
                 # leads to StaleElementReferenceException
-                is_sel: bool = "selected" in element.get_attribute("class")
+                is_sel = (
+                    False
+                    if element.get_attribute("class") is None
+                    else "selected" in element.get_attribute("class")
+                )
                 self.menu.click()
                 return is_sel
             except SE.NoSuchElementException:
@@ -241,6 +245,7 @@ class PracujplMainPage(BaseNavigation):
         reject_cookies=False,
         visual_mode=False,
         attempt_closing_popups=True,
+        timeout=5.0,
     ) -> None:
         """
 
@@ -257,8 +262,10 @@ class PracujplMainPage(BaseNavigation):
             when True: causes non-essential cookies to be rejected
             on visiting the homepage
             when False: causes all cookies to be accepted
+        timeout: float
+            sets timeout for find operations
         """
-        super().__init__(driver, visual_mode)
+        super().__init__(driver, visual_mode, timeout)
         if url is None:
             self.visit("https://www.pracuj.pl")
         else:
@@ -268,11 +275,11 @@ class PracujplMainPage(BaseNavigation):
                 logging.fatal("Error connecting to pracuj.pl website at %s", url)
                 raise e
         if attempt_closing_popups:
-            AdsPopup(driver, visual_mode).close()
+            AdsPopup(driver, visual_mode, timeout).close()
         if reject_cookies:
-            CookieChoice(driver, visual_mode).reject_non_essential_cookies()
+            CookieChoice(driver, visual_mode, timeout).reject_non_essential_cookies()
         else:
-            CookieChoice(driver, visual_mode).accept_all_cookies()
+            CookieChoice(driver, visual_mode, timeout).accept_all_cookies()
         self._search_bar_box = [
             None,
             (

@@ -29,7 +29,7 @@ class BaseNavigation:
         cls._color_index += 1
         return color
 
-    def __init__(self, driver, visual_mode=False) -> None:
+    def __init__(self, driver, visual_mode=False, timeout=5.0) -> None:
         """
         Parameters
         ----------
@@ -41,7 +41,7 @@ class BaseNavigation:
         """
         self.driver: WebDriver = driver
         self._visual_mode = visual_mode
-        self._timeout_sec = 5.0
+        self._timeout_sec = timeout
         self._wait = WebDriverWait(self.driver, timeout=self._timeout_sec)
 
     @property
@@ -91,6 +91,7 @@ class BaseNavigation:
         except Exception as e:
             logging.warning("problem visiting the page at: %s", url)
             if "ERR_NAME_NOT_RESOLVED" in str(e):
+                logging.warning("target website name (%s) couldn't be resolved", url)
                 raise ConnectionError from e
             raise e
 
@@ -285,7 +286,7 @@ class AdsPopup(BaseNavigation):
                 )
             )
         except (SE.NoSuchElementException, SE.TimeoutException):
-            logging.warning("Cookie consent modal was not found.")
+            logging.warning("Ads modal was not found.")
         return popup_container
 
     def _is_visible(self) -> bool:

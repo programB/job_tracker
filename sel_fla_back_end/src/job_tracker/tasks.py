@@ -1,7 +1,6 @@
 import logging
 import os
 from contextlib import contextmanager
-from random import randint
 
 import urllib3.exceptions as UE
 from selenium import webdriver
@@ -15,14 +14,15 @@ from job_tracker.pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 logger = logging.getLogger(__name__)
 
 
-@scheduler.task("interval", id="demo_task", seconds=4)
-def schedule_watchdog_task():
-    anum = randint(1, 49)  # nosec B311
-    logging.error("This task runs every 4 seconds printing random number: %s", anum)
+@scheduler.task("interval", id="i_am_still_alive_task", seconds=15)
+def i_am_still_alive_task():
+    logging.error(
+        "This task runs every 15 seconds to demonstrate scheduler is doing it's job"
+    )
 
 
 @contextmanager
-def selenium_driver(selenium_grid_url, selenium_grid_port="4444"):
+def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
 
     custom_options = webdriver.ChromeOptions()
 
@@ -56,9 +56,10 @@ def selenium_driver(selenium_grid_url, selenium_grid_port="4444"):
 @scheduler.task(
     trigger="cron",
     id="fetch_offers_task",
-    minute="*/5",
+    minute="0",
+    hour="12",
     max_instances=1,
-    misfire_grace_time=30,  # seconds
+    misfire_grace_time=3600,  # seconds
 )
 def fetch_offers():
     # Use selenium grid service.
@@ -67,21 +68,28 @@ def fetch_offers():
     selenium_grid_url = os.getenv("SELENIUM_GRID_URL")
     selenium_grid_port = os.getenv("SELENIUM_GRID_PORT", "4444")
     with selenium_driver(selenium_grid_url, selenium_grid_port) as driver:
-        main_page = PracujplMainPage(driver, reject_cookies=True)
+        logger.info("Job offers scraping started")
+        try:
+            main_page = PracujplMainPage(driver, reject_cookies=True)
 
-        if main_page.search_mode == "default":
-            main_page.search_mode = "it"
-        is_tag_list_available = main_page.search_mode == "it"
-        main_page.employment_type = ["full_time"]
-        main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
-        main_page.search_term = "Tester"
+            if main_page.search_mode == "default":
+                main_page.search_mode = "it"
+            is_tag_list_available = main_page.search_mode == "it"
+            main_page.employment_type = ["full_time"]
+            main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
+            main_page.search_term = "Tester"
 
-        main_page.start_searching()
+            main_page.start_searching()
 
-        results_page = ResultsPage(driver)
-        all_offers = results_page.all_offers
+            results_page = ResultsPage(driver)
+            all_offers = results_page.all_offers
+        except ConnectionError:
+            logger.error("Pracuj.pl website unreachable. No offers were collected.")
+            return
+        logger.info("Job offers scraping completed")
 
     with scheduler.app.app_context():
+        logger.info("Adding collected job offers to database")
         try:
             for offer in all_offers:
                 if not JobOffer.query.get(offer.id):  # new, not yet stored offer

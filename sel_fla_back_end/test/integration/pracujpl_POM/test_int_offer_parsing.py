@@ -17,6 +17,11 @@ def results_webpage(shared_datadir, http_test_server_url, http_test_server_port)
     removed after test. This way a test can't, even accidently, change
     these files which would affect other tests.
     This fixture starts a local httpserver running in a separate thread.
+
+    Data in this webpage are the result of a search with the following criteria:
+    search_term = "Tester"
+    employment_type = ["full_time"]
+    location_and_distance = ("Warszawa", Distance.TEN_KM)
     """
 
     # server_address = "localhost"
@@ -47,7 +52,7 @@ def results_webpage(shared_datadir, http_test_server_url, http_test_server_port)
 
     locsrv = LocalServer()
     locsrv.start()
-    if locsrv.is_alive():  # technicaly the thread not the server itself
+    if locsrv.is_alive():  # technically the thread not the server itself
         logging.info("Local webserver running at: %s:%s", bind_address, server_port)
     else:
         logging.error("Local webserver failed to start !")
@@ -65,71 +70,73 @@ def results_webpage(shared_datadir, http_test_server_url, http_test_server_port)
 
 
 @pytest.fixture
-# def standard_search(selenium_driver, sample_website):
-def standard_search(selenium_driver, results_webpage):
-    # logging.info("Running standard_search fixture")
-    # main_page = PracujplMainPage(selenium_driver, reject_cookies=True)
-    # main_page.search_term = "Tester"
-    # main_page.employment_type = ["full_time"]
-    # main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
-    # main_page.start_searching()
+def std_main_page(selenium_driver, results_webpage):
 
-    results = PracujplMainPage(
+    yield PracujplMainPage(
         selenium_driver,
         url=results_webpage.url,
         reject_cookies=True,
-        visual_mode=True,
+        visual_mode=False,
+        # Test website doesn't have any advertisement popups to close.
+        # Setting this to False saves time waiting for those popups
+        # to appear on the website.
+        attempt_closing_popups=False,
+        # By default BaseNavigation derived objects use 5 second wait time
+        # when looking for specific tags.
+        # PracujplMainPage uses this wait strategy to look for cookie consent
+        # overlay to appear on the screen. This is OK for real application but
+        # since the test website doesn't have this overlay
+        # tests can be sped up by setting the timeout to smaller value
+        # (set to 1 second as further decrease doesn't seem to reduce
+        # execution time).
+        timeout=1.0,
     )
 
-    yield results
+
+@pytest.fixture
+def std_results(std_main_page):
+    yield ResultsPage(
+        std_main_page.driver,
+        # Test website doesn't have any advertisement popups to close.
+        # Setting this to False saves time waiting for those popups
+        # to appear on the website.
+        attempt_closing_popups=False,
+        # By default BaseNavigation derived objects use 5 second wait time
+        # when looking for specific tags.
+        # PracujplMainPage uses this wait strategy to look for cookie consent
+        # overlay to appear on the screen. This is OK for real application but
+        # since the test website doesn't have this overlay
+        # tests can be sped up by setting the timeout to smaller value
+        # (set to 1 second as further decrease doesn't seem to reduce
+        # execution time).
+        timeout=1.0,
+    )
 
 
-def test_should_create_ResultPage_object(selenium_driver):
+def test_should_create_ResultPage_object(std_results):
     """
     GIVEN a selenium driver object
     WHEN ResultsPage object is created
-    THEN check the the object was created
+    THEN check the object was created
     """
-    assert ResultsPage(selenium_driver) is not None
+    assert std_results is not None
 
 
-def test_should_check_tot_number_of_subpages(standard_search):
-    logging.info("loading results page")
-    results = ResultsPage(standard_search.driver)
-    logging.info("got results page")
-
-    assert results.tot_no_of_subpages >= 2
+def test_should_check_tot_number_of_subpages(std_results):
+    assert std_results.tot_no_of_subpages >= 2
 
 
-def test_should_check_offers_list_is_not_empty(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-    assert len(results_page.subpage_offers) != 0
-
-
-def test_should_check_only_valid_offers_are_collected(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-    for offer in results_page.subpage_offers:
+def test_should_check_only_valid_offers_are_collected(std_results):
+    offers = std_results.subpage_offers
+    assert len(offers) != 0
+    for offer in std_results.subpage_offers:
         assert offer.is_valid_offer
 
 
-def test_should_check_offers_have_not_empty_essential_params(standard_search):
-    results_page = ResultsPage(standard_search.driver)
-    for offer in results_page.subpage_offers:
+def test_should_check_essential_params_of_all_offers_are_not_empty(std_results):
+    for offer in std_results.subpage_offers:
         assert offer.id != 0
         assert offer.title != ""
         assert offer.company_name != ""
         assert offer.job_level != ""
         assert offer.contract_type != ""
-
-
-# def test_should_check_navigation_to_desired_subpage(standard_search):
-#     results_page = ResultsPage(standard_search.driver)
-
-#     # The search criteria in standard_search fixture are general enough
-#     # for the returned number of offers to fill more then 1 subpage,
-#     # hence assuming the subpage 2 always exists should be safe.
-#     desired_subpage = 2
-#     results_page.goto_subpage(desired_subpage)
-#     _, cur_subpage_number = results_page.get_current_subpage()
-
-#     assert cur_subpage_number == desired_subpage
