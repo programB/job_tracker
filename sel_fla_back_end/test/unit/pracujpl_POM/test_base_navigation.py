@@ -1,35 +1,11 @@
-import unittest.mock
 from typing import List
 
 import pytest
 from selenium.common import exceptions as SE
 from selenium.webdriver.common.by import By
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 
 from job_tracker.pracujpl_POM import BaseNavigation
-
-
-@pytest.fixture
-def mock_driver():
-    driver: WebDriver = unittest.mock.create_autospec(WebDriver)
-    return driver
-
-
-@pytest.mark.skip
-def test_mock_driver_fixture(mock_driver):
-    assert isinstance(mock_driver, WebDriver)
-
-
-@pytest.fixture
-def mock_element():
-    element = unittest.mock.create_autospec(WebElement)
-    return element
-
-
-@pytest.mark.skip
-def test_mock_element_fixture(mock_element):
-    assert isinstance(mock_element, WebElement)
 
 
 def test_should_create_BaseNavigation(mock_driver):

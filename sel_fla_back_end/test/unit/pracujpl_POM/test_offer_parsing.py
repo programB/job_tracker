@@ -1,17 +1,22 @@
 import unittest.mock
-# from unittest.mock import create_autospec
 
 import pytest
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.wait import WebDriverWait
 
 from job_tracker.pracujpl_POM import PracujplMainPage, ResultsPage
 from job_tracker.pracujpl_POM.main_page import Distance
 
+# Substitute mock for real module to bypass default
+# wait strategy altogether and make calls using the until
+# method return immediately.
+# This speeds up tests and has the effect of pretending
+# that all elements selenium is looking for are present and visible.
 # This line:
 # WebDriverWait.until = create_autospec(WebDriverWait.until)
-# works if tests called like this: pytest test/unit/test_offer_parsing.py
-# doesn't work if tests called like this: pytest test/unit/
+# works if tests are called like this:
+# pytest test/unit/test_offer_parsing.py
+# it doesn't work if tests are called like this:
+# pytest test/unit/
 #  unittest.mock.InvalidSpecError: Cannot spec a Mock object.
 #  [object=<MagicMock spec='function' id='140242334309200'>]
 #
@@ -19,12 +24,6 @@ from job_tracker.pracujpl_POM.main_page import Distance
 mock_WebDriverWait_until = unittest.mock.Mock()
 mock_WebDriverWait_until.mock_add_spec(WebDriverWait.until)
 WebDriverWait.until = mock_WebDriverWait_until
-
-
-@pytest.fixture
-def mock_driver():
-    driver: WebDriver = unittest.mock.create_autospec(WebDriver)
-    return driver
 
 
 @pytest.fixture

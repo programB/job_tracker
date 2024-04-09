@@ -1,4 +1,8 @@
-"""Fixtures implicitly auto-imported by every test module"""
+"""Fixtures implicitly auto-imported by integration tests.
+These are only really needed by the POM tests but are located at this level
+in order to run pytest like: 'pytest test/integration'
+without having to specify more detailed path.
+"""
 
 import pytest
 from selenium import webdriver
