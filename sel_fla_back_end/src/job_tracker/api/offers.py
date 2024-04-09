@@ -1,12 +1,8 @@
-import logging
-
 from connexion.problem import problem
-from flask import request
+from flask import current_app, request
 from sqlalchemy import exc
 
 from job_tracker.models import JobOffer, joboffers_schema
-
-logger = logging.getLogger(__name__)
 
 
 def get_all():
@@ -17,7 +13,7 @@ def get_all():
             page=subpage, per_page=perpagelimit
         )
     except exc.OperationalError:
-        logger.exception(
+        current_app.logger.exception(
             ("Failed to connect to the database while trying query for offers")
         )
         return problem(
