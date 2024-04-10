@@ -106,13 +106,12 @@ services:
     #       In order for this to work created command must be passed to that
     #       shell in single quotes.
     command: >
-      sh -c 'python -m pytest --log-cli-level=INFO
+      sh -c 'python -m pytest
       --selenium-grid-url $$SELENIUM_GRID_URL
       --selenium-grid-port $$SELENIUM_GRID_PORT
       --http-test-server-url $$TEST_HTTP_SERVER_URL
       --http-test-server-port $$TEST_HTTP_SERVER_PORT
-      test/integration/
-      -vv'
+      test/integration/'
 
   job-tracker-frontend:
     build: fla_front_end

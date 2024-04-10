@@ -47,6 +47,11 @@ addopts = [
 markers = [
   "slow: mark a test that takes a long time to run.",
 ]
+log_cli = true
+log_cli_level = "WARNING"
+# log_cli_level = "DEBUG"
+log_cli_format = "[%(levelname)-8s] %(name)s:%(filename)s:%(lineno)s %(message)s"
+filterwarnings = ["ignore::DeprecationWarning"]
 
 # pylint --generate-toml-config > sample.toml
 # creates a sample configuration file
