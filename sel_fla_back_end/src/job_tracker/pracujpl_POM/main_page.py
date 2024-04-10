@@ -87,7 +87,7 @@ class OptionsMenu(BaseNavigation):
     def select(self, options: list[str]) -> None:
         """Select options from the menu using the _option_locators dictionary
 
-        Unknown options are skipped (warning is logged)
+        Unknown options are skipped
 
         Parameters
         ----------
@@ -114,14 +114,14 @@ class OptionsMenu(BaseNavigation):
                         self._scroll_into_view(element)
                         element.click()
                 except SE.NoSuchElementException:
-                    current_app.logger.warning("%s not found in the menu", option)
+                    current_app.logger.warning(
+                        "option '%s' not found in the menu", option
+                    )
                 finally:
                     # fold menu
                     self.menu.click()
             else:
-                current_app.logger.warning(
-                    "unable to select unknown option: %s", option
-                )
+                current_app.logger.debug("unable to select unknown option: %s", option)
 
     def is_selected(self, option: str) -> bool:
         """Check the webpage if given option is indeed selected
@@ -161,7 +161,7 @@ class OptionsMenu(BaseNavigation):
                 self.menu.click()
                 return is_sel
             except SE.NoSuchElementException:
-                current_app.logger.warning("%s not found in the menu", option)
+                current_app.logger.warning("option '%s' not found in the menu", option)
                 return False
         return False
 
@@ -194,7 +194,7 @@ class CookieChoice(BaseNavigation):
             )
 
         except (SE.NoSuchElementException, SE.TimeoutException):
-            current_app.logger.warning("Cookie consent modal was not found.")
+            current_app.logger.debug("Cookie consent modal was not found.")
         return cookie_overlay
 
     def _is_visible(self) -> bool:
@@ -274,9 +274,7 @@ class PracujplMainPage(BaseNavigation):
             try:
                 self.visit(url)
             except Exception as e:
-                current_app.logger.fatal(
-                    "Error connecting to pracuj.pl website at %s", url
-                )
+                current_app.logger.critical("Error connecting to website at %s", url)
                 raise e
         if attempt_closing_popups:
             AdsPopup(driver, visual_mode, timeout).close()
@@ -590,12 +588,12 @@ class PracujplMainPage(BaseNavigation):
 
     def _get_search_bar_control(self, control):
         try:
-            current_app.logger.warning("Looking for %s", control)
+            current_app.logger.debug("Looking for control element %s", control)
             control[0] = self.find(
                 control[1],
                 root_element=self.search_bar_box,
             )
         except SE.NoSuchElementException as e:
-            current_app.logger.critical("%s was not found", control[0])
+            current_app.logger.error("control element %s was not found", control[0])
             raise e
         return control[0]

@@ -230,7 +230,7 @@ class BaseNavigation:
             )
             return True
         except SE.TimeoutException:
-            current_app.logger.warning("timeout: %s not visible", locator)
+            current_app.logger.debug("timeout: element %s not visible", locator)
             return False
 
     def set_visual_mode(self, state: bool):
@@ -288,7 +288,7 @@ class AdsPopup(BaseNavigation):
                 )
             )
         except (SE.NoSuchElementException, SE.TimeoutException):
-            current_app.logger.warning("Ads modal was not found.")
+            current_app.logger.debug("Ads modal was not found.")
         return popup_container
 
     def _is_visible(self) -> bool:
