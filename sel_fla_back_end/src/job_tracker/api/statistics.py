@@ -1,9 +1,8 @@
-import logging
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 
 from connexion.problem import problem
-from flask import request
+from flask import current_app, request
 from sqlalchemy import and_, delete, exc, func, inspect, or_, select, true
 
 from job_tracker.database import db
@@ -19,8 +18,6 @@ from .date_helpers import (
 
 # Silence litner for lines using func (eg. func.extract or func.count)
 # pylint: disable=not-callable
-
-logger = logging.getLogger(__name__)
 
 
 class TmpContinuousDatesRange(db.Model):
@@ -306,7 +303,7 @@ def timedependant():
             start_date, end_date, binning, tags, contract_type, job_mode, job_level
         )
     except exc.OperationalError:
-        logger.exception(
+        current_app.logger.exception(
             ("Failed to connect to the database while trying query for statistics")
         )
         return problem(

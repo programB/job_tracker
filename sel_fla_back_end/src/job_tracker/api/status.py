@@ -1,14 +1,12 @@
 import json
-import logging
 import os
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
+from flask import current_app
 from sqlalchemy import text
 
 from job_tracker.database import db
-
-logger = logging.getLogger(__name__)
 
 
 def get_selenium_grid_status():
@@ -20,7 +18,7 @@ def get_selenium_grid_status():
     selenium_grid_port = os.getenv("SELENIUM_GRID_PORT", "4444")
     status_url = rf"{selenium_grid_url}:{selenium_grid_port}/wd/hub/status"
     if not status_url.startswith(r"http://"):
-        logger.critical(
+        current_app.logger.critical(
             (
                 "Checking for selenium grid status: url does not look to be valid: %s. "
                 "Check skipped for security reasons.",
@@ -35,7 +33,7 @@ def get_selenium_grid_status():
             msg = response.read()
     except (URLError, HTTPError) as e:
         is_OK = False
-        logger.warning(
+        current_app.logger.warning(
             (
                 "Checking for selenium grid status resulted in error: %s. "
                 "Service considered NOT ready"
@@ -45,7 +43,7 @@ def get_selenium_grid_status():
     else:
         is_OK = json.loads(msg).get("value").get("ready")
         result = "" if is_OK else "NOT"
-        logger.info(
+        current_app.logger.info(
             "Checking for selenium grid status: service is %s ready",
             result,
         )
@@ -57,20 +55,25 @@ def get_database_status(sqldb):
         sqldb.session.execute(text("SELECT 1"))
     except Exception as e:
         is_OK = False
-        logger.warning(
-            "Checking for database status resulted in error: %s",
+        current_app.logger.warning(
+            (
+                "Checking for database status resulted in error: %s. ",
+                "Service considered NOT ready",
+            ),
             str(e),
         )
     else:
         is_OK = True
-        logger.info("Checking for database status: database is accepting queries")
+        current_app.logger.info(
+            "Checking for database status: database is accepting queries"
+        )
 
     return is_OK
 
 
 def health():
     # This is and endpoint so the application context is active
-    # here and thus we can use it to call the db
+    # here and thus we can use it to call the db and use app.logger
     database_status = get_database_status(sqldb=db)
     return {
         "is_selenium_grid_healthy": get_selenium_grid_status(),

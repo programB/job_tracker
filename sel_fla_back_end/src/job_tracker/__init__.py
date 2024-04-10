@@ -19,6 +19,9 @@ def create_app(custom_config=config.DevelopmentConfig):
     # Get underlying flask app
     base_flask_app = connexion_app.app
 
+    # Configure logging
+    base_flask_app.logger.setLevel("INFO")
+
     # Apply configuration to the flask app
     base_flask_app.config.from_object(custom_config)
 

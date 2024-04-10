@@ -16,7 +16,7 @@ def test_should_create_PracujplMainPage_object(mock_driver):
     assert PracujplMainPage(mock_driver) is not None
 
 
-def test_should_check_essential_search_options_are_available(mock_driver):
+def test_should_check_essential_search_options_are_available(app_context, mock_driver):
     main_page = PracujplMainPage(
         mock_driver,
         reject_cookies=True,
@@ -30,7 +30,7 @@ def test_should_check_essential_search_options_are_available(mock_driver):
     assert location_field.is_displayed() and location_field.is_enabled()
 
 
-def test_should_check_distance_field_is_shown_when_requested(mock_driver):
+def test_should_check_distance_field_is_shown_when_requested(app_context, mock_driver):
     # _distance_dropdown only gets shown if browser window is maximized.
     # Test should succeed only if the window gets maximized when
     # the property is called and afterwards the dropdown gets found on the page

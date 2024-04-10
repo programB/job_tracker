@@ -39,15 +39,17 @@ def std_main_page(selenium_driver, local_http_server):
     )
 
 
-def test_should_create_PracujplMainPage_object(std_main_page):
+def test_should_create_PracujplMainPage_object(app_context, std_main_page):
     assert std_main_page is not None
 
 
-def test_should_visit_pracujpl_home_on_object_creation(std_main_page):
+def test_should_visit_pracujpl_home_on_object_creation(app_context, std_main_page):
     assert "Praca - Pracuj.pl" in std_main_page.driver.title
 
 
-def test_should_check_essential_search_options_are_available(std_main_page):
+def test_should_check_essential_search_options_are_available(
+    app_context, std_main_page
+):
     search_field = std_main_page.search_field
     category_field = std_main_page.category_field
     location_field = std_main_page.location_field
@@ -56,7 +58,9 @@ def test_should_check_essential_search_options_are_available(std_main_page):
     assert location_field.is_displayed() and location_field.is_enabled()
 
 
-def test_should_check_distance_field_is_shown_when_requested(std_main_page):
+def test_should_check_distance_field_is_shown_when_requested(
+    app_context, std_main_page
+):
     # _distance_dropdown only gets shown if browser window is maximized.
     # Test should succeed only if the window gets maximized when
     # the property is called and afterwards the dropdown gets found on the page
@@ -65,7 +69,7 @@ def test_should_check_distance_field_is_shown_when_requested(std_main_page):
 
 @pytest.mark.parametrize("reject_param", [True, False])
 def test_should_enter_text_into_search_field(
-    selenium_driver, local_http_server, reject_param
+    app_context, selenium_driver, local_http_server, reject_param
 ):
     non_std_main_page = PracujplMainPage(
         selenium_driver,
@@ -79,7 +83,7 @@ def test_should_enter_text_into_search_field(
     assert non_std_main_page.search_term.casefold() == text_to_enter.casefold()
 
 
-def test_should_check_extended_search_options_are_available(std_main_page):
+def test_should_check_extended_search_options_are_available(app_context, std_main_page):
     # extended controls are only visible if window is maximized
     std_main_page.driver.maximize_window()
     assert (
@@ -90,7 +94,7 @@ def test_should_check_extended_search_options_are_available(std_main_page):
     )
 
 
-def test_should_check_job_levels_can_be_selected(std_main_page):
+def test_should_check_job_levels_can_be_selected(app_context, std_main_page):
     # extended controls are only visible if window is maximized
     std_main_page.driver.maximize_window()
     #
@@ -112,7 +116,7 @@ def test_should_check_job_levels_can_be_selected(std_main_page):
     assert std_main_page.job_level.is_selected(choice)
 
 
-def test_should_check_contract_types_can_be_selected(std_main_page):
+def test_should_check_contract_types_can_be_selected(app_context, std_main_page):
     # extended controls are only visible if window is maximized
     std_main_page.driver.maximize_window()
     #
@@ -132,7 +136,7 @@ def test_should_check_contract_types_can_be_selected(std_main_page):
     assert std_main_page.contract_type.is_selected(choice)
 
 
-def test_should_check_employment_types_can_be_selected(std_main_page):
+def test_should_check_employment_types_can_be_selected(app_context, std_main_page):
     # extended controls are only visible if window is maximized
     std_main_page.driver.maximize_window()
     #
@@ -147,7 +151,7 @@ def test_should_check_employment_types_can_be_selected(std_main_page):
     assert std_main_page.employment_type == [choice]
 
 
-def test_should_check_job_locations_can_be_selected(std_main_page):
+def test_should_check_job_locations_can_be_selected(app_context, std_main_page):
     # extended controls are only visible if window is maximized
     std_main_page.driver.maximize_window()
     #

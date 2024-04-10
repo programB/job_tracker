@@ -40,6 +40,7 @@ def test_should_enssure_methods_existence(method):
     assert callable(BaseNavigation.__dict__[method])
 
 
+@pytest.mark.usefixtures("app_context")
 class TestVisit:
     """Unit tests for: BaseNavigation.visit"""
 
@@ -81,6 +82,7 @@ class TestVisit:
             browser_window.visit(invalid_type_as_url)
 
 
+@pytest.mark.usefixtures("app_context")
 class TestFind:
     """Unit tests for: BaseNavigation.find"""
 
@@ -212,6 +214,7 @@ class TestFind:
             )
 
 
+@pytest.mark.usefixtures("app_context")
 class TestFindAll:
     """Unit tests for: BaseNavigation.find_all"""
 

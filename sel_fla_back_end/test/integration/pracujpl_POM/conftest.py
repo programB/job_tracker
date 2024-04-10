@@ -73,17 +73,16 @@ def local_http_server(
     locsrv = LocalServer()
     locsrv.start()
     if locsrv.is_alive():  # technically the thread not the server itself
-        logging.info("Local webserver running at: %s:%s", bind_address, server_port)
+        logging.debug("Test webserver running at: %s:%s", bind_address, server_port)
     else:
-        logging.error("Local webserver failed to start !")
+        logging.critical("Test webserver failed to start !")
     # -- setup is done
-    # logging.info("yielding control to the test function")
 
     yield locsrv
 
     # -- teardown
     locsrv.stop()
     if not locsrv.is_alive():
-        logging.info("Local webserver successfully stopped")
+        logging.debug("Test webserver successfully stopped")
     else:
-        logging.error("Local webserver couldn't be stopped !")
+        logging.critical("Test webserver couldn't be stopped !")

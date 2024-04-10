@@ -1,8 +1,8 @@
-import logging
 import os
 from contextlib import contextmanager
 
 import urllib3.exceptions as UE
+from flask import current_app
 from selenium import webdriver
 from sqlalchemy import exc
 
@@ -11,14 +11,13 @@ from job_tracker.extensions import scheduler
 from job_tracker.models import Company, JobOffer, Tag
 from job_tracker.pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 
-logger = logging.getLogger(__name__)
-
 
 @scheduler.task("interval", id="i_am_still_alive_task", seconds=15)
 def i_am_still_alive_task():
-    logging.error(
-        "This task runs every 15 seconds to demonstrate scheduler is doing it's job"
-    )
+    with scheduler.app.app_context():
+        current_app.logger.info(
+            "This task runs every 15 seconds to demonstrate scheduler is doing it's job"
+        )
 
 
 @contextmanager
@@ -37,7 +36,7 @@ def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
             # if no Selenium Grid server url was given
             driver = webdriver.Chrome(options=custom_options)
     except UE.MaxRetryError:
-        logger.exception(
+        current_app.logger.exception(
             (
                 "Failed to connect to the selenium service while trying to "
                 "scrap new offers - nothing was collected or stored."
@@ -62,34 +61,37 @@ def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
     misfire_grace_time=3600,  # seconds
 )
 def fetch_offers():
-    # Use selenium grid service.
-    # If SELENIUM_GRID_URL env. is not set
-    # local selenium instalation will be used.
-    selenium_grid_url = os.getenv("SELENIUM_GRID_URL")
-    selenium_grid_port = os.getenv("SELENIUM_GRID_PORT", "4444")
-    with selenium_driver(selenium_grid_url, selenium_grid_port) as driver:
-        logger.info("Job offers scraping started")
-        try:
-            main_page = PracujplMainPage(driver, reject_cookies=True)
-
-            if main_page.search_mode == "default":
-                main_page.search_mode = "it"
-            is_tag_list_available = main_page.search_mode == "it"
-            main_page.employment_type = ["full_time"]
-            main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
-            main_page.search_term = "Tester"
-
-            main_page.start_searching()
-
-            results_page = ResultsPage(driver)
-            all_offers = results_page.all_offers
-        except ConnectionError:
-            logger.error("Pracuj.pl website unreachable. No offers were collected.")
-            return
-        logger.info("Job offers scraping completed")
-
+    # Aquire app_context for the sake of database conectivity and app.logger
     with scheduler.app.app_context():
-        logger.info("Adding collected job offers to database")
+        # Use selenium grid service.
+        # If SELENIUM_GRID_URL env. is not set
+        # local selenium instalation will be used.
+        selenium_grid_url = os.getenv("SELENIUM_GRID_URL")
+        selenium_grid_port = os.getenv("SELENIUM_GRID_PORT", "4444")
+        with selenium_driver(selenium_grid_url, selenium_grid_port) as driver:
+            current_app.logger.info("Job offers scraping started")
+            try:
+                main_page = PracujplMainPage(driver, reject_cookies=True)
+
+                if main_page.search_mode == "default":
+                    main_page.search_mode = "it"
+                is_tag_list_available = main_page.search_mode == "it"
+                main_page.employment_type = ["full_time"]
+                main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
+                main_page.search_term = "Tester"
+
+                main_page.start_searching()
+
+                results_page = ResultsPage(driver)
+                all_offers = results_page.all_offers
+            except ConnectionError:
+                current_app.logger.error(
+                    "Pracuj.pl website unreachable. No offers were collected."
+                )
+                return
+            current_app.logger.info("Job offers scraping completed")
+
+        current_app.logger.info("Adding collected job offers to the database")
         try:
             for offer in all_offers:
                 if not JobOffer.query.get(offer.id):  # new, not yet stored offer
@@ -108,7 +110,7 @@ def fetch_offers():
                             db.session.add(new_company)
                         except (exc.DataError, exc.IntegrityError) as e:
                             db.session.rollback()
-                            logger.error(
+                            current_app.logger.error(
                                 (
                                     "failed to add company while processing "
                                     "offer_id %s. Offer skipped.: %s"
@@ -118,7 +120,7 @@ def fetch_offers():
                             )
                             continue
                     else:
-                        logging.warning(
+                        current_app.logger.info(
                             "Company (id = %s) already in db", offer.company_id
                         )
 
@@ -147,7 +149,7 @@ def fetch_offers():
                                     db.session.add(new_tag)
                                 except (exc.DataError, exc.IntegrityError) as e:
                                     db.session.rollback()
-                                    logger.error(
+                                    current_app.logger.error(
                                         (
                                             "failed to add new tag while processing "
                                             "offer_id %s. Offer skipped.: %s"
@@ -162,16 +164,16 @@ def fetch_offers():
                         db.session.commit()
                     except (exc.DataError, exc.IntegrityError) as e:
                         db.session.rollback()
-                        logger.error(
+                        current_app.logger.error(
                             "failed to add new offer (offer_id %s). Offer skipped.: %s",
                             offer.id,
                             str(e),
                         )
                         continue
                 else:
-                    logging.warning("Offer (id = %s) already in db", offer.id)
+                    current_app.logger.info("Offer (id = %s) already in db", offer.id)
         except exc.OperationalError:
-            logger.exception(
+            current_app.logger.exception(
                 (
                     "Failed to connect to the database while trying to store "
                     "new offers - none were stored."

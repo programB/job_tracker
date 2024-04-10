@@ -4,10 +4,26 @@ in order to run pytest like: 'pytest test/integration'
 without having to specify more detailed path.
 """
 
+# pass --setup-show option to pytest to see the setup and teardown steps
 import pytest
 from selenium import webdriver
 
-# pass --setup-show option to pytest to see the setup and teardown steps
+from job_tracker import create_app
+from job_tracker.extensions import scheduler
+
+
+@pytest.fixture(scope="module")
+def app_context():
+    """Since some of the functions under test use flask app logger
+    this fixture creates an application context.
+    Every test/test class which ask for this fixture
+    will be executed in this context.
+    """
+    conxn_app = create_app()
+    wrapped_flask_app = conxn_app.app
+    scheduler.shutdown(wait=False)
+    with wrapped_flask_app.app_context():
+        yield
 
 
 def pytest_addoption(parser):

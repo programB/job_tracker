@@ -11,7 +11,7 @@ special_properties = {"tot_no_of_subpages": 3}
 
 
 @pytest.fixture
-def std_results_page(selenium_driver, local_http_server):
+def std_results_page(app_context, selenium_driver, local_http_server):
     selenium_driver.get(local_http_server.url)
     yield ResultsPage(
         selenium_driver,
@@ -31,7 +31,7 @@ def std_results_page(selenium_driver, local_http_server):
     )
 
 
-def test_should_create_ResultPage_object(std_results_page):
+def test_should_create_ResultPage_object(app_context, std_results_page):
     """
     GIVEN a selenium driver object
     WHEN ResultsPage object is created
@@ -40,18 +40,18 @@ def test_should_create_ResultPage_object(std_results_page):
     assert std_results_page is not None
 
 
-def test_should_check_tot_number_of_subpages(std_results_page):
+def test_should_check_tot_number_of_subpages(app_context, std_results_page):
     assert std_results_page.tot_no_of_subpages >= 2
 
 
-def test_should_check_only_valid_offers_are_collected(std_results_page):
+def test_should_check_only_valid_offers_are_collected(app_context, std_results_page):
     offers = std_results_page.subpage_offers
     assert len(offers) != 0
     for offer in std_results_page.subpage_offers:
         assert offer.is_valid_offer
 
 
-def test_should_check_essential_params_of_all_offers_are_not_empty(std_results_page):
+def test_should_check_essential_params_of_all_offers_are_not_empty(app_context, std_results_page):
     for offer in std_results_page.subpage_offers:
         assert offer.id != 0
         assert offer.title != ""
