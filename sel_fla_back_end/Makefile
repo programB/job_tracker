@@ -1,26 +1,16 @@
-.PHONY: docker_image, docker_image_from_scratch, get_global_requirements, remove_global_requirements, clean_source_tree, run_in_docker, run_chrome_in_docker, compose_up, compose_down, compose_app_shell
+.PHONY: docker_image, docker_image_from_scratch, remove_global_requirements, clean_source_tree, run_in_docker, run_chrome_in_docker, compose_up, compose_down, compose_app_shell
 
 IMAGE_TAG=job-tracker-backend
 CONTAINER_NAME=job-tracker-backend-service
 COMPOSE_YAML_FILE = testrunner-docker-compose.yaml
 
 docker_image:
-	make get_global_requirements
 	make clean_source_tree
 	docker build --progress plain -t ${IMAGE_TAG} .
-	make remove_global_requirements
 
-docker_image_from_scratch: get_global_requirements
-	make get_global_requirements
+docker_image_from_scratch:
 	make clean_source_tree
 	docker build --progress plain --no-cache -t ${IMAGE_TAG} .
-	make remove_global_requirements
-
-get_global_requirements:
-	cp ../pip-requirements.txt .
-
-remove_global_requirements:
-	rm -f pip-requirements.txt
 
 clean_source_tree:
 	pyclean -v .

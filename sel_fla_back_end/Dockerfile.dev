@@ -30,21 +30,17 @@ RUN python3 -m venv $VIRTUALENV
 # would not have persisted.
 ENV PATH="$VIRTUALENV/bin:$PATH"
 
-# Copy over the project's definition and requirement's definition files
-# to the image (changing file ownership).
-# This is to keep docker layers as isolated as possible. Copying only
-# necessary files explicitly and in separate steps
-# avoids rebuilding entire image every time one of the
-# project's files changes.
-COPY --chown=regularuser pip-requirements.txt pyproject.toml .flake8 constraints.txt ./
+# Copy over the project's definition and requirements
+# (changing file ownership) but not project sources.
+# This is to keep docker layers isolated - a change to source in the
+# files will not result in rebuild of this layer.
+COPY --chown=regularuser pyproject.toml .flake8 constraints.txt ./
 
-# Install globally pinned pip version
-# and upgrade setuptools to its latest version to avoid problems.
+# Instal and upgrade pip and setuptools to latest versions
 # Install (normal) dependencies at the versions pinned in the constraints.txt
 # (do not create cache directory for the downloaded dependencies as
 #  they won't be needed for anything else - reduces image size)
-RUN python -m pip install --no-cache-dir -r pip-requirements.txt && \
-  python -m pip install --no-cache-dir --upgrade setuptools && \
+RUN python -m pip install --upgrade pip setuptools && \
   python -m pip install --no-cache-dir -c constraints.txt ".[dev]"
 
 # Copy over project's sources
