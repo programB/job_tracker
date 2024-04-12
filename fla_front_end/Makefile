@@ -1,20 +1,41 @@
-.PHONY: docker_image, docker_image_from_scratch, remove_global_requirements, clean_source_tree, run_in_docker, run_locally
+SHELL := bash
 
-IMAGE_TAG=job-tracker-frontend
+IS_VENV_ACTIVE = $(shell [ $$PWD/venv/bin/python = $$(which python) ] && echo "YES" || echo "NO")
 
-docker_image:
-	make clean_source_tree
-	docker build --progress plain -t ${IMAGE_TAG} .
+.PHONY: clean_source_tree local.venv.check local.initialize.environment local.reinitialize.environment local.update.constraints local.setup.environment local.run
 
-docker_image_from_scratch:
-	make clean_source_tree
-	docker build --progress plain --no-cache -t ${IMAGE_TAG} .
+local.venv.check:
+	@if [ ${IS_VENV_ACTIVE} == "NO" ]; then \
+		echo $$'STOP\n\nACTIVATE VIRTUAL ENVIRONMENT FIRST WITH: source ./venv/bin/activate' ;\
+		false ;\
+	fi
 
-clean_source_tree:
-	rm -fr ./src/job_tracker_frontend/__pycache__/
+clean_source_tree: local.venv.check
+	pyclean -v .
 
-run_in_docker:
-	docker run --rm -p 9022:5000 --name web-frontend-1 ${IMAGE_TAG}:latest
+local.initialize.environment:
+	@if [ -d "venv" ]; then \
+		echo "Local environment already exists. To forcibly recreate it use: make local.reinitialize.environment" ;\
+	else \
+		echo "Creating virtual environment in venv directory" ;\
+		python -m venv venv --prompt back-end-sandbox ;\
+	fi
 
-run_locally:
-	flask --app job_tracker_frontend run --host "0.0.0.0" --port "9022"
+local.reinitialize.environment:
+	@if [ -d "venv" ]; then \
+		echo "Removing existing virtual environment directory" ;\
+		rm -fr venv ;\
+	fi
+	@echo "Creating virtual environment in venv directory"
+	@python -m venv venv --prompt back-end-sandbox
+
+local.update.constraints: local.venv.check
+	@echo "Writing all dependencies to constraints.txt"
+	@python -m pip freeze --exclude-editable > constraints.txt
+
+local.setup.environment: local.venv.check
+	@python -m pip install --upgrade pip && python -m pip install -c constraints.txt --editable ".[dev]"
+
+local.run: local.venv.check
+	@echo "Running frontend app localy on port http://localhost:9022"
+	@flask --app job_tracker_frontend run --host "0.0.0.0" --port "9022"

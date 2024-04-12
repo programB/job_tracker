@@ -1,52 +1,43 @@
-.PHONY: docker_image, docker_image_from_scratch, remove_global_requirements, clean_source_tree, run_in_docker, run_chrome_in_docker, compose_up, compose_down, compose_app_shell
+SHELL := bash
 
-IMAGE_TAG=job-tracker-backend
-CONTAINER_NAME=job-tracker-backend-service
-COMPOSE_YAML_FILE = testrunner-docker-compose.yaml
+IS_VENV_ACTIVE = $(shell [ $$PWD/venv/bin/python = $$(which python) ] && echo "YES" || echo "NO")
 
-docker_image:
-	make clean_source_tree
-	docker build --progress plain -t ${IMAGE_TAG} .
+.PHONY: clean_source_tree local.venv.check local.initialize.environment local.reinitialize.environment local.update.constraints local.setup.environment local.test.unit local.test.integration
 
-docker_image_from_scratch:
-	make clean_source_tree
-	docker build --progress plain --no-cache -t ${IMAGE_TAG} .
+local.venv.check:
+	@if [ ${IS_VENV_ACTIVE} == "NO" ]; then \
+		echo $$'STOP\n\nACTIVATE VIRTUAL ENVIRONMENT FIRST WITH: source ./venv/bin/activate' ;\
+		false ;\
+	fi
 
-clean_source_tree:
+clean_source_tree: local.venv.check
 	pyclean -v .
 
-run_in_docker:
-	docker run -it --rm --name ${CONTAINER_NAME}-1 ${IMAGE_TAG}:latest sh
+local.initialize.environment:
+	@if [ -d "venv" ]; then \
+		echo "Local environment already exists. To forcibly recreate it use: make local.reinitialize.environment" ;\
+	else \
+		echo "Creating virtual environment in venv directory" ;\
+		python -m venv venv --prompt back-end-sandbox ;\
+	fi
 
-run_chrome_in_docker:
-	docker run --rm -d --name standalone-chrome --ulimit nofile=65536:65536 -p 4444:4444 -p 7900:7900 -p 5900:5900 --shm-size="2g" selenium/standalone-chrome:4.17.0-20240123
-	# When no longer needed stop the this container using:
-	#   docker stop standalone-chrome
-	# It will be automatically removed.
+local.reinitialize.environment:
+	@if [ -d "venv" ]; then \
+		echo "Removing existing virtual environment directory" ;\
+		rm -fr venv ;\
+	fi
+	@echo "Creating virtual environment in venv directory"
+	@python -m venv venv --prompt back-end-sandbox
 
-compose_up:
-	docker compose --progress plain --file ${COMPOSE_YAML_FILE} up -d
+local.update.constraints: local.venv.check
+	@echo "Writing all dependencies to constraints.txt"
+	@python -m pip freeze --exclude-editable > constraints.txt
 
-compose_down:
-	docker compose --file ${COMPOSE_YAML_FILE} down
+local.setup.environment: local.venv.check
+	@python -m pip install --upgrade pip && python -m pip install -c constraints.txt --editable ".[dev]"
 
-compose_app_shell:
-	docker compose --file ${COMPOSE_YAML_FILE} exec job-tracker-backend sh
+local.test.unit: local.venv.check
+	@python -m pytest -o log_cli_level=INFO test/unit
 
-compose_show_logs:
-	docker compose --file ${COMPOSE_YAML_FILE} logs -f job-tracker-backend
-
-compose_test_up:
-	docker compose --progress plain --file ${COMPOSE_YAML_FILE} --profile testing up -d
-
-compose_test_down:
-	docker compose --file ${COMPOSE_YAML_FILE} --profile testing down
-
-compose_test_clean:
-	docker compose --file ${COMPOSE_YAML_FILE} --profile testing rm --force
-
-compose_test_app_shell:
-	docker compose --file ${COMPOSE_YAML_FILE} exec job-tracker-backend-tests sh
-
-compose_test_show_logs:
-	docker compose --file ${COMPOSE_YAML_FILE} --profile testing logs job-tracker-backend-tests
+local.test.integration: local.venv.check
+	@python -m pytest -o log_cli_level=INFO test/integration
