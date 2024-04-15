@@ -47,9 +47,6 @@ RUN python -m pip install --upgrade pip setuptools && \
 COPY --chown=regularuser .env ./
 COPY --chown=regularuser src/ src/
 
-# Install project's package
-RUN python -m pip install . -c constraints.txt
-
-# run whatever needs to be run
+# run the application directly from the source tree
 CMD ["flask", "--app", "src/job_tracker_frontend", "run", \
   "--host", "0.0.0.0", "--port", "9022"]
