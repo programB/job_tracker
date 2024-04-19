@@ -3,8 +3,10 @@
 # - with python 3.11.7 (last currently available version of the 3.11 series)
 FROM python:3.11.7-slim-bookworm
 
-# Apply any security updates for Debian if they are available
-RUN apt-get update && apt-get upgrade --yes
+# Install Debian's updates if any
+# and remove the leftovers in one step to reduce layer's size
+RUN apt-get update && apt-get upgrade --yes && \
+  apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Add non-privileged user to the system (inside container)
 RUN useradd --create-home regularuser
