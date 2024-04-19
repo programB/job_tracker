@@ -121,8 +121,6 @@ services:
       - job-tracker-network
     ports:
       - 9022:9022
-    depends_on:
-      - job-tracker-backend
     # run the app from its sources
     command: 'python -m flask --app src/job_tracker_frontend run --host 0.0.0.0 --port 9022'
 
