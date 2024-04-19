@@ -4,7 +4,7 @@ services:
     networks:
       - job-tracker-network
     ports:
-      - "4444:4444" # selenium grid
+      - "4444:4444" # selenium
       - "5900:5900" # VNC
       - "7900:7900" # novnc
     # Due to a bug the system inside the container has very large limit
@@ -22,7 +22,7 @@ services:
       - SE_VNC_NO_PASSWORD=1
     healthcheck:
       # Use a script inside this image (provided by selenium devs)
-      # to check whether the grid is ready to accept and process
+      # to check whether the server is ready to accept and process
       # requests.
       # This healthcheck is then used by other
       # services in this file to decide if their containers
@@ -58,8 +58,8 @@ services:
   job-tracker-backend:
     build: sel_fla_back_end
     environment:
-      SELENIUM_GRID_URL: http://selenium
-      SELENIUM_GRID_PORT: 4444
+      SELENIUM_URL: http://selenium
+      SELENIUM_PORT: 4444
       DATABASE_URI: mysql+pymysql://db_regular_user:abc123@database:3306/job_tracker_db
     stdin_open: true # docker run -i
     tty: true # docker run -t
@@ -83,8 +83,8 @@ services:
       context: sel_fla_back_end
       dockerfile: Dockerfile.dev
     environment:
-      SELENIUM_GRID_URL: http://selenium
-      SELENIUM_GRID_PORT: 4444
+      SELENIUM_URL: http://selenium
+      SELENIUM_PORT: 4444
       TEST_HTTP_SERVER_URL: http://job-tracker-backend-tests
       TEST_HTTP_SERVER_PORT: 8000
     stdin_open: true # docker run -i
@@ -107,8 +107,8 @@ services:
     #       shell in single quotes.
     command: >
       sh -c 'python -m pytest
-      --selenium-grid-url $$SELENIUM_GRID_URL
-      --selenium-grid-port $$SELENIUM_GRID_PORT
+      --selenium-url $$SELENIUM_URL
+      --selenium-port $$SELENIUM_PORT
       --http-test-server-url $$TEST_HTTP_SERVER_URL
       --http-test-server-port $$TEST_HTTP_SERVER_PORT
       test/integration/'

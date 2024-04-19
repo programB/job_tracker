@@ -20,7 +20,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  is_selenium_grid_healthy:
+                  is_selenium_service_healthy:
                     type: boolean
                   is_database_online:
                     type: boolean

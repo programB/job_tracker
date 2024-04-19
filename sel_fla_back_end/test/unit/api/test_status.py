@@ -70,7 +70,7 @@ def test_should_get_good_answer_from_health_endpoint(
     with unittest.mock.patch(
         "job_tracker.api.status.get_database_status"
     ) as mock_db_h, unittest.mock.patch(
-        "job_tracker.api.status.get_selenium_grid_status"
+        "job_tracker.api.status.get_selenium_service_status"
     ) as mock_selenium_h:
         mock_db_h.return_value = db_h
         mock_selenium_h.return_value = sel_h
@@ -80,6 +80,6 @@ def test_should_get_good_answer_from_health_endpoint(
     # Then
     assert response.status_code == 200
     assert json.loads(response.text) == {
-        "is_selenium_grid_healthy": sel_h,
+        "is_selenium_service_healthy": sel_h,
         "is_database_online": db_h,
     }

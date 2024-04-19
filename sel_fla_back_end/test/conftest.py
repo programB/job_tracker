@@ -28,15 +28,15 @@ def app_context():
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--selenium-grid-url",
-        help="Url of the Selenium Grid server eg. http://127.0.0.1 \
-Use --selenium-grid-port to set port. \
+        "--selenium-url",
+        help="Url of the Selenium server eg. http://127.0.0.1 \
+Use --selenium-port to set port. \
 If not passed local webdriver will be used.",
     )
 
     parser.addoption(
-        "--selenium-grid-port",
-        help="Port number of the Selenium Grid server, if this option \
+        "--selenium-port",
+        help="Port number of the Selenium server, if this option \
 is not passed default value 4444 will be used.",
     )
 
@@ -55,13 +55,13 @@ is not passed default value 8000 will be used.",
 
 
 @pytest.fixture(scope="session")
-def selenium_grid_url(request):
-    return request.config.getoption("--selenium-grid-url")
+def SELENIUM_URL(request):
+    return request.config.getoption("--selenium-url")
 
 
 @pytest.fixture(scope="session")
-def selenium_grid_port(request):
-    return request.config.getoption("--selenium-grid-port")
+def SELENIUM_PORT(request):
+    return request.config.getoption("--selenium-port")
 
 
 @pytest.fixture(scope="session")
@@ -77,7 +77,7 @@ def http_test_server_port(request):
 # function scope is the default
 # but stating it here explicitly for clarity
 @pytest.fixture(scope="function")
-def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
+def selenium_driver(SELENIUM_URL: str | None, SELENIUM_PORT="4444"):
     # Setup browser driver
     # (with the scope='function' this step is performed
     #  BEFORE EACH test...)
@@ -85,7 +85,7 @@ def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
     custom_options = webdriver.ChromeOptions()
     # custom_options.add_argument('--headless')
 
-    if selenium_grid_url:
+    if SELENIUM_URL:
         # WARNING: /wd/hub path is deprecated
         # driver = webdriver.Remote("http://selenium:4444/wd/hub")
 
@@ -101,12 +101,12 @@ def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
         # )
 
         driver = webdriver.Remote(
-            command_executor=selenium_grid_url + ":" + selenium_grid_port,
+            command_executor=SELENIUM_URL + ":" + SELENIUM_PORT,
             options=custom_options,
         )
     else:
         # Use local driver (local browser)
-        # if no Selenium Grid server url was given
+        # if no Selenium server url was given
         driver = webdriver.Chrome(options=custom_options)
 
     yield driver  # yield control to the test function
