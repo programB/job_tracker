@@ -2,7 +2,7 @@ services:
   selenium:
     image: selenium/standalone-chrome:4.17.0-20240123
     networks:
-      - selenium-network
+      - job-tracker-network
     ports:
       - "4444:4444" # selenium grid
       - "5900:5900" # VNC
@@ -35,7 +35,7 @@ services:
   database:
     image: lscr.io/linuxserver/mariadb:10.11.6
     networks:
-      - selenium-network
+      - job-tracker-network
     environment:
       - PUID=1000
       - PGID=1000
@@ -64,7 +64,7 @@ services:
     stdin_open: true # docker run -i
     tty: true # docker run -t
     networks:
-      - selenium-network
+      - job-tracker-network
     ports:
       - 5000:5000
     depends_on:
@@ -90,7 +90,7 @@ services:
     stdin_open: true # docker run -i
     tty: true # docker run -t
     networks:
-      - selenium-network
+      - job-tracker-network
     depends_on:
       selenium:
         # Use the healthcheck defined for the selenium service above
@@ -118,7 +118,7 @@ services:
     stdin_open: true # docker run -i
     tty: true # docker run -t
     networks:
-      - selenium-network
+      - job-tracker-network
     ports:
       - 9022:9022
     depends_on:
@@ -127,4 +127,4 @@ services:
     command: 'python -m flask --app src/job_tracker_frontend run --host 0.0.0.0 --port 9022'
 
 networks:
-  selenium-network:
+  job-tracker-network:
