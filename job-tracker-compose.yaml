@@ -1,4 +1,5 @@
 services:
+  # -- Always started --
   selenium:
     image: selenium/standalone-chrome:4.17.0-20240123
     networks:
@@ -32,7 +33,9 @@ services:
       timeout: 10s
       retries: 5
 
+  # -- Prod --
   database:
+    profiles: ["prod"]
     image: lscr.io/linuxserver/mariadb:10.11.6
     networks:
       - job-tracker-network
@@ -56,6 +59,7 @@ services:
       retries: 5
 
   job-tracker-backend:
+    profiles: ["prod"]
     build: sel_fla_back_end
     environment:
       SELENIUM_URL: http://selenium
@@ -74,11 +78,21 @@ services:
         condition: service_healthy
     command: 'python -m job_tracker'
 
+  job-tracker-frontend:
+    profiles: ["prod"]
+    build: fla_front_end
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    networks:
+      - job-tracker-network
+    ports:
+      - 9022:9022
+    # run the app from its sources
+    command: 'python -m flask --app src/job_tracker_frontend run --host 0.0.0.0 --port 9022'
+
+  # -- Testing --
   job-tracker-backend-tests:
-    # This container will be spun up only if explicitly requested
-    # ($ docker compose --file <this file> --profile testing up -d)
-    profiles:
-      - testing
+    profiles: ["testing"]
     build:
       context: sel_fla_back_end
       dockerfile: Dockerfile.dev
@@ -112,17 +126,6 @@ services:
       --http-test-server-url $$TEST_HTTP_SERVER_URL
       --http-test-server-port $$TEST_HTTP_SERVER_PORT
       test/integration/'
-
-  job-tracker-frontend:
-    build: fla_front_end
-    stdin_open: true # docker run -i
-    tty: true # docker run -t
-    networks:
-      - job-tracker-network
-    ports:
-      - 9022:9022
-    # run the app from its sources
-    command: 'python -m flask --app src/job_tracker_frontend run --host 0.0.0.0 --port 9022'
 
 networks:
   job-tracker-network:
