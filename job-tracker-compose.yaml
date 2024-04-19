@@ -76,7 +76,11 @@ services:
         condition: service_healthy
       database:
         condition: service_healthy
-    command: 'python -m job_tracker'
+    # Run the app from the installed package using the gunicorn server.
+    # uvicorn workers are required because job_tracker is based on connexion
+    # which uses asynchronous functions and needs ASGI server to run
+    # (by default gunicorn works as a WSGI server).
+    command: 'gunicorn job_tracker.wsgi:app --workers 2 --threads 4 --bind 0.0.0.0:5000 --worker-class uvicorn.workers.UvicornWorker'
 
   job-tracker-frontend:
     profiles: ["prod"]
