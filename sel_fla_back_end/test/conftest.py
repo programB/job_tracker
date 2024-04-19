@@ -87,7 +87,7 @@ def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
 
     if selenium_grid_url:
         # WARNING: /wd/hub path is deprecated
-        # driver = webdriver.Remote("http://chromeindocker:4444/wd/hub")
+        # driver = webdriver.Remote("http://selenium:4444/wd/hub")
 
         # WARNING: command_executor path MUST NOT end with a slash.
         #          "http://127.0.0.1:4444/" is wrong and should be
@@ -96,7 +96,7 @@ def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
         #          "selenium.common.exceptions.WebDriverException: \
         #           Message: Unable to find handler for (POST) //session"
         # driver = webdriver.Remote(
-        #     "http://chromeindocker:4444/",
+        #     "http://selenium:4444/",
         #     options=options,
         # )
 

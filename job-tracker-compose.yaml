@@ -1,5 +1,5 @@
 services:
-  chromeindocker:
+  selenium:
     image: selenium/standalone-chrome:4.17.0-20240123
     networks:
       - selenium-network
@@ -58,7 +58,7 @@ services:
   job-tracker-backend:
     build: sel_fla_back_end
     environment:
-      SELENIUM_GRID_URL: http://chromeindocker
+      SELENIUM_GRID_URL: http://selenium
       SELENIUM_GRID_PORT: 4444
       DATABASE_URI: mysql+pymysql://db_regular_user:abc123@database:3306/job_tracker_db
     stdin_open: true # docker run -i
@@ -68,7 +68,7 @@ services:
     ports:
       - 5000:5000
     depends_on:
-      chromeindocker:
+      selenium:
         condition: service_healthy
       database:
         condition: service_healthy
@@ -83,7 +83,7 @@ services:
       context: sel_fla_back_end
       dockerfile: Dockerfile.dev
     environment:
-      SELENIUM_GRID_URL: http://chromeindocker
+      SELENIUM_GRID_URL: http://selenium
       SELENIUM_GRID_PORT: 4444
       TEST_HTTP_SERVER_URL: http://job-tracker-backend-tests
       TEST_HTTP_SERVER_PORT: 8000
@@ -92,8 +92,8 @@ services:
     networks:
       - selenium-network
     depends_on:
-      chromeindocker:
-        # Use the healthcheck defined for the chromeindocker service above
+      selenium:
+        # Use the healthcheck defined for the selenium service above
         # to find out if that service is indeed ready
         # and the job-tracker-backend-tests container can be started already.
         condition: service_healthy
