@@ -10,6 +10,7 @@ dependencies = [
   "python-dotenv",
   "dash",
   "pandas",
+  "gunicorn"
 ]
 
 [project.optional-dependencies]
