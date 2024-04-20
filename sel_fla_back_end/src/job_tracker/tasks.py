@@ -21,19 +21,19 @@ def i_am_still_alive_task():
 
 
 @contextmanager
-def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
+def selenium_driver(SELENIUM_URL: str | None, SELENIUM_PORT="4444"):
 
     custom_options = webdriver.ChromeOptions()
 
     try:
-        if selenium_grid_url:
+        if SELENIUM_URL:
             driver = webdriver.Remote(
-                command_executor=selenium_grid_url + ":" + selenium_grid_port,
+                command_executor=SELENIUM_URL + ":" + SELENIUM_PORT,
                 options=custom_options,
             )
         else:
             # Use local driver (local browser)
-            # if no Selenium Grid server url was given
+            # if no Selenium server url was given
             driver = webdriver.Chrome(options=custom_options)
     except UE.MaxRetryError:
         current_app.logger.exception(
@@ -63,12 +63,12 @@ def selenium_driver(selenium_grid_url: str | None, selenium_grid_port="4444"):
 def fetch_offers():
     # Aquire app_context for the sake of database conectivity and app.logger
     with scheduler.app.app_context():
-        # Use selenium grid service.
-        # If SELENIUM_GRID_URL env. is not set
+        # Use selenium service.
+        # If SELENIUM_URL env. is not set
         # local selenium instalation will be used.
-        selenium_grid_url = os.getenv("SELENIUM_GRID_URL")
-        selenium_grid_port = os.getenv("SELENIUM_GRID_PORT", "4444")
-        with selenium_driver(selenium_grid_url, selenium_grid_port) as driver:
+        SELENIUM_URL = os.getenv("SELENIUM_URL")
+        SELENIUM_PORT = os.getenv("SELENIUM_PORT", "4444")
+        with selenium_driver(SELENIUM_URL, SELENIUM_PORT) as driver:
             current_app.logger.info("Job offers scraping started")
             try:
                 main_page = PracujplMainPage(driver, reject_cookies=True)

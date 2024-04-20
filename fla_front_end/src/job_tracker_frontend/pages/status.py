@@ -25,7 +25,7 @@ def status():
             db_status="Unknown",
         )
 
-    selenium_status = "healthy" if ans["is_selenium_grid_healthy"] else "error"
+    selenium_status = "healthy" if ans["is_selenium_service_healthy"] else "error"
     db_status = "healthy" if ans["is_database_online"] else "error"
     return render_template(
         "pages/status.html",

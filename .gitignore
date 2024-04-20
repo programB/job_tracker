@@ -266,3 +266,4 @@ pyrightconfig.json
 # Project specific
 Temp_data/
 db_storage_dir/
+requirements*.txt

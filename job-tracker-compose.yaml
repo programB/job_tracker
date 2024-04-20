@@ -1,41 +1,44 @@
 services:
-  chromeindocker:
+  # -- Always started --
+  selenium:
     image: selenium/standalone-chrome:4.17.0-20240123
     networks:
-      - selenium-network
+      - job-tracker-network
     ports:
-      - "4444:4444" # selenium grid
-      - "5900:5900" # VNC
-      - "7900:7900" # novnc
-    # Due to a bug the system inside the container has very large limit
-    # on the number of opened files,
-    # this leads to extremely long image set up time.
+      - "4444:4444" # selenium monitoring (web UI)
+      - "5900:5900" # VNC server
+      - "7900:7900" # novnc server (web UI)
+    # Due to a bug by default the OS inside the container has
+    # a very large limit on the number of opened files,
+    # which leads to extremely long image set up time.
     # (https://github.com/SeleniumHQ/docker-selenium/issues/2045)
     ulimits:
       nofile:
         soft: 65536
         hard: 65536
-    # some pages will fail to load (error code: SIGTRAP)
-    # if allocated memory size is too small
+    # the browser used by selenium will fail to load some web pages 
+    # if the allocated memory size is too small
     shm_size: "2gb"
     environment:
       - SE_VNC_NO_PASSWORD=1
     healthcheck:
       # Use a script inside this image (provided by selenium devs)
-      # to check whether the grid is ready to accept and process
+      # to check whether the server is ready to accept and process
       # requests.
-      # This healthcheck is then used by other
-      # services in this file to decide if their containers
-      # can start or not (yet)
+      # This healthcheck is then used by other services
+      # (using condition: service_healthy option)
+      # to decide if their containers can be started or not (yet)
       test: '/opt/bin/check-grid.sh --host 0.0.0.0 --port 4444  || exit 1'
       interval: 15s
       timeout: 10s
       retries: 5
 
+  # -- Prod --
   database:
+    profiles: [ "prod" ]
     image: lscr.io/linuxserver/mariadb:10.11.6
     networks:
-      - selenium-network
+      - job-tracker-network
     environment:
       - PUID=1000
       - PGID=1000
@@ -56,46 +59,58 @@ services:
       retries: 5
 
   job-tracker-backend:
+    profiles: [ "prod" ]
     build: sel_fla_back_end
     environment:
-      SELENIUM_GRID_URL: http://chromeindocker
-      SELENIUM_GRID_PORT: 4444
+      SELENIUM_URL: http://selenium
+      SELENIUM_PORT: 4444
       DATABASE_URI: mysql+pymysql://db_regular_user:abc123@database:3306/job_tracker_db
     stdin_open: true # docker run -i
     tty: true # docker run -t
     networks:
-      - selenium-network
+      - job-tracker-network
     ports:
       - 5000:5000
     depends_on:
-      chromeindocker:
+      selenium:
         condition: service_healthy
       database:
         condition: service_healthy
-    command: 'python -m job_tracker'
+    # Run the app from the installed package using the gunicorn server.
+    # uvicorn workers are required because job_tracker is based on connexion
+    # which uses asynchronous functions and needs ASGI server to run
+    # (by default gunicorn works as a WSGI server).
+    command: 'gunicorn job_tracker.wsgi:app --workers 2 --threads 4 --bind 0.0.0.0:5000 --worker-class uvicorn.workers.UvicornWorker'
 
+  job-tracker-frontend:
+    profiles: [ "prod" ]
+    build: fla_front_end
+    stdin_open: true
+    tty: true
+    networks:
+      - job-tracker-network
+    ports:
+      - 9022:9022
+    # Run the app from its sources using gunicorn server.
+    command: 'gunicorn --chdir src job_tracker_frontend.wsgi:app  --bind 0.0.0.0:9022'
+
+  # -- Testing --
   job-tracker-backend-tests:
-    # This container will be spun up only if explicitly requested
-    # ($ docker compose --file <this file> --profile testing up -d)
-    profiles:
-      - testing
+    profiles: [ "testing" ]
     build:
       context: sel_fla_back_end
       dockerfile: Dockerfile.dev
     environment:
-      SELENIUM_GRID_URL: http://chromeindocker
-      SELENIUM_GRID_PORT: 4444
+      SELENIUM_URL: http://selenium
+      SELENIUM_PORT: 4444
       TEST_HTTP_SERVER_URL: http://job-tracker-backend-tests
       TEST_HTTP_SERVER_PORT: 8000
-    stdin_open: true # docker run -i
-    tty: true # docker run -t
+    stdin_open: true
+    tty: true
     networks:
-      - selenium-network
+      - job-tracker-network
     depends_on:
-      chromeindocker:
-        # Use the healthcheck defined for the chromeindocker service above
-        # to find out if that service is indeed ready
-        # and the job-tracker-backend-tests container can be started already.
+      selenium:
         condition: service_healthy
     # Override Dockerfile.dev CMD and run integration tests
     # Note: docker compose will try to substitute host's environment variables
@@ -107,23 +122,11 @@ services:
     #       shell in single quotes.
     command: >
       sh -c 'python -m pytest
-      --selenium-grid-url $$SELENIUM_GRID_URL
-      --selenium-grid-port $$SELENIUM_GRID_PORT
+      --selenium-url $$SELENIUM_URL
+      --selenium-port $$SELENIUM_PORT
       --http-test-server-url $$TEST_HTTP_SERVER_URL
       --http-test-server-port $$TEST_HTTP_SERVER_PORT
       test/integration/'
 
-  job-tracker-frontend:
-    build: fla_front_end
-    stdin_open: true # docker run -i
-    tty: true # docker run -t
-    networks:
-      - selenium-network
-    ports:
-      - 9022:9022
-    depends_on:
-      - job-tracker-backend
-    command: 'python -m flask --app src/job_tracker_frontend run --host 0.0.0.0 --port 9022'
-
 networks:
-  selenium-network:
+  job-tracker-network:

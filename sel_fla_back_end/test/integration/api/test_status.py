@@ -8,6 +8,6 @@ class TestHappyPaths:
         response = httpx_test_client.get("/api/health")
         assert response.status_code == 200
         assert json.loads(response.text) == {
-            "is_selenium_grid_healthy": True,
+            "is_selenium_service_healthy": True,
             "is_database_online": True,
         }

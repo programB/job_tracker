@@ -1,30 +1,43 @@
-.PHONY: docker_image, docker_image_from_scratch, get_global_requirements, remove_global_requirements, clean_source_tree, run_in_docker, run_locally
+SHELL := bash
 
-IMAGE_TAG=job-tracker-frontend
+IS_VENV_ACTIVE = $(shell [ $$PWD/venv/bin/python = $$(which python) ] && echo "YES" || echo "NO")
 
-docker_image:
-	make get_global_requirements
-	make clean_source_tree
-	docker build --progress plain -t ${IMAGE_TAG} .
-	make remove_global_requirements
+.PHONY: clean_source_tree local.venv.check local.initialize.environment local.reinitialize.environment local.update.constraints local.setup.environment local.run
 
-docker_image_from_scratch: get_global_requirements
-	make get_global_requirements
-	make clean_source_tree
-	docker build --progress plain --no-cache -t ${IMAGE_TAG} .
-	make remove_global_requirements
+local.venv.check:
+	@if [ ${IS_VENV_ACTIVE} == "NO" ]; then \
+		echo $$'STOP\n\nACTIVATE VIRTUAL ENVIRONMENT FIRST WITH: source ./venv/bin/activate' ;\
+		false ;\
+	fi
 
-get_global_requirements:
-	cp ../pip-requirements.txt .
+clean_source_tree: local.venv.check
+	pyclean -v .
 
-remove_global_requirements:
-	rm -f pip-requirements.txt
+local.initialize.environment:
+	@if [ -d "venv" ]; then \
+		echo "Local environment already exists. To forcibly recreate it use: make local.reinitialize.environment" ;\
+	else \
+		echo "Creating virtual environment in 'venv' directory" ;\
+		python -m venv venv --prompt front-end-sandbox ;\
+	fi
 
-clean_source_tree:
-	rm -fr ./src/job_tracker_frontend/__pycache__/
+local.reinitialize.environment:
+	@if [ -d "venv" ]; then \
+		echo "Removing existing virtual environment directory 'venv'" ;\
+		rm -fr venv ;\
+	fi
+	@echo "Creating virtual environment in directory 'venv'"
+	@python -m venv venv --prompt front-end-sandbox
 
-run_in_docker:
-	docker run --rm -p 9022:5000 --name web-frontend-1 ${IMAGE_TAG}:latest
+local.update.constraints: local.venv.check
+	@echo "Writing all dependencies to constraints.txt"
+	@python -m pip freeze --exclude-editable > constraints.txt
 
-run_locally:
-	flask --app job_tracker_frontend run --host "0.0.0.0" --port "9022"
+local.setup.environment: local.venv.check
+	@echo "Installing project in editable mode"
+	@echo "Installing all project's dependencies at pinned versions"
+	@python -m pip install --upgrade pip && python -m pip install -c constraints.txt --editable ".[dev]"
+
+local.run: local.venv.check
+	@echo "Running frontend app localy from source tree on port http://localhost:9022"
+	@flask --app src/job_tracker_frontend run --host "0.0.0.0" --port "9022"
