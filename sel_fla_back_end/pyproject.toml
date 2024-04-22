@@ -7,6 +7,7 @@ name = "job-tracker"
 version = "0.0.1"
 dependencies = [
   "Flask",
+  "python-dotenv",
   "selenium",
   "connexion[swagger-ui]",
   "connexion[flask]",
@@ -33,7 +34,7 @@ dev = [
 
 [tool.setuptools.package-data]
 # include API sepcification file in the package
-job_tracker = ["*.yml"]
+job_tracker = ["*.yml", ".env"]
 
 [tool.black]
 line-length = 88

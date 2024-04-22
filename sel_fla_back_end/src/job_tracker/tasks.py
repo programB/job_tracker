@@ -11,6 +11,15 @@ from job_tracker.extensions import scheduler
 from job_tracker.models import Company, JobOffer, Tag
 from job_tracker.pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 
+# Search for job offers with criteria set through
+# .env file or enviroment variables
+# (fallback is for when nothing was passed)
+search_term = os.getenv("SEARCH_TERM", "Tester")
+search_employment_type = os.getenv("SEARCH_EMPLOYMENT_TYPE", "full_time")
+search_location = os.getenv("SEARCH_LOCATION", "Warszawa")
+# Search radius is not yet user settable at this time
+# and fixed to 10 km here
+search_radius = Distance.TEN_KM
 
 @scheduler.task("interval", id="i_am_still_alive_task", seconds=15)
 def i_am_still_alive_task():
@@ -76,9 +85,9 @@ def fetch_offers():
                 if main_page.search_mode == "default":
                     main_page.search_mode = "it"
                 is_tag_list_available = main_page.search_mode == "it"
-                main_page.employment_type = ["full_time"]
-                main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
-                main_page.search_term = "Tester"
+                main_page.employment_type = [search_employment_type]
+                main_page.location_and_distance = (search_location, search_radius)
+                main_page.search_term = search_term
 
                 main_page.start_searching()
 
