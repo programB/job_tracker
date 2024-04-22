@@ -1,0 +1,20 @@
+.homepage {
+  line-height: 1.8;
+}
+header.homepage {
+  font-size: 1.2rem;
+  text-align: center;
+  padding-bottom: 20px;
+  text-decoration-line: underline;
+  text-decoration-color: var(--emph-color);
+  text-transform: capitalize;
+}
+
+ul li {
+  margin: 10px 0;
+  color: var(--neutral-color);
+}
+li::marker {
+  list-style: disc;
+  color: var(--emph-color);
+}
