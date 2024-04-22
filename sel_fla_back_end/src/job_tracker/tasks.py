@@ -20,6 +20,7 @@ search_location = os.getenv("SEARCH_LOCATION", "Warszawa")
 # Search radius is not yet user settable at this time
 # and fixed to 10 km here
 search_radius = Distance.TEN_KM
+search_interval = int(os.getenv("SEARCH_INTERVAL_MINUTES", "360"))  # 360 min = 6h
 
 @scheduler.task("interval", id="i_am_still_alive_task", seconds=15)
 def i_am_still_alive_task():
@@ -61,11 +62,18 @@ def selenium_driver(SELENIUM_URL: str | None, SELENIUM_PORT="4444"):
 # Cron-like syntax
 # See https://apscheduler.readthedocs.io/en/3.x/modules/triggers/cron.html
 # for details.
+# @scheduler.task(
+#     trigger="cron",
+#     id="fetch_offers_task",
+#     minute="0",
+#     hour="12",
+#     max_instances=1,
+#     misfire_grace_time=3600,  # seconds
+# )
 @scheduler.task(
-    trigger="cron",
+    trigger="interval",
     id="fetch_offers_task",
-    minute="0",
-    hour="12",
+    seconds=search_interval * 60,
     max_instances=1,
     misfire_grace_time=3600,  # seconds
 )
