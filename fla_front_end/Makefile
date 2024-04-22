@@ -40,4 +40,4 @@ local.setup.environment: local.venv.check
 
 local.run: local.venv.check
 	@echo "Running frontend app localy from source tree on port http://localhost:9022"
-	@flask --app src/job_tracker_frontend run --host "0.0.0.0" --port "9022"
+	@flask --app src/job_tracker_frontend run --host "0.0.0.0" --port "9022" --debug
