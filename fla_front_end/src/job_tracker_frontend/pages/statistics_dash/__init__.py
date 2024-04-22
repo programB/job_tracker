@@ -104,10 +104,10 @@ def init_dash_app(master_app: Flask) -> Flask:
                     )
                 ],
             ),
-            Div(
-                children="This is a placeholder for a header with some general info",
-                className="statistics-header",
-            ),
+            # Div(
+            #     children="This is a placeholder for a header with some general info",
+            #     className="statistics-header",
+            # ),
             Div(
                 children=[chart1],
                 className="charts",
@@ -285,7 +285,8 @@ def init_dash_app(master_app: Flask) -> Flask:
             gridcolor="#eeeeee",  # Horizontal grid (parallel to X axis !) color
         )
         # print(fig)  # to see resulting JSON structure describing the figure
-        # return fig for the first output and empty string for the warnig_msg output
+        # Outputs to update are:
+        # ("chart1", "figure"), ("warnig_msg", "children"), ("tags_dd", "options")
         return fig, "", [{"label": tag, "value": tag} for tag in retreived_tags]
 
     return dash_app.server  # type: ignore

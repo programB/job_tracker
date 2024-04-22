@@ -1,9 +1,17 @@
 {% extends 'base.html' %}
 
+{% block extrastylesheet %}{{ url_for('static', filename='css/home.css') }}{% endblock extrastylesheet %}
+
 {% block title %}Home{% endblock title %}
 
 {% block main %}
-  <p>
-    Learn more about this project by visiting the <a href="{{ url_for('pages.about') }}">About page</a>
+  <header class="homepage">Welcome to the Job Tracker &#x2122; &#x1F609  front end web UI</header>
+  <p class="homepage">
+     This app uses back end's service API to display the information about scraped job offers in two forms:
+     <ul>
+       <li>Statistics of collected offers presented as a histogram. The time span and binning period can be adjusted, also the presented data can be filtered by a few criteria.</li>
+       <li>All collected offers presented as a paginated list. Each entry presents some essential information and contains link to the original offer. Offers are sorted by the date they were posted at.</li>
+     </ul>
   </p>
+  <p>Finally one can check the status of the back end's component services.</p>
 {% endblock main %}

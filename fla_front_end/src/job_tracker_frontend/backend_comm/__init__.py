@@ -1,4 +1,5 @@
 import logging
+import os
 
 import requests
 from requests.exceptions import ConnectionError, Timeout
@@ -7,7 +8,12 @@ from .exceptions import APIException, BackendNotAvailableException
 
 logger = logging.getLogger(__name__)
 
-backend_URI = "http://job-tracker-backend:5000/api/"
+# The value of BACKEND_URI is set by the load_dotenv function when application
+# starts based on the contents of the .env file.
+# If this this variable is set in the enviroment PRIOR to app execution
+# load_dotenv will ignore the value in the .env file.
+# The fallback value is used when none of the above places defines the variable.
+backend_URI = os.getenv("BACKEND_URI", "http://localhost:5000/api/")
 
 
 def make_backend_call(
