@@ -104,10 +104,10 @@ def init_dash_app(master_app: Flask) -> Flask:
                     )
                 ],
             ),
-            Div(
-                children="This is a placeholder for a header with some general info",
-                className="statistics-header",
-            ),
+            # Div(
+            #     children="This is a placeholder for a header with some general info",
+            #     className="statistics-header",
+            # ),
             Div(
                 children=[chart1],
                 className="charts",
