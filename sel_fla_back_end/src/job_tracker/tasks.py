@@ -172,6 +172,7 @@ def fetch_offers():
                         continue
                 else:
                     current_app.logger.info("Offer (id = %s) already in db", offer.id)
+            current_app.logger.info("Finished adding offers to the database")
         except exc.OperationalError:
             current_app.logger.exception(
                 (

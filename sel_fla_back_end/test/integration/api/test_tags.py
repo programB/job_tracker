@@ -14,6 +14,6 @@ class TestHappyPaths:
         assert all(tag in ["Java", "Selenium", "Python"] for tag in received_tags)
 
 
-@pytest.mark.xfail(reason="communication with the selenium selenium not yet implemented.")
+@pytest.mark.xfail(reason="not yet implemented")
 def test_should_get_500error_if_server_not_healthy(httpx_test_client):
     assert False
