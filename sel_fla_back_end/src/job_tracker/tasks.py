@@ -1,5 +1,6 @@
 import os
 from contextlib import contextmanager
+from datetime import datetime
 
 import urllib3.exceptions as UE
 from flask import current_app
@@ -22,11 +23,21 @@ search_location = os.getenv("SEARCH_LOCATION", "Warszawa")
 search_radius = Distance.TEN_KM
 search_interval = int(os.getenv("SEARCH_INTERVAL_MINUTES", "360"))  # 360 min = 6h
 
-@scheduler.task("interval", id="i_am_still_alive_task", seconds=15)
-def i_am_still_alive_task():
+
+@scheduler.task("interval", id="heartbeat_task", seconds=60)
+def heartbeat_task():
     with scheduler.app.app_context():
+        main_task = scheduler.get_job("fetch_offers_task") or datetime(1, 1, 1)
+        next_run = main_task.next_run_time.strftime("%Y.%m.%d %H:%M:%S")
         current_app.logger.info(
-            "This task runs every 15 seconds to demonstrate scheduler is doing it's job"
+            (
+                "Heartbeat every 60s. Main scraping task is set to "
+                f"run every {search_interval} minutes, "
+                f"looking for offers with: term '{search_term}', employment type "
+                f"of '{search_employment_type}' "
+                f"in '{search_location}' (+10 km radius)."
+                f"It's next scheduled run is at {next_run}"
+            )
         )
 
 
