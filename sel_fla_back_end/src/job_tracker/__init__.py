@@ -1,9 +1,12 @@
+import os
+
 import connexion
 from connexion.resolver import RelativeResolver
 from dotenv import load_dotenv
 
 from job_tracker import config
 from job_tracker.database import db
+from job_tracker.demo import load_demo_data
 from job_tracker.extensions import ma, scheduler
 
 answer = load_dotenv()
@@ -51,16 +54,18 @@ def create_app(custom_config=config.DevelopmentConfig):
     # Any additional routes (eg. added temporarily for a quick test and
     # besides those already added through blueprints) can go here
 
+    # Init the db here (within the context of created app !)
+    with base_flask_app.app_context():
+        db.create_all()
+        if os.getenv("LOAD_DEMO_DATA"):
+            load_demo_data(db)
+
     # Add any tasks to the scheduler here
     # (or import module(s) with functions decorated with @scheduler.task)
     # and start the scheduler.
     import job_tracker.tasks  # noqa: F401
 
     scheduler.start()
-
-    # Init the db here (within the context of created app !)
-    with base_flask_app.app_context():
-        db.create_all()
 
     # Finally return the app
     return connexion_app

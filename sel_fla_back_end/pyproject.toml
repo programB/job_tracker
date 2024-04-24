@@ -14,6 +14,7 @@ dependencies = [
   "connexion[uvicorn]",
   "flask-marshmallow[sqlalchemy]",
   "PyMySQL",
+  "sqlparse",
   "flask-apscheduler",
   "gunicorn"
 ]
@@ -34,7 +35,7 @@ dev = [
 
 [tool.setuptools.package-data]
 # include API sepcification file in the package
-job_tracker = ["*.yml", ".env"]
+job_tracker = ["*.yml", ".env", "demo_data.sql"]
 
 [tool.black]
 line-length = 88
