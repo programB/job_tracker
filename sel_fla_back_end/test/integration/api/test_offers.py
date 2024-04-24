@@ -115,6 +115,6 @@ def test_should_get_404error_when_pagination_out_of_range(httpx_test_client):
     assert response.status_code == 404
 
 
-@pytest.mark.xfail(reason="communication with the selenium service not yet implemented.")
+@pytest.mark.xfail(reason="not yet implemented")
 def test_should_get_500error_if_server_not_healthy(httpx_test_client):
     assert False

@@ -301,6 +301,6 @@ def test_should_get_400error_when_end_date_eariler_then_start_date(httpx_test_cl
     assert response.status_code == 400
 
 
-@pytest.mark.xfail(reason="communication with the selenium service not yet implemented.")
+@pytest.mark.xfail(reason="not yet implemented")
 def test_should_get_500error_if_server_not_healthy(httpx_test_client):
     assert False
