@@ -1,9 +1,13 @@
 import connexion
 from connexion.resolver import RelativeResolver
+from dotenv import load_dotenv
 
 from job_tracker import config
 from job_tracker.database import db
 from job_tracker.extensions import ma, scheduler
+
+answer = load_dotenv()
+print(f"loaded env?: {answer}")
 
 
 def create_app(custom_config=config.DevelopmentConfig):

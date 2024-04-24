@@ -1,5 +1,6 @@
 import os
 from contextlib import contextmanager
+from datetime import datetime
 
 import urllib3.exceptions as UE
 from flask import current_app
@@ -11,12 +12,32 @@ from job_tracker.extensions import scheduler
 from job_tracker.models import Company, JobOffer, Tag
 from job_tracker.pracujpl_POM import Distance, PracujplMainPage, ResultsPage
 
+# Search for job offers with criteria set through
+# .env file or enviroment variables
+# (fallback is for when nothing was passed)
+search_term = os.getenv("SEARCH_TERM", "Tester")
+search_employment_type = os.getenv("SEARCH_EMPLOYMENT_TYPE", "full_time")
+search_location = os.getenv("SEARCH_LOCATION", "Warszawa")
+# Search radius is not yet user settable at this time
+# and fixed to 10 km here
+search_radius = Distance.TEN_KM
+search_interval = int(os.getenv("SEARCH_INTERVAL_MINUTES", "360"))  # 360 min = 6h
 
-@scheduler.task("interval", id="i_am_still_alive_task", seconds=15)
-def i_am_still_alive_task():
+
+@scheduler.task("interval", id="heartbeat_task", seconds=60)
+def heartbeat_task():
     with scheduler.app.app_context():
+        main_task = scheduler.get_job("fetch_offers_task") or datetime(1, 1, 1)
+        next_run = main_task.next_run_time.strftime("%Y.%m.%d %H:%M:%S")
         current_app.logger.info(
-            "This task runs every 15 seconds to demonstrate scheduler is doing it's job"
+            (
+                "Heartbeat every 60s. Main scraping task is set to "
+                f"run every {search_interval} minutes, "
+                f"looking for offers with: term '{search_term}', employment type "
+                f"of '{search_employment_type}' "
+                f"in '{search_location}' (+10 km radius)."
+                f"It's next scheduled run is at {next_run}"
+            )
         )
 
 
@@ -52,11 +73,18 @@ def selenium_driver(SELENIUM_URL: str | None, SELENIUM_PORT="4444"):
 # Cron-like syntax
 # See https://apscheduler.readthedocs.io/en/3.x/modules/triggers/cron.html
 # for details.
+# @scheduler.task(
+#     trigger="cron",
+#     id="fetch_offers_task",
+#     minute="0",
+#     hour="12",
+#     max_instances=1,
+#     misfire_grace_time=3600,  # seconds
+# )
 @scheduler.task(
-    trigger="cron",
+    trigger="interval",
     id="fetch_offers_task",
-    minute="0",
-    hour="12",
+    seconds=search_interval * 60,
     max_instances=1,
     misfire_grace_time=3600,  # seconds
 )
@@ -76,9 +104,9 @@ def fetch_offers():
                 if main_page.search_mode == "default":
                     main_page.search_mode = "it"
                 is_tag_list_available = main_page.search_mode == "it"
-                main_page.employment_type = ["full_time"]
-                main_page.location_and_distance = ("Warszawa", Distance.TEN_KM)
-                main_page.search_term = "Tester"
+                main_page.employment_type = [search_employment_type]
+                main_page.location_and_distance = (search_location, search_radius)
+                main_page.search_term = search_term
 
                 main_page.start_searching()
 
