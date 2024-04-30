@@ -19,23 +19,23 @@ help:
 	@echo "To stop and remove containers do: make down"
 	@echo ""
 
-sel_fla_back_end/requirements-dev.txt: sel_fla_back_end/pyproject.toml
-	@python extract_deps.py sel_fla_back_end/pyproject.toml
+back_end/requirements-dev.txt: back_end/pyproject.toml
+	@python extract_deps.py back_end/pyproject.toml
 
-sel_fla_back_end/src/job_tracker/.env: sel_fla_back_end/src/job_tracker/.env_sample
+back_end/src/job_tracker/.env: back_end/src/job_tracker/.env_sample
 	@echo "(back end app) FOR DEMO PURPOSES creating .env from the .env_sample file. Remove this step to avoid overwriting your custom .env file"
-	@cp -u ./sel_fla_back_end/src/job_tracker/.env_sample ./sel_fla_back_end/src/job_tracker/.env
+	@cp -u ./back_end/src/job_tracker/.env_sample ./back_end/src/job_tracker/.env
 
-fla_front_end/.env: fla_front_end/.env_sample
+front_end_FD/.env: front_end_FD/.env_sample
 	@echo "(front end app) FOR DEMO PURPOSES creating .env from the .env_sample file. Remove this step to avoid overwriting your custom .env file"
-	@cp -u ./fla_front_end/.env_sample fla_front_end/.env
+	@cp -u ./front_end_FD/.env_sample front_end_FD/.env
 
 .PHONY: apps.backend.remove-requirements-file apps apps.backend.logs apps.frontend.logs apps.frontend.show
 
 apps.backend.remove-requirements-file:
-	@rm -fr sel_fla_back_end/requirements-dev.txt
+	@rm -fr back_end/requirements-dev.txt
 
-apps: sel_fla_back_end/requirements-dev.txt sel_fla_back_end/src/job_tracker/.env fla_front_end/.env
+apps: back_end/requirements-dev.txt back_end/src/job_tracker/.env front_end_FD/.env
 	@$(DC) --progress ${PROGRESS_APP} --file ${COMPOSE_FILE} --profile ${APP_PROFILE} up --build -d
 	@$(DC) --file ${COMPOSE_FILE} ps
 	make apps.frontend.show
@@ -52,7 +52,7 @@ apps.frontend.show:
 
 .PHONY: tests tests.backend.logs tests.backend.monitor test.monitor
 
-tests: sel_fla_back_end/requirements-dev.txt sel_fla_back_end/src/job_tracker/.env fla_front_end/.env
+tests: back_end/requirements-dev.txt back_end/src/job_tracker/.env front_end_FD/.env
 	@$(DC) --progress ${PROGRESS_TEST} --file ${COMPOSE_FILE} --profile ${TEST_PROFILE} up --build -d
 	@$(DC) --file ${COMPOSE_FILE} ps
 

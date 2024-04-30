@@ -60,7 +60,7 @@ services:
 
   job-tracker-backend:
     profiles: [ "prod" ]
-    build: sel_fla_back_end
+    build: back_end
     environment:
       SELENIUM_URL: http://selenium
       SELENIUM_PORT: 4444
@@ -84,7 +84,7 @@ services:
 
   job-tracker-frontend:
     profiles: [ "prod" ]
-    build: fla_front_end
+    build: front_end_FD
     stdin_open: true
     tty: true
     networks:
@@ -98,7 +98,7 @@ services:
   job-tracker-backend-tests:
     profiles: [ "testing" ]
     build:
-      context: sel_fla_back_end
+      context: back_end
       dockerfile: Dockerfile.dev
     environment:
       SELENIUM_URL: http://selenium
