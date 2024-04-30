@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "job-tracker-frontend"
 version = "0.0.1"
+license = {text = "MIT License"}
 dependencies = [
   "Flask",
   "python-dotenv",
