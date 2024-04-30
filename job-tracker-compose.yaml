@@ -7,7 +7,7 @@ services:
     ports:
       - "4444:4444" # selenium monitoring (web UI)
       - "5900:5900" # VNC server
-      - "7900:7900" # novnc server (web UI)
+      - "7900:7900" # noVNC (web UI VNC client)
     # Due to a bug by default the OS inside the container has
     # a very large limit on the number of opened files,
     # which leads to extremely long image set up time.
